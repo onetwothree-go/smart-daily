@@ -1,0 +1,6 @@
+[project]
+name = "smart-daily"
+version = "0.1.0"
+description = "Smart Daily - 最小 Python 工程（课程环境验收）"
+requires-python = ">=3.12"
+dependencies = []
