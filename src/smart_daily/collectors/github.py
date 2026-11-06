@@ -29,6 +29,23 @@ GITHUB_API = "https://api.github.com"
 API_VERSION = "2022-11-28"
 
 
+def _display_name(login: str, fallback: str) -> str:
+    """把 GitHub 登录名映射为团队显示名（如 yjy120 → 杨佳莹）。
+
+    映射走环境变量 MEMBER_DISPLAY_NAMES（配置管理员维护，
+    格式：login:显示名,login:显示名），未配置或未命中时原样返回 fallback。
+    新成员提交过代码后，把其登录名补进 .env 即可。
+    """
+    raw = os.getenv("MEMBER_DISPLAY_NAMES", "")
+    for pair in raw.split(","):
+        pair = pair.strip()
+        if ":" in pair:
+            key, value = pair.split(":", 1)
+            if key.strip() == login:
+                return value.strip()
+    return fallback
+
+
 class GitHubCollector:
     """GitHub 提交采集器。
 
@@ -154,10 +171,11 @@ class GitHubCollector:
         detail = item.get("stats") or {}
         files = item.get("files") or []
         ts = author.get("date")
+        login = (item.get("author") or {}).get("login", "") or author.get("name", "")
         return CommitEntry(
             sha=item.get("sha", "")[:8],
-            author_login=(item.get("author") or {}).get("login", "") or author.get("name", ""),
-            author_name=author.get("name", ""),
+            author_login=login,
+            author_name=_display_name(login, author.get("name", "") or login),
             timestamp=(
                 datetime.fromisoformat(ts.replace("Z", "+00:00"))
                 if ts
