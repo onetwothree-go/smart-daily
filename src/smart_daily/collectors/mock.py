@@ -22,37 +22,50 @@ from datetime import datetime, timedelta, timezone
 from .models import CommitEntry, MessageEntry, TaskEntry, record_timestamp
 
 #: 演示用的成员与各自的行为模板
+#: 成员为本小组成员（姓名与 GitHub 登录名对应拼音，演示数据不含任何真实凭证）
 _MOCK_PROFILES: list[dict[str, object]] = [
     {
-        "login": "zhangsan",
-        "name": "张三",
+        "login": "yangjiaying",
+        "name": "杨佳莹",
         "commits": [
-            ("feat: 实现采集层数据源协议抽象与降级链路", 3),
-            ("fix: 修复时间窗口过滤时边界未闭合的问题", 5),
-            ("test: 补充采集器降级场景的单元测试", 8),
+            ("docs: 完成需求澄清问答记录与隐含需求清单", 9),
+            ("docs: 撰写业务调研报告初稿", 10),
+            ("spec: 完善 proposal.md 范围与成功标准", 11),
         ],
-        "messages": [("日报数据源今天全部跑通了，降级链路也验证过", 10)],
-        "tasks": [("完成采集层接口契约文档", 11, True)],
+        "messages": [("需求澄清的 12 个问题已全部回答，隐含需求整理出 6 条", 12)],
+        "tasks": [("汇总 proposal.md 范围条目与用例对照表", 13, True)],
     },
     {
-        "login": "lisi",
-        "name": "李四",
+        "login": "yuyue",
+        "name": "于悦",
         "commits": [
-            ("feat: 实现日报生成层的分组与渲染", 4),
-            ("style: 统一日报条目格式", 6),
+            ("design: 确定四层架构与模块职责划分", 10),
+            ("adr: 补充 httpx 与 SQLite 选型决策记录", 12),
         ],
-        "messages": [("生成层的输出格式跟产品确认过了", 14)],
-        "tasks": [("输出个人日报初稿", 15, False)],
+        "messages": [("design.md 的接口契约已按开发侧评审意见改了一版", 14)],
+        "tasks": [("完成系统分析报告的数据模型章节", 15, False)],
     },
     {
-        "login": "wangwu",
-        "name": "王五",
+        "login": "fanghe",
+        "name": "方赫",
         "commits": [
-            ("feat: 打通飞书推送通道", 7),
-            ("docs: 补充采集层交接说明与接口契约", 9),
+            ("chore: 初始化 specs/ 目录与分支规范", 9),
+            ("test: 补充采集器降级场景单元测试", 13),
+            ("ci: 配置静态扫描与提交规范检查", 15),
+        ],
+        "messages": [("分支规范已发群里，大家提交前看一眼 BRANCHING.md", 11)],
+        "tasks": [("归档本周组内 AI 使用日志并登记凭证就绪状态", 16, False)],
+    },
+    {
+        "login": "zhaorui",
+        "name": "赵蕊",
+        "commits": [
+            ("feat: 实现采集层数据源协议抽象与降级链路", 10),
+            ("feat: 打通飞书推送通道与签名校验", 12),
+            ("fix: 修复时间窗口过滤时边界未闭合的问题", 14),
         ],
         "messages": [("推送通道实测通过了，日报已经进群", 16)],
-        "tasks": [("配置并验证 SMTP 邮件通道", 17, False)],
+        "tasks": [("完成日报生成层分组渲染与集成测试", 17, False)],
     },
 ]
 
