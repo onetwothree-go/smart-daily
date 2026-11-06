@@ -4,8 +4,12 @@
     生成层产出的是「成员 -> 个人日报文本」，推送层需要的是「邮箱 -> 收件人」。
     两者之间的映射是配置，不是代码 —— 所以放在环境变量里，由配置管理员维护。
 
-配置格式（.env）：
-    MEMBER_EMAILS=zhangsan:zhangsan@qq.com,lisi:lisi@163.com,wangwu:wangwu@qq.com
+配置格式（.env，本地维护、不进仓库）：
+    MEMBER_EMAILS=杨佳莹:jy@example.com,于悦:yy@example.com,方赫:fh@example.com,赵蕊:zr@example.com
+
+    说明：成员名必须与采集到的 author_name 一致（mock 数据源里即为四名成员真名）；
+    真实邮箱映射只写在本地 .env（被 .gitignore 保护），本文件示例一律用 example.com 占位，
+    避免把成员真实邮箱推进公开仓库。
 
 设计要点：
   1. 映射表是可选的 —— 没配就跳过邮件推送，不影响其他通道。
@@ -55,7 +59,7 @@ def resolve_recipients(member: str, mapping: dict[str, list[str]] | None = None)
     if member in mapping:
         return list(mapping[member])
 
-    # 退化匹配：member 形如 zhangsan@qq.com，用前缀找
+    # 退化匹配：member 形如 name@example.com，用前缀找
     prefix = member.split("@")[0].strip()
     if prefix in mapping:
         return list(mapping[prefix])
