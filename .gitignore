@@ -1,4 +1,32 @@
-.venv/
-__pycache__/
-*.pyc
+# 凭证与本地环境（绝对不能提交到仓库）
 .env
+.env.local
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# 数据与产物（日报历史属于业务数据，不入库）
+data/
+*.db
+*.sqlite3
+
+# AI 会话记录导出版本（含上下文，可能含敏感信息）
+*.session.json
+sessions/
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+
+# 系统
+.DS_Store
+Thumbs.db

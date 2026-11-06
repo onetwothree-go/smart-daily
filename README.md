@@ -1,7 +1,95 @@
-# smart-daily
+# 智能日报生成器（Smart Daily Report Generator）
 
-Smart Daily - 项目仓库
+> 《软件工程职业技能实践》课程仿真企业项目 · 阶段一（SDD 规范驱动）
+> 规格先行：本项目所有功能以 `specs/` 目录下的规范为唯一事实来源，代码与规范冲突时走规范变更流程。
 
-## 简介
+## 它解决什么问题
 
-课程作业项目。
+写日报的五个痛点：下班靠记忆翻找、痕迹散落多平台、忙起来必遗漏、协作成果无人认领、格式不一组长手工汇总。
+本系统让日报从成员的真实工作数据里**自动长出来**。
+
+## 系统架构（四层）
+
+```
+┌─────────────────────────────────────────────┐
+│ 主编排入口  cli.py / orchestrator.py          │  降级链调度 + 个人/团队日报分发
+├─────────────────────────────────────────────┤
+│ 推送层      push/notifiers.py                │  邮件 + 飞书群机器人（支持签名校验）
+├─────────────────────────────────────────────┤
+│ 生成层      push/generator.py                │  WorkItem → 日报条目 → 团队日报
+├─────────────────────────────────────────────┤
+│ 采集层      collectors/                      │  GitHub / 飞书 / local-git / mock
+└─────────────────────────────────────────────┘
+```
+
+## 快速开始
+
+```bash
+# 1. 安装依赖（uv）
+uv sync
+
+# 2. 配置环境变量（严禁写入代码或提交仓库）
+cp .env.example .env
+# 编辑 .env，填入 GitHub PAT、飞书凭证、SMTP 授权码
+
+# 3. 无凭证演示（mock 数据源）
+uv run smart-daily --mock --day 2026-11-02
+
+# 4. 真实采集（默认降级链 GitHub → 飞书 → local-git）
+uv run smart-daily --day 2026-11-02
+
+# 5. 只生成不推送
+uv run smart-daily --no-notify
+
+# 6. 查看已有日报
+uv run smart-daily --list
+```
+
+## 环境变量清单
+
+| 变量 | 用途 | 必需 |
+| --- | --- | --- |
+| `GITHUB_TOKEN` | GitHub 个人访问令牌（仅只读权限） | GitHub 采集时 |
+| `GITHUB_REPO_OWNER` / `GITHUB_REPO_NAME` | 小组仓库标识 | GitHub 采集时 |
+| `FEISHU_APP_ID` / `FEISHU_APP_SECRET` | 飞书自建应用凭证 | 飞书采集时 |
+| `FEISHU_CHAT_ID` | 飞书群标识 | 飞书采集时 |
+| `FEISHU_WEBHOOK_URL` | 群自定义机器人 Webhook | 飞书推送时 |
+| `FEISHU_WEBHOOK_SECRET` | 机器人签名密钥 | 可选，开启签名校验时 |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` | 邮件通道 | 邮件推送时 |
+| `REPORT_RECIPIENTS` / `MEMBER_EMAILS` | 团队收件人 / 成员邮箱映射 | 邮件推送时 |
+| `DAILY_CUTOFF` | 日报统计截止时间 | 可选 |
+| `DB_PATH` | SQLite 路径 | 可选 |
+
+完整说明见 [.env.example](.env.example)。**凭证一律走环境变量，严禁写入代码或提交到仓库。**
+
+## 验证脚本
+
+| 脚本 | 用途 |
+| --- | --- |
+| `scripts/verify_collectors.py` | 采集层回归（39 项断言） |
+| `scripts/check_feishu.py` | 飞书凭证与开放平台连通性 |
+| `scripts/check_webhook.py` | 飞书 Webhook 推送实测 |
+| `scripts/verify_security.py` | 签名与关键词安全设置反向探测 |
+| `scripts/check_email.py` | SMTP 通道实测 |
+| `scripts/check_github_net.py` | GitHub 网络分层诊断 |
+
+## 文档
+
+| 文档 | 内容 |
+| --- | --- |
+| [specs/proposal.md](specs/proposal.md) | 需求规范（范围 / 不做什么 / 可度量成功标准） |
+| [docs/ai-usage-log.md](docs/ai-usage-log.md) | AI 使用日志（每周日晚提交） |
+| [docs/采集层交接说明.md](docs/采集层交接说明.md) | 采集层接口契约与降级链 |
+| [docs/飞书配置指引.md](docs/飞书配置指引.md) | 飞书开放平台与机器人配置 |
+| [docs/GitHub访问诊断报告.md](docs/GitHub访问诊断报告.md) | GitHub 网络问题根因与解法 |
+| [docs/Clash使用指引.md](docs/Clash使用指引.md) | 代理工具使用 |
+
+## 当前进度
+
+- [x] 采集层：GitHub / 飞书 / local-git / mock 四源 + 统一降级链
+- [x] 生成层：个人日报 + 团队日报 + 本地时区归属
+- [x] 推送层：邮件 + 飞书群机器人（签名校验）
+- [x] 主编排：CLI + SQLite 幂等存储
+- [ ] 规范文档：`proposal.md` 初稿中，`design.md` / `tasks.md` 待写
+- [ ] 单元测试与集成测试（TDD 红绿循环记录）
+- [ ] v1.1 考勤数据采集（第 4 周变更涟漪演练）

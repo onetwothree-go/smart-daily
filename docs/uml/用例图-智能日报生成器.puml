@@ -1,0 +1,50 @@
+@startuml 智能日报生成器-用例图
+left to right direction
+skinparam packageStyle rectangle
+
+actor "小组成员" as Member
+actor "团队负责人" as Leader
+actor "配置管理员" as Admin
+
+rectangle "智能日报生成器" {
+  usecase "采集 GitHub 提交" as UC1
+  usecase "采集飞书任务" as UC2
+  usecase "采集飞书群消息" as UC3
+  usecase "生成个人日报" as UC4
+  usecase "归属协作成果" as UC5
+  usecase "汇总团队日报" as UC6
+  usecase "推送日报\n(邮件/飞书机器人)" as UC7
+  usecase "查询历史日报" as UC8
+  usecase "配置数据源凭证" as UC9
+  usecase "维护成员映射" as UC10
+}
+
+Member --> UC1
+Member --> UC2
+Member --> UC3
+Member --> UC4
+Member --> UC8
+
+UC4 ..> UC5 : <<include>>
+UC6 ..> UC4 : <<include>>
+UC6 ..> UC7 : <<include>>
+
+Leader --> UC6
+Leader --> UC7
+Leader --> UC8
+
+Admin --> UC9
+Admin --> UC10
+
+note right of UC5
+  依据提交与任务的
+  关联关系自动归属
+  到全部贡献者名下
+end note
+
+note bottom of UC9
+  凭证一律走环境变量
+  严禁写入代码或仓库
+end note
+
+@enduml
