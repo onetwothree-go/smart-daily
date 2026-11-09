@@ -1,7 +1,8 @@
 # design.md —— 智能日报生成器（Smart Daily Report Generator）
 
-> 状态：**0.4 补实时通道实测证据** · 依据 `specs/proposal.md` **0.4（2026-11-09 定稿，含 Q16–Q21 / I20–I28 与 C10）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。
-> 本版新增：3.5 附 **Actions 真实运行证据**（run `42587824934`，飞书 `code=0`），逐条回指契约 1/3/4/5/6；其余章节与 0.3 一致。
+> 状态：**0.5 红队评审整改** · 依据 `specs/proposal.md` **0.4（2026-11-09 定稿，含 Q16–Q21 / I20–I28 与 C10）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。
+> 本版变更：按 `docs/赵蕊-design红队评审单.md`（RT-01～RT-18）整改——修正签名算法描述、mock 链位置、悬空 ADR 引用、触发口径；补大 push 边界约定与内存实体图注；**如实标注三处"文档与实现不符 / 证据缺失"**（C7 判定、34 项断言脚本、敏感信息扫描），并挂到 tasks 待办 T-01/T-02/T-05。
+> 0.4 变更：3.5 附 **Actions 真实运行证据**（run `42587824934`，飞书 `code=0`），逐条回指契约 1/3/4/5/6。
 > 0.3 变更：**实时提醒作为独立通道**的定位与契约（1.4 / 3.5 / 5.3）、proposal 编号与本文档的对照表（附录 A）、实时通道失败语义（C10 / G5）。
 > 写法约定：**已有实现的部分照实描述（每条注明出处）**；尚未实现、由本文档首次约定的部分标【本期约定】，须随 tasks.md 评审确认。
 > ADR 结论均为本组自行论证，格式参照教材 ADR-001（httpx 选型）/ ADR-002（SQLite 选型），不照抄结论。编号自 101 起，避开教材编号。
@@ -65,6 +66,8 @@ flowchart TB
     NP -.->|"不调采集层 · 不写 SQLite · 不计入日报条目"| DB
 ```
 
+> 图例：**箭头表示数据流向，不表示模块 import 依赖**。下三层之间没有相互 import，`GEN --> MEM` 的连线由编排层在 `run()` 中串接（评审 RT-18）。
+
 ### 1.2 分层职责一览
 
 | 层 | 模块 | 职责 | 不做什么 |
@@ -95,13 +98,13 @@ proposal 0.4 把「每次 push 在群里提醒」定性为**提醒（notificatio
 
 | 维度 | 日报汇总通道 | 实时提醒通道 |
 | --- | --- | --- |
-| 触发 | 每日 22:00 本机手动（Q18，自动定时留 v1.1）或 Actions schedule | GitHub `push` 到 `main` / `dev`（Q20） |
+| 触发 | **本期：每日 22:00 本机手动运行**（Q18）；Actions 定时属 v1.1，仓库当前**没有**每日工作流 | GitHub `push` 到 `main` / `dev`（Q20） |
 | 入口 | `cli.py` → `orchestrator.py` | `scripts/notify_push.py`（**独立脚本，不经主编排**） |
 | 数据来源 | 采集层降级链（GitHub → 飞书 → local-git） | 事件文件 `GITHUB_EVENT_PATH` 的 `commits[]` 与 `ref`（**不调 GitHub API、不复用采集层**） |
 | 归属键 | `author_name` → `MEMBER_DISPLAY_NAMES` | `github.actor` → `MEMBER_DISPLAY_NAMES`（Q19/ADR-104） |
 | 落库 | 写 `daily_reports`（幂等 upsert） | **不写库**（Q16：不落库、不拼进日报） |
 | 计数 | 计入 G1 的「条目数 = 提交 + 任务 + 消息」 | **一次都不计入**（Q17） |
-| 送达 | 4 封个人邮件 + 1 条群消息，全部 ok 才算成功（C7） | 1 条群消息，`code=0` 即成功；**不计入 C7 的 5 条送达判定** |
+| 送达 | 4 封个人邮件 + 1 条群消息，**全部 ok 才算成功**（C7）〔⚠ 现状不符：`orchestrator.py` 用 `pushed = any(...)`，任一条成功即置真，且 CLI 恒返回 0；见评审 RT-02 / 待办 T-01〕 | 1 条群消息，`code=0` 即成功；**不计入 C7 的 5 条送达判定** |
 | 失败语义 | 降级链兜底，全失败抛异常（C8） | 打印错误码 + `sys.exit(1)` 让 workflow 亮红灯；**不自动重试、不往群里发告警**，主流程不受影响（C10 / G5 / Q21） |
 | 频次 | 每日 1 次 | 每次 push 1 条汇总（Q19：合并成 1 条，不逐条发） |
 
@@ -125,6 +128,8 @@ DailyReport（日报实体）          WorkItem（工作痕迹条目）
 └──────────────────────┘           ↑ normalize()
                                 RawRecord = CommitEntry | MessageEntry | TaskEntry
 ```
+
+> 图注：`WorkItem` 是**内存态**，不落库（`record_id` 未持久化，见 2.3）；图中 1:* 表示"一份日报由若干条目渲染而来"的**聚合关系，不是外键**。真正持久化的只有 `daily_reports` 一张表（评审 RT-12）。
 
 一份日报 = **(report_date, member) 唯一确定的条目集合的文本渲染**。原始记录先归一化为 `WorkItem`，按成员分组（`group_by_member`）后逐人生成个人日报；全组合集渲染为团队日报。
 
@@ -167,12 +172,14 @@ CREATE TABLE IF NOT EXISTS daily_reports (
     content      TEXT NOT NULL,          -- 日报全文（Markdown 文本）
     item_count   INTEGER NOT NULL DEFAULT 0,
     source_name  TEXT,                   -- 实际生效的数据源名（github/feishu/local-git/mock）
-    created_at   TEXT NOT NULL,          -- 写入时间（UTC ISO 格式）
+    created_at   TEXT NOT NULL,          -- 最后写入时间（UTC ISO；重跑会被 upsert 覆盖）
     UNIQUE (report_date, member)         -- 幂等键：同日同人唯一
 );
 ```
 
 **幂等策略**（对应 proposal C5）：写入用 `INSERT ... ON CONFLICT(report_date, member) DO UPDATE SET content/item_count/source_name/created_at = excluded.*`——同日同人重复执行**覆盖而非追加**，重复跑不会产生重复记录，也天然保留最后一次（信息最全）的结果。
+
+> ⚠ `created_at` 因此实际语义是**最后一次写入时间**（不是首次创建时间）；`--list` 排序必须用 `report_date` 而非 `created_at`，否则重跑过的日报会跳到最前。若将来需要"首写时间"，另加 `first_created_at` 列（v1.1，评审 RT-13）。
 
 **查询接口**：`list_reports(day=None)` 按日期倒序返回元数据（不含全文），支撑 CLI `--list` 历史查询（proposal 隐含需求 I7 的最小实现）。
 
@@ -196,7 +203,9 @@ CREATE TABLE IF NOT EXISTS work_items (
 
 ## 3. 接口契约
 
-> 以下契约与代码一一对应，34 项断言（`scripts/verify_collectors.py`）可作证据。每条函数给出签名、行为约束与异常语义。
+> 以下契约与代码一一对应，每条函数给出签名、行为约束与异常语义。
+>
+> ⚠ **证据状态（评审 RT-03）**：本章早期版本称"34 项断言（`scripts/verify_collectors.py`）可作证据"。该脚本**目前不在仓库中**（`scripts/` 下仅有 `notify_push.py`，仓库无 `tests/`），因此下文标注的断言编号（[1][2][3][4][5][8][9][10][12]）来自采集层开发期的本地校验，**当前不可复核**。补齐断言脚本并接入 CI 列为待办 **T-02**；在补齐之前，这些编号只能当"曾经验证过"的线索，不能当评审证据。
 
 ### 3.1 采集层
 
@@ -230,7 +239,7 @@ def collect_with_fallback(sources: list[WorkSource], *, since=None, until=None,
     """
 ```
 
-> 注意：`collect_with_fallback` 内部已完成 `normalize()`，编排层**不可二次归一化**。降级顺序 GitHub → 飞书 → local-git → mock 由编排层注入 `sources` 列表决定（见 ADR-003）。
+> 注意：`collect_with_fallback` 内部已完成 `normalize()`，编排层**不可二次归一化**。**默认降级链为 GitHub → 飞书 → local-git**；`mock` **不进入默认链**（演示数据混进真实链路会把"今天 0 条提交"变成"今天 4 条演示提交"，破坏 G1 的 1:1 口径），仅在 `--mock` 时作为**唯一**数据源注入。链序在 `cli.py` / `orchestrator.py` 构造 `sources` 处决定（评审 RT-08）。
 
 **各采集器工厂**（统一模式：`from_env()` 读环境变量，缺凭证即抛 `SourceUnavailableError`）：
 
@@ -286,7 +295,14 @@ class Notifier(Protocol):
 1. **消息文本必须包含「日报」二字**。群机器人若启用关键词安全设置，不含关键词的消息被飞书直接拒绝并返回 **19024**；发送前须校验文本含关键词。标题模板"团队日报 YYYY-MM-DD"天然满足，但任何绕过生成层直接拼消息体的路径（如 Actions 工作流脚本）必须自行保证这一点。
 2. **签名必须复用 `push/notifiers.py::gen_sign()`**，任何触发路径（含 GitHub Actions 工作流脚本）**不得重复实现**签名算法——同一算法两处实现必然漂移（如时间戳单位、编码差异），漂移后报错还难以定位。
 
-**签名算法**（`gen_sign(timestamp, secret)`）：按飞书官方算法 `base64(hmac_sha256(f"{timestamp}\n{secret}"))`，时间戳距当前不得超过 1 小时。
+**签名算法**（`gen_sign(timestamp, secret)`）：飞书官方算法为
+
+```text
+string_to_sign = f"{timestamp}\n{secret}"
+sign = base64( hmac_sha256( key = string_to_sign, msg = "" ) )
+```
+
+即**以待签名串本身作为 HMAC 密钥、消息为空**（这一点极易写错：把待签名串当消息、密钥留空会得到不同的签名，且只在 19021 时才暴露）。时间戳为秒级、距当前不得超过 1 小时。**本文只作说明，唯一权威实现是 `push/notifiers.py::gen_sign()`**（评审 RT-04）。
 
 **成员映射**（`members.py`）：
 
@@ -341,15 +357,28 @@ class DailyReportOrchestrator:
 | --- | --- | --- |
 | 1 | 读事件文件取 `commits[]`，**不调用 GitHub API、不复用采集层** | Q19 / 分工单步骤 8.1 |
 | 2 | 归属用 `ACTOR` 查映射；**未命中显示原始登录名并打告警**，不得静默丢弃 | Q13 |
-| 3 | 一次 push 合并为 **1 条**消息，`commits[]` 全部列出、原文不截断不摘要；长 message 按 Q4 口径截前 60 字 | Q19 / Q4 |
+| 3 | 一次 push 合并为 **1 条**消息，`commits[]` 全部列出；每条**取 message 首行**原样呈现（不改写、不摘要），超 60 字截断加省略号，完整说明由 commit 链接回溯（多行正文不外发） | Q19 / Q4 |
 | 4 | 文本**必须含「日报」二字**，发送前本地校验，不含则拒发并 `exit 1` | C10 / 3.3 约束 1 |
 | 5 | 签名 `timestamp = str(int(time.time()))`，`sign = gen_sign(timestamp, secret)`，**复用 `notifiers.py`**，禁止另写算法 | 3.3 约束 2 |
 | 6 | `httpx.post(..., timeout=15)`；`code == 0` 才 `exit 0`，否则打印错误码并 `exit 1`（workflow 亮红灯） | C10 / Q21 |
 | 7 | **不写 SQLite、不改 `orchestrator.py`、不触发日报生成**；失败**不自动重试、不往群里发告警** | Q16 / Q21 |
 
+**边界约定（评审 RT-11）**：契约 3 的"全部列出"建立在"事件文件 `commits[]` 完整"的前提上，三种边界须按以下方式处理——
+
+| 边界 | 事件载荷表现 | 本期行为 | 措辞口径 |
+| --- | --- | --- | --- |
+| 删除分支 | `commits` 为空、`deleted: true` | 提示"本次 push 未包含提交记录，可能是分支删除或强制推送"，仍发 1 条 | 不视为失败 |
+| 强制推送 | `commits` 可能为空或仅含新提交 | 同上，按实际条数发送 | 条数即 `len(commits)`，不推断 |
+| 单次 push 提交数超上限 | `commits` 被平台截断，`size`/`distinct_size` 仍给真实总数 | 按实际数组发送，**不补调 Commits API**（契约 1 禁止调 API） | 若 `len(commits) < size` 须在消息里注明"仅列前 N 条" |
+
+> 关于"push 载荷最多 20 条提交"：官方文档的措辞带条件（该上限"仅适用于 timeline events，**不适用于 webhook 投递**"），Actions 载荷的实际条数**尚未实测**，故本版不做定量承诺，只约定"以实际数组为准、不足时注明"。实测任务列 **T-06**（构造 21 个提交的 push，核对条数与 `size`）。
+
 **输出即 Actions 日志**：HTTP 状态码、飞书 `code` 与 `msg`、耗时（连通性测试已按同格式实测，`72155d0`）。
 
-**实测证据（2026-11-09，run `42587824934`）**：`dev` 分支一次 push 触发 `notify.yml`，工作流结论 `success`，推送 step 耗时约 1 秒；日志实测值 `HTTP 200` / `code=0 msg=success` / `1.48s`，实发 **1 条**消息、含 **2 个** commit（`fd996a0` 功能提交 + `7386577` 合并提交）。据此本轮闭合的契约：**1**（只读事件文件、未调 GitHub API）、**3**（一次 push 一条、commits 全列）、**4**（文本含「日报」，未被 19024 拦截）、**5**（`gen_sign` 复用，未被 19021 拦截）、**6**（`code==0` 才 `exit 0`，工作流亮绿灯）。仍待验证：契约 2 的映射未命中告警分支、契约 7 的失败语义（需构造失败注入）。
+**实测证据（2026-11-09，run `42587824934`）**：`dev` 分支一次 push 触发 `notify.yml`，工作流结论 `success`，推送 step 耗时约 1 秒；日志实测值 `HTTP 200` / `code=0 msg=success` / `1.48s`，实发 **1 条**消息、含 **2 个** commit（`fd996a0` 功能提交 + `7386577` 合并提交）。据此**正向通过**的契约：**1**（只读事件文件、未调 GitHub API）、**3**（一次 push 一条、commits 全列）、**4**（文本含「日报」，未被 19024 拦截）、**6**（`code==0` 才 `exit 0`，工作流亮绿灯）。
+
+> ⚠ **契约 5 不能据此判定"已闭合"**（评审 RT-19）：飞书的签名校验是**可选项**，机器人未开校验时错误签名同样返回 `code=0`，所以"未被 19021 拦截"是零信息。本 run 只能说明**签名路径跑通**；要证明算法正确，须用错误 secret 跑出 `19021`（负向用例 **T-07**）。
+> 仍待验证：契约 2 的映射未命中告警分支（需构造未映射 actor）、契约 7 的失败语义（需失败注入）。
 
 ---
 
@@ -392,14 +421,16 @@ class DailyReportOrchestrator:
 
 ### ADR-104：推送触发采用 GitHub Actions，成员归属以事件文件的 github.actor 为准
 
+> **适用范围**：本 ADR 只约束**实时提醒通道**（`push` 触发，`notify.yml`）。日报汇总通道本期仍是**本机手动运行**（`uv run --env-file .env smart-daily`），Actions 定时属 v1.1，不在此 ADR 内（评审 RT-07）。
+
 | 项 | 内容 |
 | --- | --- |
 | **状态** | 已接受（2026-11-09，组内实测约束） |
 | **背景** | 定时触发落点是技术栈清单开放问题 7 的未决项（本机计划任务 vs GitHub Actions vs 常驻服务）。组内把日报推送接进飞书群机器人实测时踩到五个坑，直接约束了工作流与归属设计。 |
 | **决策** | 五条：①触发采用 **GitHub Actions**（push / schedule 事件）；②workflow 的 `branches` 过滤**只保留 `main` 与 `dev`**——不过滤时每个 PR 分支（`docs/xxx` 等）的推送都会触发一次，把群消息刷成流水账（实测教训）；③成员归属**读 `GITHUB_EVENT_PATH` 事件文件**，取 `github.actor`（触发本次推送的 GitHub 登录名）查 `MEMBER_DISPLAY_NAMES` 得显示名，**禁止**以 `commits[].author.name` 做归属键；④飞书 Webhook 消息体必须含「日报」关键词，否则 19024（见 3.3）；⑤Webhook 签名复用 `push/notifiers.py::gen_sign()`，不在工作流脚本里重复实现（见 3.3）。 |
 | **论证** | ①**归属键的稳定性**：`github.actor` 是平台侧登录名，与 `MEMBER_DISPLAY_NAMES` 的键（GitHub 登录名）同源，映射一一对应；而 `commits[].author.name` 来自提交者本地 git config 的自由文本，同一人实测出现过 `fh` / `20233046方赫` 两种写法（proposal 痛点④），拿它查映射必漏。②**branches 过滤是防刷群的唯一闸门**：Actions 对 push 事件默认全分支触发，而本组工作流（每人各推 `docs/xxx` 分支）推送频繁，不过滤等于把群消息频道交给 git 事件流。③**事件文件零成本**：`GITHUB_EVENT_PATH` 是 Actions 官方注入的本地 JSON 文件，读文件不增加任何 API 调用、不消耗频率配额（呼应 5.1）；而另查 commits API 既多打请求，又拿不到"这次是谁触发的"这层语义。④**关键词与签名复用**：19024 报错只报错误码不指明原因，排查成本高，发送前校验把失败拦在本机；签名算法单点实现是"同一逻辑只写一遍"的通用纪律（与降级链收敛在 `collect_with_fallback` 同理）。 |
-| **后果** | 正面：零本机开机依赖；触发与运行记录在仓库 workflow 留痕；归属稳定可复现。负面：Actions runner 境外访问飞书开放平台的连通性未实测（技术栈清单证据缺口 5）；凭证须配成 Actions Secrets（5.2）；本机调试路径（`--mock` / `--source local-git`）与线上触发路径不同，须各自验证；关键词约束对"绕过生成层的自定义消息"构成限制。 |
-| **触发重议的条件** | runner 到飞书连通性实测不可用 → 回退本机计划任务（技术栈清单 3.9 候选 A，`uv run --env-file .env smart-daily` 一行对接，零代码改动）。 |
+| **后果** | 正面：零本机开机依赖；触发与运行记录在仓库 workflow 留痕；归属稳定可复现。负面：**连通性要分两个域名看**——自定义机器人 Webhook 域名已实测可达（run `42587824934`，HTTP 200 / `code=0` / 1.48s），而**开放平台 API 域名（采集侧 `open.feishu.cn`）仍未实测**（技术栈清单证据缺口 5，评审 RT-05）；凭证须配成 Actions Secrets（5.2）；本机调试路径（`--mock` / `--source local-git`）与线上触发路径不同，须各自验证；关键词约束对"绕过生成层的自定义消息"构成限制。 |
+| **触发重议的条件** | ①Webhook 域名出现持续性不可达 → 回退本机计划任务（技术栈清单 3.9 候选 A，`uv run --env-file .env smart-daily` 一行对接，零代码改动）；②采集侧改用 Actions 定时运行时，须先补 `open.feishu.cn` 的连通性实测。 |
 
 ---
 
@@ -422,7 +453,7 @@ class DailyReportOrchestrator:
 
 | 级别 | 变量 | 存放位置 | 规则 |
 | --- | --- | --- | --- |
-| **秘密级（绝不进仓库）** | `GITHUB_TOKEN`、`FEISHU_APP_ID/APP_SECRET`、飞书 Webhook 签名密钥、SMTP 授权码、**`MEMBER_EMAILS`（成员真实邮箱属个人信息）** | 本地 `.env`（`.gitignore` 保护）/ GitHub Actions Secrets | 严禁写入代码、严禁提交仓库；推送前执行敏感信息扫描；仓库内示例一律用 `example.com` 占位（members.py 已践行） |
+| **秘密级（绝不进仓库）** | `GITHUB_TOKEN`、`FEISHU_APP_ID/APP_SECRET`、飞书 Webhook 签名密钥、SMTP 授权码、**`MEMBER_EMAILS`（成员真实邮箱属个人信息）** | 本地 `.env`（`.gitignore` 保护）/ GitHub Actions Secrets | 严禁写入代码、严禁提交仓库；仓库内示例一律用 `example.com` 占位（members.py 已践行）。**【本期约定】"推送前敏感信息扫描"目前只是纪律，仓库里没有扫描脚本、CI 里也没有这一步**（`.gitignore` 只能按文件名挡住 `.env`/`*.pem`，挡不住硬编码密钥）——落地任务见 **T-05**（评审 RT-16） |
 | **可入库级** | `MEMBER_DISPLAY_NAMES`（GitHub 登录名 → 显示名映射） | 可随仓库分发（含 Actions 工作流读取） | 不含任何敏感信息，入库反而保证 Actions 与全员环境读到同一份映射，避免各机漂移 |
 
 其余纪律：
@@ -449,7 +480,7 @@ class DailyReportOrchestrator:
 
 | 约束 | 内容 | 依据 |
 | --- | --- | --- |
-| 性能 | 单成员 100 条提交采集 < 30s（计时断言待补，proposal C6/G2） | 串行翻页 + httpx 连接复用（`httpx.Client` 单例）即可满足，不做并发 |
+| 性能 | 单成员 100 条提交采集 < 30s（**C6 目前无验证手段**：计时断言尚未落地，见 T-04；proposal C6/G2） | 串行翻页 + httpx 连接复用（`httpx.Client` 单例）即可满足，不做并发 |
 | 可观测性 | 统一 `[source]` / `[push]` 前缀 print；推送结果明细含通道名、范围、成败；CLI 汇总面板。logging 文件化列入 v1.1（技术栈清单 3.6 候选 B，定时任务落地时一并做） | 现状 + 开放问题 7 |
 | 时区正确性 | 一切日期归属走 `local_date()`，禁止直接 `.date()`（契约 3，断言 [12]） | 实测教训 |
 | 平台可迁移 | 代码不依赖 Windows 特性，可迁移 Linux（proposal 技术约束）；路径用 `pathlib` | proposal |
@@ -459,10 +490,13 @@ class DailyReportOrchestrator:
 
 ## 6. 未决问题（承接技术栈清单第六节，随 tasks.md 评审收敛）
 
-1. ~~定时触发落点~~ → **已决**：GitHub Actions（ADR-104）。遗留一条：runner 到飞书开放平台的连通性实测（技术栈清单证据缺口 5），实测不通则回退本机计划任务。
-2. 推送重试是否引入指数退避 → 影响推送层契约（3.3，当前"返回 False 不抛"已为重试留出实现空间）。
+1. ~~定时触发落点~~ → **已决（仅实时提醒通道）**：GitHub Actions（ADR-104）。**收敛说明（评审 RT-06）**：Webhook 域名连通性已实测通过（run `42587824934`）；仍未测的是**开放平台 API 域名**（`open.feishu.cn`，采集侧用），本期采集在本机跑，不构成阻断。
+2. ~~推送重试是否引入指数退避~~ → **已决**：本期不重试，指数退避列 v1.1（5.3）；重议条件＝推送失败率经观察后仍偏高（评审 RT-14）。
 3. 条目级对账表 `work_items` 是否建表 → 见 2.3【本期约定】。
 4. 协作归属函数 `attribute_collaboration()` 的规则细节 → 见 2.2【本期约定】，待 G3 的构造数据集定义后评审。
+5. **C7 的"全部送达"如何判定并暴露**（评审 RT-02）：当前实现 `pushed = any(...)`、CLI 恒 0，与契约相反。需定"全 ok 才真 / 失败退出码 / 明细字段"三项，见 **T-01**。
+6. **单次 push 超量时的截断口径**（评审 RT-11）：`len(commits) < size` 时是否注明"仅列前 N 条"，待 **T-06** 实测后定稿。
+7. **敏感信息扫描手段**（评审 RT-16）：gitleaks 或等价方案、接入 CI 的时机，见 **T-05**。
 
 ---
 
@@ -478,8 +512,8 @@ class DailyReportOrchestrator:
 | G5 / C2 / C8（降级不中断、两种空要区分） | 1.3 三条数据流契约、3.1 `collect_with_fallback`、ADR-103 |
 | C3（身份归并 100%） | 2.2 成员归属的键选择（`MEMBER_DISPLAY_NAMES`） |
 | C5（同日重跑不追加） | 2.3 `UNIQUE(report_date, member)` + `ON CONFLICT DO UPDATE` |
-| C6 / G2（100 条 < 30s，性能观察项） | 5.1 采集频率、5.4 性能 |
-| C7（4 邮件 + 1 群消息全 ok 才算送达） | 3.3 分发规则、3.4 推送明细 |
+| C6 / G2（100 条 < 30s，性能观察项） | 5.1 采集频率、5.4 性能〔⚠ **未验证**：C6 至今无计时断言，落点只到"设计意图"，见 T-04〕 |
+| C7（4 邮件 + 1 群消息全 ok 才算送达） | 3.3 分发规则、3.4 推送明细〔⚠ **实现与契约相反**：`pushed = any(...)`，见 RT-02 / T-01〕 |
 | C9（跨时区按本地日历日） | 1.3 契约 3、3.1 `local_date()` |
 | **C10（实时提醒：1 次 push 1 条、含关键词、中文名、code=0、失败不重试）** | **1.4 通道对比、3.5 接口契约、5.3 失败语义** |
 | N1（不做 AI 摘要） | 3.2 生成层「不做什么」 |
@@ -497,3 +531,4 @@ class DailyReportOrchestrator:
 | 2026-11-09 | 0.2 | 并入推送链路实测约束：新增 ADR-104（Actions 触发 / branches 过滤 main+dev / github.actor 归属 / 关键词 19024 / gen_sign 单点复用）；5.2 配置分两级（MEMBER_DISPLAY_NAMES 可入库、MEMBER_EMAILS 绝不进）；2.2 增补归属键选择；未决问题 1 关闭 | AI 起草，待架构评审签字 |
 | 2026-11-09 | 0.3 | 对齐 proposal 0.4 定稿：新增 1.4「两条独立通道」隔离表（实时提醒不落库、不计入 G1、不计入 C7 送达）、3.5 实时提醒通道接口契约（对应 C10）、5.3 实时通道失败语义（不重试、不进群告警、workflow 亮红灯）、附录 A proposal 条款对照表；架构图补实时提醒支路 | AI 起草，待架构评审签字 |
 | 2026-11-09 | 0.4 | 3.5 附 Actions 真实运行证据（run 42587824934：HTTP 200 / code=0 / 1.48s / 1 条含 2 个 commit），逐条回指已闭合契约 1、3、4、5、6，并列出契约 2、7 的待验证项 | AI 起草，待架构评审签字 |
+| 2026-11-09 | 0.5 | **红队评审整改**（评审单 `docs/赵蕊-design红队评审单.md`，19 条）：修签名算法描述（补 key/msg）、mock 链位置、悬空 ADR-003 引用、日报通道触发口径（本机手动 vs Actions 定时）、ADR-104 适用范围与连通性措辞、契约 3 截断口径、实测证据中"契约 5 闭合"降为"正向通过"；新增 3.5 边界约定表、2.1 图注、2.3 `created_at` 语义说明、1.1 图例；**如实标注** C7 判定与实现相反（T-01）、34 项断言脚本缺失（T-02）、敏感信息扫描未落地（T-05）、C6 未验证（T-04）、签名缺负向用例（T-07）；§6 收敛 4 条并新增 3 条 | AI 执行修改，待架构签字 |
