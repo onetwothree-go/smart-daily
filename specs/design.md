@@ -1,6 +1,6 @@
 # design.md —— 智能日报生成器（Smart Daily Report Generator）
 
-> 状态：**0.4 补实时通道实测证据** · 依据 `specs/proposal.md` **0.4（2026-11-09 定稿，含 Q16–Q21 / I20–I28 与 C10）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。
+> 状态：**0.4.1 依据开发工程师评审意见修订** · 依据 `specs/proposal.md` **0.4.2（2026-11-09 定稿，含 Q16–Q21 / I20–I28、C10 与 §6.2 可测性回应）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。
 > 本版新增：3.5 附 **Actions 真实运行证据**（run `42587824934`，飞书 `code=0`），逐条回指契约 1/3/4/5/6；其余章节与 0.3 一致。
 > 0.3 变更：**实时提醒作为独立通道**的定位与契约（1.4 / 3.5 / 5.3）、proposal 编号与本文档的对照表（附录 A）、实时通道失败语义（C10 / G5）。
 > 写法约定：**已有实现的部分照实描述（每条注明出处）**；尚未实现、由本文档首次约定的部分标【本期约定】，须随 tasks.md 评审确认。
@@ -16,8 +16,8 @@
 
 ```mermaid
 flowchart TB
-    subgraph T["触发（ADR-104）"]
-        ACT["GitHub Actions<br/>日报汇总通道<br/>schedule / 手动"]
+    subgraph T["触发入口"]
+        ACT["本机手动触发<br/>每日 22:00（Q18）<br/>自动定时留 v1.1"]
         RT["GitHub Actions<br/>实时提醒通道<br/>push: main + dev<br/>读 GITHUB_EVENT_PATH"]
     end
 
@@ -46,7 +46,7 @@ flowchart TB
 
     DB[("SQLite<br/>daily_report.db")]
 
-    ACT -->|"调度主编排"| ORCH
+    ACT -->|"运行 CLI → 调度主编排"| ORCH
     CLI -->|"--mock / --source / --no-notify / --day / --list"| ORCH
     ORCH -->|"collect_with_fallback(sources)"| BASE
     BASE -->|依次尝试| GH
@@ -91,11 +91,11 @@ flowchart TB
 
 ### 1.4 两条独立通道：日报汇总 vs 实时提醒
 
-proposal 0.4 把「每次 push 在群里提醒」定性为**提醒（notification）**，不是日报条目（Q16/Q17）。两者在架构上必须**物理隔离**，否则实时消息会污染 G1 的 1:1 计数口径：
+proposal 0.4.2 把「每次 push 在群里提醒」定性为**提醒（notification）**，不是日报条目（Q16/Q17）。两者在架构上必须**物理隔离**，否则实时消息会污染 G1 的 1:1 计数口径：
 
 | 维度 | 日报汇总通道 | 实时提醒通道 |
 | --- | --- | --- |
-| 触发 | 每日 22:00 本机手动（Q18，自动定时留 v1.1）或 Actions schedule | GitHub `push` 到 `main` / `dev`（Q20） |
+| 触发 | 每日 22:00 本机手动（Q18，自动定时留 v1.1；Actions 不做日报汇总调度） | GitHub `push` 到 `main` / `dev`（Q20） |
 | 入口 | `cli.py` → `orchestrator.py` | `scripts/notify_push.py`（**独立脚本，不经主编排**） |
 | 数据来源 | 采集层降级链（GitHub → 飞书 → local-git） | 事件文件 `GITHUB_EVENT_PATH` 的 `commits[]` 与 `ref`（**不调 GitHub API、不复用采集层**） |
 | 归属键 | `author_name` → `MEMBER_DISPLAY_NAMES` | `github.actor` → `MEMBER_DISPLAY_NAMES`（Q19/ADR-104） |
@@ -155,7 +155,7 @@ DailyReport（日报实体）          WorkItem（工作痕迹条目）
 
 **成员归属的键选择**（ADR-104 实测约束）：凡由 GitHub 触发链路（Actions 工作流）决定的归属，一律以 `github.actor`（事件文件中的平台登录名）查 `MEMBER_DISPLAY_NAMES` 得到显示名；**禁止**用 `commits[].author.name`（git 本地配置的自由文本，同一人实测出现过 `fh` / `20233046方赫` 两种写法，无法稳定映射——proposal 痛点④的根源）。采集器内部的 `author_login` 字段保持为登录名，与本规则同源。
 
-【本期约定】第 2 周协作成果归属（proposal S5/G3）将引入"一条提交归属多名贡献者"的展开规则：在 `normalize()` 之后、`group_by_member()` 之前增加 `attribute_collaboration(items) -> list[WorkItem]` 纯函数，按 `metrics.members` 与 `MEMBER_DISPLAY_NAMES` 反查展开成员，**不改 WorkItem 结构**，保证生成层零改动。
+【本期约定】协作成果归属按 proposal 0.4.2（Q5 / Q12 / I9）执行：本期只做「身份归并」（同一人多个 GitHub 登录名合并为一份日报），**不做**「一条成果归属多名贡献者」的展开，也不引入 `attribute_collaboration()`；飞书任务 `members` 与群消息 `mentions` 字段保留为可追溯线索，不拆成多人的条目，一条成果只进一人日报、不重复计数（团队日报按唯一记录数算）。
 
 ### 2.3 SQLite 表结构（已实现，出处：`orchestrator.py::_ensure_db`）
 
@@ -230,7 +230,7 @@ def collect_with_fallback(sources: list[WorkSource], *, since=None, until=None,
     """
 ```
 
-> 注意：`collect_with_fallback` 内部已完成 `normalize()`，编排层**不可二次归一化**。降级顺序 GitHub → 飞书 → local-git → mock 由编排层注入 `sources` 列表决定（见 ADR-003）。
+> 注意：`collect_with_fallback` 内部已完成 `normalize()`，编排层**不可二次归一化**。降级顺序 GitHub → 飞书 → local-git → mock 由编排层注入 `sources` 列表决定（见 ADR-103）。
 
 **各采集器工厂**（统一模式：`from_env()` 读环境变量，缺凭证即抛 `SourceUnavailableError`）：
 
@@ -398,7 +398,7 @@ class DailyReportOrchestrator:
 | **背景** | 定时触发落点是技术栈清单开放问题 7 的未决项（本机计划任务 vs GitHub Actions vs 常驻服务）。组内把日报推送接进飞书群机器人实测时踩到五个坑，直接约束了工作流与归属设计。 |
 | **决策** | 五条：①触发采用 **GitHub Actions**（push / schedule 事件）；②workflow 的 `branches` 过滤**只保留 `main` 与 `dev`**——不过滤时每个 PR 分支（`docs/xxx` 等）的推送都会触发一次，把群消息刷成流水账（实测教训）；③成员归属**读 `GITHUB_EVENT_PATH` 事件文件**，取 `github.actor`（触发本次推送的 GitHub 登录名）查 `MEMBER_DISPLAY_NAMES` 得显示名，**禁止**以 `commits[].author.name` 做归属键；④飞书 Webhook 消息体必须含「日报」关键词，否则 19024（见 3.3）；⑤Webhook 签名复用 `push/notifiers.py::gen_sign()`，不在工作流脚本里重复实现（见 3.3）。 |
 | **论证** | ①**归属键的稳定性**：`github.actor` 是平台侧登录名，与 `MEMBER_DISPLAY_NAMES` 的键（GitHub 登录名）同源，映射一一对应；而 `commits[].author.name` 来自提交者本地 git config 的自由文本，同一人实测出现过 `fh` / `20233046方赫` 两种写法（proposal 痛点④），拿它查映射必漏。②**branches 过滤是防刷群的唯一闸门**：Actions 对 push 事件默认全分支触发，而本组工作流（每人各推 `docs/xxx` 分支）推送频繁，不过滤等于把群消息频道交给 git 事件流。③**事件文件零成本**：`GITHUB_EVENT_PATH` 是 Actions 官方注入的本地 JSON 文件，读文件不增加任何 API 调用、不消耗频率配额（呼应 5.1）；而另查 commits API 既多打请求，又拿不到"这次是谁触发的"这层语义。④**关键词与签名复用**：19024 报错只报错误码不指明原因，排查成本高，发送前校验把失败拦在本机；签名算法单点实现是"同一逻辑只写一遍"的通用纪律（与降级链收敛在 `collect_with_fallback` 同理）。 |
-| **后果** | 正面：零本机开机依赖；触发与运行记录在仓库 workflow 留痕；归属稳定可复现。负面：Actions runner 境外访问飞书开放平台的连通性未实测（技术栈清单证据缺口 5）；凭证须配成 Actions Secrets（5.2）；本机调试路径（`--mock` / `--source local-git`）与线上触发路径不同，须各自验证；关键词约束对"绕过生成层的自定义消息"构成限制。 |
+| **后果** | 正面：零本机开机依赖；触发与运行记录在仓库 workflow 留痕；归属稳定可复现。负面：Actions runner 境外访问飞书开放平台已在 run `42587824934` 实测通过（HTTP 200 / code=0 / 1.48s，技术栈清单证据缺口 5 已闭合），仍须随环境与凭证变更定期复核；凭证须配成 Actions Secrets（5.2）；本机调试路径（`--mock` / `--source local-git`）与线上触发路径不同，须各自验证；关键词约束对"绕过生成层的自定义消息"构成限制。 |
 | **触发重议的条件** | runner 到飞书连通性实测不可用 → 回退本机计划任务（技术栈清单 3.9 候选 A，`uv run --env-file .env smart-daily` 一行对接，零代码改动）。 |
 
 ---
@@ -449,7 +449,7 @@ class DailyReportOrchestrator:
 
 | 约束 | 内容 | 依据 |
 | --- | --- | --- |
-| 性能 | 单成员 100 条提交采集 < 30s（计时断言待补，proposal C6/G2） | 串行翻页 + httpx 连接复用（`httpx.Client` 单例）即可满足，不做并发 |
+| 性能 | 单成员 100 条提交采集 < 30s（**观察项，非验收标准**；proposal 0.4.2 §6.2 / C6 / G2 明确不建计时断言） | 串行翻页 + httpx 连接复用（`httpx.Client` 单例）即可满足，不做并发 |
 | 可观测性 | 统一 `[source]` / `[push]` 前缀 print；推送结果明细含通道名、范围、成败；CLI 汇总面板。logging 文件化列入 v1.1（技术栈清单 3.6 候选 B，定时任务落地时一并做） | 现状 + 开放问题 7 |
 | 时区正确性 | 一切日期归属走 `local_date()`，禁止直接 `.date()`（契约 3，断言 [12]） | 实测教训 |
 | 平台可迁移 | 代码不依赖 Windows 特性，可迁移 Linux（proposal 技术约束）；路径用 `pathlib` | proposal |
@@ -459,14 +459,14 @@ class DailyReportOrchestrator:
 
 ## 6. 未决问题（承接技术栈清单第六节，随 tasks.md 评审收敛）
 
-1. ~~定时触发落点~~ → **已决**：GitHub Actions（ADR-104）。遗留一条：runner 到飞书开放平台的连通性实测（技术栈清单证据缺口 5），实测不通则回退本机计划任务。
+1. ~~定时触发落点~~ → **已决**：GitHub Actions（ADR-104）仅用于实时提交通知；22:00 日报汇总按 Q18 保持本机手动触发、自动定时留 v1.1。~~runner 到飞书开放平台的连通性实测~~ → **已闭合**：run `42587824934` 返回 HTTP 200 / code=0（技术栈清单证据缺口 5 已销项）。
 2. 推送重试是否引入指数退避 → 影响推送层契约（3.3，当前"返回 False 不抛"已为重试留出实现空间）。
 3. 条目级对账表 `work_items` 是否建表 → 见 2.3【本期约定】。
-4. 协作归属函数 `attribute_collaboration()` 的规则细节 → 见 2.2【本期约定】，待 G3 的构造数据集定义后评审。
+4. ~~协作归属函数 `attribute_collaboration()` 的规则细节~~ → **本期不引入**：按 proposal 0.4.2（Q5 / Q12 / I9），本期只做身份归并、不做多人协作归属；G3 改按身份归并准确率定义（构造多账号数据集）。
 
 ---
 
-## 附录 A · proposal 0.4 条款与本文档章节对照
+## 附录 A · proposal 0.4.2 条款与本文档章节对照
 
 > 供架构评审与 tasks.md 拆分时逐条核对：proposal 里每一条「要什么」，在本文档的哪一节得到「怎么实现」的回答。
 
@@ -497,3 +497,4 @@ class DailyReportOrchestrator:
 | 2026-11-09 | 0.2 | 并入推送链路实测约束：新增 ADR-104（Actions 触发 / branches 过滤 main+dev / github.actor 归属 / 关键词 19024 / gen_sign 单点复用）；5.2 配置分两级（MEMBER_DISPLAY_NAMES 可入库、MEMBER_EMAILS 绝不进）；2.2 增补归属键选择；未决问题 1 关闭 | AI 起草，待架构评审签字 |
 | 2026-11-09 | 0.3 | 对齐 proposal 0.4 定稿：新增 1.4「两条独立通道」隔离表（实时提醒不落库、不计入 G1、不计入 C7 送达）、3.5 实时提醒通道接口契约（对应 C10）、5.3 实时通道失败语义（不重试、不进群告警、workflow 亮红灯）、附录 A proposal 条款对照表；架构图补实时提醒支路 | AI 起草，待架构评审签字 |
 | 2026-11-09 | 0.4 | 3.5 附 Actions 真实运行证据（run 42587824934：HTTP 200 / code=0 / 1.48s / 1 条含 2 个 commit），逐条回指已闭合契约 1、3、4、5、6，并列出契约 2、7 的待验证项 | AI 起草，待架构评审签字 |
+| 2026-11-09 | 0.4.1 | 依据开发工程师评审意见（会话内提出，未单独成文）修订 7 条发现：状态与依据对齐 proposal 0.4.2；1.1 架构图删除「Actions 日报汇总 / schedule」改为本机手动触发；1.4 触发表同步；ADR-104 后果把「连通性未实测」改为实测已闭合；2.2 与 6.4 删除本期不做的多人协作归属函数；3.1 引用 ADR-003→ADR-103；5.4 的 C6/G2 改为观察项非验收标准；附录 A 标题同步。**原作者署名仍为架构师赵蕊，本次属评审—修订循环，不代签** | 杨佳莹（开发工程师）依据评审意见修订 |
