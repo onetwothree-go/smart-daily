@@ -1,0 +1,33 @@
+name: connectivity-test
+
+# 阶段 A · 最小连通性测试（第 1 周分工单 · 赵蕊）
+# 只在本测试分支触发，绝不刷 main / dev
+on:
+  push:
+    branches:
+      - feature/connectivity-test
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install httpx
+        run: pip install httpx
+
+      - name: Run connectivity test
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          FEISHU_WEBHOOK_SECRET: ${{ secrets.FEISHU_WEBHOOK_SECRET }}
+          PYTHONPATH: src
+        run: python scripts/connectivity_test.py
