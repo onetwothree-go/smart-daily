@@ -107,6 +107,10 @@ def main(argv: list[str] | None = None) -> int:
         print("-" * 60)
 
     print(result["team_report"])
+
+    if not args.no_notify and not result["pushed"]:
+        print("[push] 存在失败通道，退出码 1（C7：全部通道 ok 才算送达）")
+        return 1
     return 0
 
 

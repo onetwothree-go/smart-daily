@@ -212,7 +212,7 @@ class DailyReportOrchestrator:
             # 团队日报走群渠道（飞书机器人 Webhook 等）
             team_results = self._push_team_report(team_text, day)
             push_detail = email_results + team_results
-            pushed = any(r["ok"] for r in push_detail)
+            pushed = bool(push_detail) and all(r["ok"] for r in push_detail)
 
         return {
             "date": day.isoformat(),
