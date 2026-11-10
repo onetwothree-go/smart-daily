@@ -83,6 +83,7 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-10 | Claude Code | 黄 | 随 design 0.5 将 `specs/tasks.md` 升 **0.1.2**：同步 TK-103（退出码四码）、TK-303（跨天验收边界）、TK-604（退出码五条不变量）、TK-707（应送达集合 + `all()` + `at`/`error`）、TK-903 版本号与 C7 覆盖矩阵 | `specs/tasks.md`（10 增 / 9 删），提交 `4f58742` | 与 design 3.4 退出码表、2.2 跨天规则、3.4.1 字段逐条对齐；任务总数与依赖 DAG 未变；提交前确认 `git diff` 仅任务表 10 处与表头/版本号 | ☑ 已确认 |
 | 2026-11-10 | Claude Code | 黄 | 新增仓库根目录 `CLAUDE.md`：约定凡 AI 参与产出或修改仓库内容（不限 docs/specs，含代码、脚本、工作流、配置），提交前检查 `docs/ai-usage-log.md` 当天记录，缺失则按格式补记并与产出同批提交；纯手工上传不记 | `CLAUDE.md`（5 行），提交 `5040680` | 约定文本与本人指令逐字比对；确认文件位于仓库根、未改动其他规则；本条即按新约定对本提交自身的补记 | ☐ 待确认 |
 | 2026-11-10 | Claude Code | 黄 | 按交付项自检修订 `specs/design.md` **0.5.1** 与 `specs/tasks.md` **0.1.3**：design 补 ER 附件、ADR 备选项、可维护性约束、3.6 出站接口清单并标注 RT-03 待补；tasks 重画依赖图补齐 TK-705/706/707/708/804、新增 §2.1 并行组标记（39 条全覆盖）、TK-601 依赖补 TK-404、TK-903 版本号同步；同步 `specs/README.md` 版本总表 | `specs/design.md`、`specs/tasks.md`、`specs/README.md`，提交 `82c1273` | 逐项对照验收清单核对；脚本检查 39 条任务在任务表/依赖图/并行组表一一对应、无缺项；`git diff --check` 无空白错误；design 3.6 接口路径与 `github.py`/`feishu.py` 实际调用逐条比对 | ☐ 待确认 |
+| 2026-11-10 | Claude Code | 黄 | 红队评审清单闭环回填与仓库同步：同步 origin/dev（纯快进 22 提交，丢弃本地过时 design 0.5 草稿）；红队清单 8 行闭环记录补提交号 `90116c2`（RT-01/02/04/05/06/07/08/09），RT-03 因 `scripts/verify_collectors.py` 未入库保持空白；在清单「闭环记录」说明下补闭环依据事实备注 | `docs/于悦-红队评审意见清单.md` | git fetch 复核落后 22 提交且远端未动红队清单；`git log` 实查 90116c2/82c1273/3f2b3ee；`git ls-files scripts/` 确认无 verify_collectors.py；提交后 `git status` 干净、与 origin/dev 完全一致 | ☐ 待确认 |
 
 ---
 
