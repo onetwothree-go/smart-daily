@@ -73,6 +73,7 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-09 | Claude Code | 黄 | `tasks.md` 0.1 任务拆解：9 阶段 39 条任务（TK-101～903）、依赖 DAG、每条可测验收标准、proposal 覆盖矩阵；红队评审 7 条待办并入任务编号（TK-701/707/803/804/901/902 等） | `specs/tasks.md`，PR #5 合并 `b8c3f6a` | 与 proposal 0.4.2 范围逐条反查覆盖矩阵；实测发现 `pyproject.toml` 入口点缺陷（`smart_daily:main` 不存在）写入 TK-101 验收标准 | ☐ 待确认 |
 | 2026-11-09 | Claude Code | 黄 | 拆解 Superpowers 技能包 `subagent-driven-development`：触发描述的路由作用 / 工作步骤 / `references`(7) 与 `scripts`(4) 各自承担什么 | `docs/赵蕊-技能拆解笔记.md`（正文 228 汉字），PR #7 合并 `4165f40` | 素材为公开仓库 obra/superpowers v7.0.2（commit `22f0b46`），本地克隆 `D:\superpowers` 可复核；脚本用途取自脚本头注释，非推测 | ☐ 待确认 |
 | 2026-11-09 | Claude Code | 黄 | 系统分析报告框架版 v0.1：6 章 + 附录 A–E、47 张表、56 个标题、40 余处【待补·责任人｜字数】提示块；附录 C 证据索引填真实运行记录 E1–E4 | `docs/系统分析报告-框架版.docx`，PR #8 合并 `947129e` | 转换校验 312 段 0 缺失、标题样式绑定 56/56；表 4-1 字段与 `orchestrator.py` 建表语句逐字段比对；图注来源已标明（杨佳莹待供图 / 赵蕊自绘） | ☐ 待确认 |
+| 2026-11-10 | Claude Code（DeepSeek） | 黄 | 建立 specs/ 规范版本总表并修正 README 目录结构描述 | `specs/README.md`（版本总表：proposal 0.4.2 / design 0.4.1 / tasks 0.1.1） | 三个版本号与提交号逐一用 git log 实查核对；发现 proposal 头部状态行滞后已在表内备注 | ☑ 已确认 |
 
 ---
 
