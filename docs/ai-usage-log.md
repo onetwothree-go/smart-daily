@@ -86,6 +86,7 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-10 | WorkBuddy | 黄 | 起草第 2 周开发工程师三项交付：接口契约工程可行性评审意见（逐条对照 design.md 0.5.1 §3.1–3.6 写三段式，含 10 条已落地修订的书面补记与 10 条待架构师裁定差异）、技能拆解笔记（Superpowers test-driven-development，约 230 字）、v1 实现与审查提交历史（39 条任务逐条对照代码与提交 hash，按五角色对账标出组员产出空白） | `docs/杨佳莹-接口契约工程可行性评审意见.md`、`docs/杨佳莹-技能拆解笔记.md`、`docs/杨佳莹-v1实现与审查提交历史.md`，本次提交 | design 0.5.1 / tasks 0.1.3 与 src/ 当前代码逐条实查（base.py L100、orchestrator.py L215、cli.py L110-114、notifiers.py L212、pyproject.toml 入口点、identity.py 不存在）；提交号用 git log 逐文件核对；技能包素材为在线仓库目录清单与 SKILL.md 原文；39 条状态照抄 tasks.md 未美化 | ☑ 已确认（杨佳莹） |
 | 2026-11-10 | Claude Code | 黄 | 红队评审清单闭环回填与仓库同步：同步 origin/dev（纯快进 22 提交，丢弃本地过时 design 0.5 草稿）；红队清单 8 行闭环记录补提交号 `90116c2`（RT-01/02/04/05/06/07/08/09），RT-03 因 `scripts/verify_collectors.py` 未入库保持空白；在清单「闭环记录」说明下补闭环依据事实备注 | `docs/于悦-红队评审意见清单.md` | git fetch 复核落后 22 提交且远端未动红队清单；`git log` 实查 90116c2/82c1273/3f2b3ee；`git ls-files scripts/` 确认无 verify_collectors.py；提交后 `git status` 干净、与 origin/dev 完全一致 | ☐ 待确认 |
 | 2026-11-10 | Claude Code | 黄 | 核对表同步 proposal 0.4.2 可测性回应：G2/C6 改判观察项、C7 恢复可测（5 通道 ok）、G4 时间口径对齐运营约定，并修正文内 4 处旧口径矛盾 | `docs/于悦-proposal成功标准逐条核对表.md` v1.1 | 与 proposal 0.4.2 §6.2 原文逐条比对；全文扫描确认无「待定」「需补送达时刻字段」残留 | ☐ 待确认 |
+| 2026-11-10 | WorkBuddy | 黄 | 更新 `specs/README.md` 规范版本总表：登记 proposal `761f806` 为格式整理（未升版、变更记录未补），核对 design 0.5.1 / tasks 0.1.3 均对应 `82c1273`；备注区登记 proposal 头部状态行滞后、格式整理未补变更记录两项待责任人处理 | `specs/README.md` | 逐份 `git log` 实查最近提交（proposal `761f806`／`2ba0d56`，design·tasks `82c1273`）；`git diff -w` 验证 `761f806` 为格式整理（16 增 15 删，实质未变）；三份规范头部状态行与表内版本逐项比对 | ☐ 待确认 |
 
 ---
 
