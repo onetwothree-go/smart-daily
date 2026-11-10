@@ -1,7 +1,8 @@
 # design.md —— 智能日报生成器（Smart Daily Report Generator）
 
-> 状态：**0.5 依据红队评审意见修订**（`docs/于悦-红队评审意见清单.md` 2026-11-09，RT-01~09）· 依据 `specs/proposal.md` **0.4.2（2026-11-09 定稿，含 Q16–Q21 / I20–I28、C10 与 §6.2 可测性回应）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。逐条回应见 `docs/赵蕊-红队回应.md`。
+> 状态：**0.5.1（0.5 增补：接口清单 / ER 附件 / ADR 备选项 / 可维护性约束）**（`docs/于悦-红队评审意见清单.md` 2026-11-09，RT-01~09）· 依据 `specs/proposal.md` **0.4.2（2026-11-09 定稿，含 Q16–Q21 / I20–I28、C10 与 §6.2 可测性回应）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。逐条回应见 `docs/赵蕊-红队回应.md`。
 > 本版新增（0.5）：**推送判定链一并改写**——1.4 送达判定改为「应送达集合 + `push_status`」并标注 `any()` 现状（RT-01）；3.4 新增 `push_status` 五态、CLI 退出码 0/1/2/3 与五条不变量（RT-02）、新增 3.4.1 `push_detail` 结构（`at`/`error`，RT-07）；1.1 架构图拆出团队日报直达群渠道的独立边（RT-04）；5.2 纪律 1 分层写明采集 `SourceUnavailableError` 与推送 `ValueError`（RT-05）；2.2/3.5/ADR-104 统一归属键匹配为 `strip + casefold` 并收敛到 `identity.py`（RT-06）；2.2 写明跨天任务归属规则（RT-08）；3.3 记载 `MultiNotifier` 并声明弃用（RT-09）；2.3 新增 `push_receipts` v1.1 结构草案（RT-07）。0.4.1 及其前版本内容除上述修订处外不变。
+> 本版增补（0.5.1）：按交付项自检补齐文档结构——2.1 挂接 ER 图附件；ADR-101~104 各补「备选项」行；5.4 新增「可维护性」并把 Python 3.13 写入兼容性；§3 前言说明「单机 CLI 无入站 HTTP 接口」并新增 3.6 出站接口清单，同时标注 34 项断言待 RT-03 补提交。**不改变 0.5 的任何契约与判定口径。**
 > 0.4.1 变更：依据开发工程师评审意见修订 7 条（架构图改本机手动触发、ADR-104 后果改为实测已闭合、5.4 的 C6/G2 改为观察项等）。
 > 0.3 变更：**实时提醒作为独立通道**的定位与契约（1.4 / 3.5 / 5.3）、proposal 编号与本文档的对照表（附录 A）、实时通道失败语义（C10 / G5）。
 > 写法约定：**已有实现的部分照实描述（每条注明出处）**；尚未实现、由本文档首次约定的部分标【本期约定】，须随 tasks.md 评审确认。
@@ -132,6 +133,8 @@ DailyReport（日报实体）          WorkItem（工作痕迹条目）
 
 一份日报 = **(report_date, member) 唯一确定的条目集合的文本渲染**。原始记录先归一化为 `WorkItem`，按成员分组（`group_by_member`）后逐人生成个人日报；全组合集渲染为团队日报。
 
+> **ER 图附件（0.5.1）**：[`docs/er-diagram.md`](../docs/er-diagram.md)（Mermaid ERD，含 `daily_reports` 与预留 `work_items`）｜[`docs/uml/ER图.png`](../docs/uml/ER图.png)（图片版）。附件与 2.3 DDL 同源；若两者不一致，以 2.3 的 SQL 为准。
+
 ### 2.2 内存实体（dataclass，出处：`collectors/models.py`）
 
 **RawRecord 三型**（采集器返回值，frozen dataclass，采集完成即不可变）：
@@ -226,7 +229,9 @@ CREATE TABLE IF NOT EXISTS push_receipts (
 
 ## 3. 接口契约
 
-> 以下契约与代码一一对应，34 项断言（`scripts/verify_collectors.py`）可作证据。每条函数给出签名、行为约束与异常语义。
+> 以下契约与代码一一对应；34 项断言（`scripts/verify_collectors.py`）**待采集层组员补提交后**可作证据（RT-03）。每条函数给出签名、行为约束与异常语义。
+
+> **接口形态说明（0.5.1）**：本系统是**单机 CLI**，不提供对外 HTTP 服务端接口。本节“接口”指 **Python 函数/协议 + CLI 参数与退出码**，因此没有“路径/方法”字段；外部依赖的 HTTP 调用由 3.1/3.3/3.5 的工厂与脚本封装，其方法、路径、入参/出参与错误码汇总在 **3.6**。
 
 ### 3.1 采集层
 
@@ -460,6 +465,21 @@ class DailyReportOrchestrator:
 
 **实测证据（2026-11-09，run `42587824934`）**：`dev` 分支一次 push 触发 `notify.yml`，工作流结论 `success`，推送 step 耗时约 1 秒；日志实测值 `HTTP 200` / `code=0 msg=success` / `1.48s`，实发 **1 条**消息、含 **2 个** commit（`fd996a0` 功能提交 + `7386577` 合并提交）。据此本轮闭合的契约：**1**（只读事件文件、未调 GitHub API）、**3**（一次 push 一条、commits 全列）、**4**（文本含「日报」，未被 19024 拦截）、**5**（`gen_sign` 复用，未被 19021 拦截）、**6**（`code==0` 才 `exit 0`，工作流亮绿灯）。仍待验证：契约 2 的映射未命中告警分支、契约 7 的失败语义（需构造失败注入）。
 
+### 3.6 外部 HTTP 依赖（出站接口清单，0.5.1）
+
+> 本系统无**入站** HTTP 接口；下表是代码实际调用的**出站**接口，供“路径/方法/入参/出参/错误码”口径核对。GitHub 路径相对 `https://api.github.com`，飞书路径相对 `https://open.feishu.cn/open-apis`；Webhook 为 Secret 注入的完整 URL，不写入仓库。
+
+| 用途 | 方法 | 路径 | 关键入参 | 关键出参 | 主要错误码 |
+| --- | --- | --- | --- | --- | --- |
+| GitHub 提交列表 | GET | `/repos/{owner}/{repo}/commits` | `since`、`until`、`author`、`per_page`、`page` | `sha`、`commit.message`、`author.login`、`html_url`、`stats` | 401/403（凭证/权限）、404（仓库不存在）、409（空仓库）、429（限频） |
+| GitHub 仓库协作者 | GET | `/repos/{owner}/{repo}/collaborators` | 无（认证头） | `login`、`name`、`permissions` | 401/403/404 |
+| 飞书 tenant_access_token | POST | `/auth/v3/tenant_access_token/internal` | `app_id`、`app_secret` | `tenant_access_token`、`expire` | `code != 0`（如 21001 租户资质） |
+| 飞书任务列表 | GET | `/task/v1/tasks` | `page_size`、`page_token`、`completed`、`created_at_from/to` | `items[]`（task_id/summary/created_at/completed_at）、`has_more` | `code != 0`（权限/频控） |
+| 飞书群消息列表 | GET | `/im/v1/messages` | `container_id`（chat_id）、`page_size`、`page_token`、`start_time`、`end_time` | `items[]`（message_id/sender/text/msg_type） | `code != 0` |
+| 飞书通讯录成员 | GET | `/contact/v3/users` | `department_id`、`page_size`、`page_token` | `items[]`（user_id/name） | `code != 0` |
+| 飞书群列表 | GET | `/im/v1/chats` | `page_size`、`page_token` | `items[]`（chat_id/name） | `code != 0` |
+| 飞书 Webhook 发送 | POST | 自定义机器人 Webhook URL（Secret） | `timestamp`、`sign`、`msg_type`、`content` | `code`、`msg` | 19021（签名）、19022（IP 白名单）、19024（关键词） |
+
 ---
 
 ## 4. 架构决策记录（ADR）
@@ -472,6 +492,7 @@ class DailyReportOrchestrator:
 | --- | --- |
 | **状态** | 已接受（2026-11-09） |
 | **背景** | 采集层需访问 GitHub REST API 与飞书开放平台两套 HTTP 服务；候选为 httpx 直连（现状）、PyGithub、gh CLI 子进程（GitHub 侧）、lark-oapi 官方 SDK（飞书侧）。httpx 是仓库当前**唯一运行依赖**（pyproject.toml），github.py 已封装认证头、API 版本头、409/401/403/404 细分错误语义与手动翻页；feishu.py 已自管 token 缓存与页码翻页。 |
+| **备选项** | ①httpx 直连（选中）；②PyGithub；③`gh` CLI 子进程；④lark-oapi 官方 SDK。逐项取舍见下方论证。 |
 | **决策** | 采集与推送的全部 HTTP 调用统一走 httpx；不引入任何 SDK 或第二套 HTTP 栈。 |
 | **论证** | ①**错误语义可控**：409=空仓库、401/403=凭证失效这类**项目自定义**降级语义，SDK 并不感知——换 SDK 必须为降级契约重写一层错误翻译，收益为负。②**依赖单一**：PyGithub 会引入 requests 系传递依赖，与 httpx 并存两套 HTTP 栈，违背"依赖最小化"（proposal 技术约束）。③**契约可保留**：WorkSource 协议外壳不变，未来若扩采 PR 评审等字段，直连改造成本低于 SDK 适配。④**飞书 token 自管已验证**：过期前 300 秒刷新的缓存逻辑已被实测覆盖，SDK 在此环节无增量价值（user_access_token 授权链路 SDK 是否覆盖未核实——见技术栈清单证据缺口 3，不作为决策依据）。⑤**国内可用性**：GitHub API 可达性波动是已识别风险（docs/GitHub访问诊断报告），但它是**网络问题不是客户端问题**，换 SDK 不解决。 |
 | **后果** | 正面：零新增依赖；降级语义与代码同层、可测；错误信息直白。负面：翻页、重试、字段映射自行维护；飞书接口变更需跟官方文档手工适配。 |
@@ -483,6 +504,7 @@ class DailyReportOrchestrator:
 | --- | --- |
 | **状态** | 已接受（2026-11-09） |
 | **背景** | 需要持久化日报历史（proposal S8）并保证"同日重复执行不重复记录"（C5 幂等）。候选：SQLite（标准库 sqlite3）、JSON 文件、服务端数据库。部署形态是**单机命令行工具**（`uv run --env-file .env smart-daily`），无服务器、无并发写。 |
+| **备选项** | ①标准库 `sqlite3`（选中）；②JSON 文件；③MySQL/PostgreSQL 服务端数据库。 |
 | **决策** | 用标准库 `sqlite3`，单文件库（路径经 `DB_PATH` 环境变量配置，默认 `data/daily_report.db`）；幂等靠表约束 `UNIQUE(report_date, member)` + `ON CONFLICT ... DO UPDATE` upsert，不靠应用层先查后写。 |
 | **论证** | ①**幂等放数据库层最可靠**：先 SELECT 再 INSERT 在两次运行并发时有竞态；`INSERT ... ON CONFLICT` 是原子操作，幂等性不依赖调用方自觉。②**零部署成本**：标准库随 Python 3.13 分发，组员 `uv sync` 后即可跑，与"凭证未就绪不阻塞进度"的小组处境匹配；MySQL/PostgreSQL 需要额外搭建与连接配置，对单机 CLI 是过度设计。③**JSON 文件否决理由**：无查询能力（`--list` 按日期/成员过滤要自己实现）、无约束（重复写入要靠应用层防）、并发写会互相覆盖。④**可迁移性**：SQL 是标准接口，若 v1.1 演化为多人共享服务，表结构可平移到服务端数据库。 |
 | **后果** | 正面：零依赖、原子幂等、有查询能力、可按 (日期, 成员) 精确回溯（隐含需求 I7）。负面：单文件不利于多人同时写（本期无此场景）；日报全文存 TEXT，条目级统计需应用层解析（条目级对账表见 2.3【本期约定】，默认不建）。 |
@@ -494,6 +516,7 @@ class DailyReportOrchestrator:
 | --- | --- |
 | **状态** | 已接受（2026-11-09） |
 | **背景** | 凭证失效、租户资质卡审、网络波动是本项目**常态**而非异常（proposal I1、C2、C8；指导书 FAQ 明示"凭证申请不下来不必阻塞进度"）。问题：源失败后系统该重试、该跳过、还是该中断？"今天没提交"和"源坏了"如何区分？ |
+| **备选项** | ①采集器内重试；②失败后静默跳过/返回 `[]`；③中断全流程；④异常驱动降级、采集器不重试（选中）。 |
 | **决策** | 三条规则：①源不可用**显式抛** `SourceUnavailableError`，严禁吞异常返回 `[]`；②降级链**异常驱动**——捕获异常即切下一个源，遇空列表即停止；③**采集器内不做重试**，单源一次尝试，失败直接降级；重试（若做）只放在推送层。 |
 | **论证** | ①**实测教训**：飞书采集器曾吞异常返回空列表，降级链误判"成功"跳过 local-git 兜底，产出 0 条空日报（断言 [9][10] 固化此教训）。②**空列表与异常的区分是语义必需**：把"没数据"报成异常会导致无提交的日子（缺勤/纯会议日，隐含需求 I5）误触发降级，浪费配额且日志失真。③**采集侧不重试的理由**：采集源失败多为确定性故障（凭证缺失、资质未过、仓库地址错），重试同样失败，只会拖慢主流程；降级到下一个源本身就是最好的"重试"。而推送失败多为瞬时故障（网络抖动），值得重试——但本期推送层只返回 False 留痕，重试列入 v1.1（见第 5 节）。④**全失败必须显式报错**（C8）：降级链耗尽抛聚合了各源错误的 `SourceUnavailableError`，禁止静默产出空日报。 |
 | **后果** | 正面：主流程在任一单点故障下不中断（G5）；故障原因留痕（errors 聚合）；语义可测（34 项断言中 8 项覆盖此契约）。负面：瞬时网络抖动会直接降级到低质量源（如 local-git 只有本机克隆的仓库），产出可能不全——接受此代价，换取行为确定性；缓解手段是 `--source` 显式指定源重跑（幂等覆盖，无脏数据）。 |
@@ -505,6 +528,7 @@ class DailyReportOrchestrator:
 | --- | --- |
 | **状态** | 已接受（2026-11-09，组内实测约束） |
 | **背景** | 定时触发落点是技术栈清单开放问题 7 的未决项（本机计划任务 vs GitHub Actions vs 常驻服务）。组内把日报推送接进飞书群机器人实测时踩到五个坑，直接约束了工作流与归属设计。 |
+| **备选项** | ①本机计划任务（cron / Windows 任务计划程序）；②GitHub Actions（选中）；③常驻服务/守护进程。 |
 | **决策** | 五条：①触发采用 **GitHub Actions**（push / schedule 事件）；②workflow 的 `branches` 过滤**只保留 `main` 与 `dev`**——不过滤时每个 PR 分支（`docs/xxx` 等）的推送都会触发一次，把群消息刷成流水账（实测教训）；③成员归属**读 `GITHUB_EVENT_PATH` 事件文件**，取 `github.actor`（触发本次推送的 GitHub 登录名）查 `MEMBER_DISPLAY_NAMES` 得显示名，**禁止**以 `commits[].author.name` 做归属键（映射匹配大小写不敏感、去首尾空白，见 2.2，两条链路共用同一实现 `identity.lookup_display_name`）；④飞书 Webhook 消息体必须含「日报」关键词，否则 19024（见 3.3）；⑤Webhook 签名复用 `push/notifiers.py::gen_sign()`，不在工作流脚本里重复实现（见 3.3）。 |
 | **论证** | ①**归属键的稳定性**：`github.actor` 是平台侧登录名，与 `MEMBER_DISPLAY_NAMES` 的键（GitHub 登录名）同源，映射一一对应；而 `commits[].author.name` 来自提交者本地 git config 的自由文本，同一人实测出现过 `fh` / `20233046方赫` 两种写法（proposal 痛点④），拿它查映射必漏。②**branches 过滤是防刷群的唯一闸门**：Actions 对 push 事件默认全分支触发，而本组工作流（每人各推 `docs/xxx` 分支）推送频繁，不过滤等于把群消息频道交给 git 事件流。③**事件文件零成本**：`GITHUB_EVENT_PATH` 是 Actions 官方注入的本地 JSON 文件，读文件不增加任何 API 调用、不消耗频率配额（呼应 5.1）；而另查 commits API 既多打请求，又拿不到"这次是谁触发的"这层语义。④**关键词与签名复用**：19024 报错只报错误码不指明原因，排查成本高，发送前校验把失败拦在本机；签名算法单点实现是"同一逻辑只写一遍"的通用纪律（与降级链收敛在 `collect_with_fallback` 同理）。 |
 | **后果** | 正面：零本机开机依赖；触发与运行记录在仓库 workflow 留痕；归属稳定可复现。负面：Actions runner 境外访问飞书开放平台已在 run `42587824934` 实测通过（HTTP 200 / code=0 / 1.48s，技术栈清单证据缺口 5 已闭合），仍须随环境与凭证变更定期复核；凭证须配成 Actions Secrets（5.2）；本机调试路径（`--mock` / `--source local-git`）与线上触发路径不同，须各自验证；关键词约束对"绕过生成层的自定义消息"构成限制。 |
@@ -566,8 +590,9 @@ class DailyReportOrchestrator:
 | --- | --- | --- |
 | 性能 | 单成员 100 条提交采集 < 30s（**观察项，非验收标准**；proposal 0.4.2 §6.2 / C6 / G2 明确不建计时断言） | 串行翻页 + httpx 连接复用（`httpx.Client` 单例）即可满足，不做并发 |
 | 可观测性 | 统一 `[source]` / `[push]` 前缀 print；推送明细含通道名、范围、成败、**送达/失败时刻（`at`）与失败原因（`error`）**（3.4.1）；CLI 输出格式同步补这两列（`cli.py` L101-107 扩展）；CLI 汇总面板。logging 文件化列入 v1.1（技术栈清单 3.6 候选 B，定时任务落地时一并做） | 现状 + 开放问题 7 + RT-07 |
+| 可维护性 | 分层依赖单向、下三层互不感知（1.1）；同一逻辑只写一遍——`gen_sign()`、`identity.lookup_display_name()`、`collect_with_fallback` 均单点实现；生成层纯函数、推送层不抛异常，故障定位边界清晰；模块与文件边界见 1.2，接口契约见 3.x | 1.1 / 1.2 / 3.3 / 3.5 / ADR-103 |
 | 时区正确性 | 一切日期归属走 `local_date()`，禁止直接 `.date()`（契约 3，断言 [12]） | 实测教训 |
-| 平台可迁移 | 代码不依赖 Windows 特性，可迁移 Linux（proposal 技术约束）；路径用 `pathlib` | proposal |
+| 平台可迁移 | Python 3.13（`.python-version`，ADR-102）；代码不依赖 Windows 特性，可迁移 Linux（proposal 技术约束）；路径用 `pathlib` | proposal / ADR-102 |
 | 启动纪律 | 必须经 `uv run --env-file .env` 启动——直接 `python -m` 不读 .env 会**静默降级**（README 已警示） | proposal 技术约束 |
 
 ---
@@ -615,3 +640,4 @@ class DailyReportOrchestrator:
 | 2026-11-09 | 0.4 | 3.5 附 Actions 真实运行证据（run 42587824934：HTTP 200 / code=0 / 1.48s / 1 条含 2 个 commit），逐条回指已闭合契约 1、3、4、5、6，并列出契约 2、7 的待验证项 | AI 起草，待架构评审签字 |
 | 2026-11-09 | 0.4.1 | 依据开发工程师评审意见（会话内提出，未单独成文）修订 7 条发现：状态与依据对齐 proposal 0.4.2；1.1 架构图删除「Actions 日报汇总 / schedule」改为本机手动触发；1.4 触发表同步；ADR-104 后果把「连通性未实测」改为实测已闭合；2.2 与 6.4 删除本期不做的多人协作归属函数；3.1 引用 ADR-003→ADR-103；5.4 的 C6/G2 改为观察项非验收标准；附录 A 标题同步。**原作者署名仍为架构师赵蕊，本次属评审—修订循环，不代签** | 杨佳莹（开发工程师）依据评审意见修订 |
 | 2026-11-10 | **0.5** | **依据红队评审意见（于悦《红队评审意见清单》RT-01~09）修订，逐条回应见 `docs/赵蕊-红队回应.md`**：①**RT-01** 1.4 送达行改为「应送达集合 + `pushed=(push_status=="ok")`」并加 0.4.1 `any()` 现状标注，3.4 新增 `push_status` 五态与应送达集合定义，5.3 推送行补汇总判定，附录 A C7 落点改指 3.4/3.4.1；②**RT-02** 3.4 新增 CLI 进程退出码 0/1/2/3 与五条不变量，编排层不调 `sys.exit()`；③**RT-04** 1.1 架构图拆出「团队日报直达群渠道（不经 members.py）」独立边，1.2 职责表与 3.3 增两条分发硬规则及反例；④**RT-05** 5.2 纪律 1 拆 1a（采集 `SourceUnavailableError`）/1b（推送 `ValueError`）并补「为什么不统一类型」，3.3 补 `from_env` 契约，5.3 新增「推送通道工厂」行，1.2 职责表补「不抛采集层异常」；⑤**RT-06** 2.2 增映射匹配语义（`strip + casefold`）与 `identity.py` 唯一实现约定，3.5 契约 2 改写，ADR-104 ③ 补匹配语义；⑥**RT-07** 新增 3.4.1 `push_detail` 结构（`at`/`error`）与 C7 重判口径，3.3 补回执契约，5.4 可观测性改写，2.3 新增 `push_receipts` v1.1 结构草案；⑦**RT-08** 2.2 写明任务归属日 = `local_date(created_at)`、跨天规则、C1 口径对照与 TK-303 验收边界；⑧**RT-09** 3.3 记载 `MultiNotifier` 并声明弃用，1.2 职责表补「不提供多通道聚合」。**本次仅改 design，`tasks.md` 的 TK-103/TK-303/TK-604/TK-707 同步与于悦清单「闭环记录」回填另行提交** | 赵蕊（架构师） |
+| 2026-11-10 | **0.5.1** | 按交付项自检补齐文档结构：2.1 增 ER 图附件链接（`docs/er-diagram.md` / `docs/uml/ER图.png`）；ADR-101~104 各增「备选项」行；5.4 增「可维护性」行、兼容性补 Python 3.13；§3 前言说明本系统无入站 HTTP 接口，新增 3.6 出站 HTTP 接口清单（GitHub/飞书/Webhook 的方法、路径、入参、出参、错误码），并标注 34 项断言待 RT-03 补提交。**不改变 0.5 已定契约与判定口径** | 赵蕊（架构师） |
