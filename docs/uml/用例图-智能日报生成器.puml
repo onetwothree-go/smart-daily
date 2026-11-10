@@ -12,7 +12,7 @@
 '   - 新增外部系统参与者 GitHub push 事件（S9 由 Actions 事件驱动，非人触发）；
 '   - 新增 extend 分支「降级本地 Git 采集」(C2)。
 ' ============================================================
-title 智能日报生成器 用例图（第 2 周重画版 · 2026-11-10）
+title 智能日报生成器 用例图（第 2 周 · 需求分析师 方赫 · 2026-11-10）
 left to right direction
 skinparam defaultFontName "Microsoft YaHei"
 skinparam packageStyle rectangle
