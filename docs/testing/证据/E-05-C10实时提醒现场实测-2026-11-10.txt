@@ -1,0 +1,21 @@
+E-05 C10 实时提醒现场实测（一次 push 3 个 commit）
+执行时间：2026-11-10 22:35（北京时间）　执行人：于悦
+触发：git push origin dev（3 个提交 b0f08ae / 0a1da99 / 7009620）
+
+--- Actions 运行 ---
+run #77  completed/success  branch=dev  sha=70096200
+https://github.com/onetwothree-go/smart-daily/actions/runs/42835602375
+
+--- 运行时消息体（日志原文）---
+【日报·提交通知】于悦 向 dev 推送了 3 个提交
+时间：2026-11-10 22:35（北京时间）
+HTTP 状态码：200｜耗时：1.37s
+飞书返回：code=0 msg=success
+
+--- 分支过滤（引用第 1 周 W1-E-04 实测）---
+从 dev 建 feature/w1-tc04-check 推 1 个空提交后：total_count 不变、按该分支查询返回 []
+
+===== 结论 =====
+一次 push 3 个提交 → 群内恰 1 条提醒（非 3 条），标题含关键词「日报」（满足机器人关键词校验），飞书返回 code=0
+feature/* 分支推送 0 次触发（W1-E-04）
+→ C10 全部期望达成
