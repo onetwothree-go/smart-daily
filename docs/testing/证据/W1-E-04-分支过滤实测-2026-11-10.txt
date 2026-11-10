@@ -1,0 +1,17 @@
+W1-E-04 TC-04 分支过滤真实推送实测
+采集日期：2026-11-10
+来源：GitHub Actions 真实运行日志 / 本机命令输出（凭证值一律不记录）
+────────────────────────────────────────────────────────────────────
+配置事实：.github/workflows/notify.yml 第 7 行 `branches: [main, dev]`；全仓库仅此 1 个 workflow。
+
+实测步骤（2026-11-10）：
+  1. 基线：gh api .../actions/runs → total_count=74，latest=42822599696（dev，13:13:46Z）
+  2. 从 dev 建本地分支 feature/w1-tc04-check，做 1 个空提交 7f6d838（不改任何文件）
+  3. git push -u origin feature/w1-tc04-check → 推送成功（remote: new branch）
+  4. 复查：total_count 仍为 74，latest 仍为 42822599696；
+     select(.head_branch=="feature/w1-tc04-check") 查询返回 []
+  5. 清理：git push origin --delete feature/w1-tc04-check → [deleted]；本地分支已删除，已切回 dev
+
+TC-04 判定：✅ 通过 —— feature/* 推送 0 次触发 notify 工作流。
+历史数据：74 次 run 中 dev 71 次，另有 1 次 2026-11-09T03:05:01Z 的 feature/connectivity-test，
+该次早于当前 workflow 落地，属分支自带旧 workflow 的历史运行，不计入本次过滤判定。

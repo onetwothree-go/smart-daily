@@ -1,0 +1,27 @@
+W1-E-01 TC-01 送达时延与飞书返回码
+采集日期：2026-11-10
+来源：GitHub Actions 真实运行日志 / 本机命令输出（凭证值一律不记录）
+────────────────────────────────────────────────────────────────────
+最近 12 次真实 dev 推送通知（created→updated 为 CI 端到端耗时，HTTP 行为飞书接口往返）：
+
+  2026-11-10T13:13:46Z → 2026-11-10T13:13:57Z  run=42822599696  sha=1a78fd1  code=0  HTTP耗时=1.18s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42822599696
+  2026-11-10T13:08:57Z → 2026-11-10T13:09:12Z  run=42821864907  sha=c81a140  code=0  HTTP耗时=1.22s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42821864907
+  2026-11-10T12:57:56Z → 2026-11-10T12:58:07Z  run=42820227394  sha=070a90c  code=0  HTTP耗时=1.23s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42820227394
+  2026-11-10T12:32:34Z → 2026-11-10T12:32:48Z  run=42816643004  sha=5b5d636  code=0  HTTP耗时=1.81s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42816643004
+  2026-11-10T12:28:05Z → 2026-11-10T12:28:17Z  run=42815992028  sha=3076ada  code=0  HTTP耗时=1.52s  提交数=7  https://github.com/onetwothree-go/smart-daily/actions/runs/42815992028
+  2026-11-10T12:26:53Z → 2026-11-10T12:27:05Z  run=42815823349  sha=793d664  code=0  HTTP耗时=0.87s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42815823349
+  2026-11-10T12:19:30Z → 2026-11-10T12:19:44Z  run=42814770781  sha=e66191b  code=0  HTTP耗时=1.16s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42814770781
+  2026-11-10T12:06:52Z → 2026-11-10T12:07:04Z  run=42812991025  sha=8532017  code=0  HTTP耗时=1.27s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42812991025
+  2026-11-10T12:05:25Z → 2026-11-10T12:05:35Z  run=42812788480  sha=44017a9  code=0  HTTP耗时=0.72s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42812788480
+  2026-11-10T12:03:36Z → 2026-11-10T12:03:49Z  run=42812532664  sha=24945f8  code=0  HTTP耗时=1.1s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42812532664
+  2026-11-10T12:00:03Z → 2026-11-10T12:00:16Z  run=42812022972  sha=79ae717  code=0  HTTP耗时=1.49s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42812022972
+  2026-11-10T11:57:12Z → 2026-11-10T11:57:27Z  run=42811649894  sha=83c0112  code=0  HTTP耗时=1.47s  提交数=1  https://github.com/onetwothree-go/smart-daily/actions/runs/42811649894
+
+TC-01 判定：飞书返回 code=0 表示消息已被机器人接收（送达凭据）；
+单次 CI 端到端 11~15 秒、HTTP 往返 0.72~2.84 秒，均远小于目标 ≤60 秒。
+最近一次 run 日志原文关键行：
+  发送 push 提醒到飞书群	读取事件文件并推送提醒	2026-11-10T13:13:55.5150854Z 【日报·提交通知】方赫 向 dev 推送了 1 个提交
+  发送 push 提醒到飞书群	读取事件文件并推送提醒	2026-11-10T13:13:55.5157501Z HTTP 状态码：200｜耗时：1.18s
+  发送 push 提醒到飞书群	读取事件文件并推送提醒	2026-11-10T13:13:55.5158347Z 飞书返回：code=0 msg=success
+
+待补：群内消息到达时刻的截图由执行人本人于 11-15 前补存；本证据不代替群截图。
