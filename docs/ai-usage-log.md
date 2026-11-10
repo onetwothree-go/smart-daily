@@ -75,6 +75,10 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-09 | Claude Code | 黄 | 系统分析报告框架版 v0.1：6 章 + 附录 A–E、47 张表、56 个标题、40 余处【待补·责任人｜字数】提示块；附录 C 证据索引填真实运行记录 E1–E4 | `docs/系统分析报告-框架版.docx`，PR #8 合并 `947129e` | 转换校验 312 段 0 缺失、标题样式绑定 56/56；表 4-1 字段与 `orchestrator.py` 建表语句逐字段比对；图注来源已标明（杨佳莹待供图 / 赵蕊自绘） | ☐ 待确认 |
 | 2026-11-10 | Claude Code（DeepSeek） | 黄 | 建立 specs/ 规范版本总表并修正 README 目录结构描述 | `specs/README.md`（版本总表：proposal 0.4.2 / design 0.4.1 / tasks 0.1.1） | 三个版本号与提交号逐一用 git log 实查核对；发现 proposal 头部状态行滞后已在表内备注 | ☑ 已确认 |
 | 2026-11-10 | WorkBuddy | 黄 | 技能拆解笔记起草：拆解 Superpowers `brainstorming` 技能（触发描述 / 工作步骤 / 配套脚本三要素，避开已拆的 subagent-driven-development） | `docs/于悦-技能拆解笔记.md`（正文 269 汉字，格式对齐赵蕊笔记） | 触发描述逐字取自 `SKILL.md` frontmatter；文件构成 `find` 实测（scripts/ 5 个文件）；脚本用途取自脚本头注释（start-server.sh 写明随机高端口输出 JSON）；字数用脚本复核 | ☑ 已确认 |
+| 2026-11-10 | Claude Code | 黄 | 依据 design 2.3 表结构与 3.4 主流程绘制 **ER 图**（PlantUML + HTML 预览）与 **日报生成主流程泳道图**（6 泳道，按代码实况绘制，标注 TK-707 `any()`/`all()` 已知差异）；中途一次 revert 重提，并清理重命名副本 | `docs/er-diagram.md`、`docs/er-diagram.html`、`docs/er-diagram-photo.html`、`docs/uml/ER图.png`、`docs/uml/日报生成主流程（泳道图）.png`；提交 `e1d95d1`、`9ecffad`、`7b7b026`（`966f603` 先提后由 `575ac43` revert） | 实体/字段与 `orchestrator.py::_ensure_db` 建表语句逐字段比对（report_date/member/content/item_count/source_name/created_at/UNIQUE）；泳道节点按 `run()` 主流程、`_push_personal_reports`/`_push_team_report` 调用顺序逐一核对；TK-707 差异标注单独复核 | ☐ 待确认 |
+| 2026-11-10 | Claude Code | 黄 | 逐条回应于悦《红队评审意见清单》中「待转交架构师」的 8 条（RT-01/02/04/05/06/07/08/09）：每条含处置结论、design 0.5 落点、计划版本；RT-03 归采集层组员，明确不在范围 | `docs/赵蕊-红队回应.md`（485 行），提交 `7de448e` | 每条引用的 design 章节与代码行号逐条复核：`orchestrator.py` L215/L235-248、`cli.py` L110、`notifiers.py` L94/L166/L211-232、`github.py` L44、`notify_push.py` L74-80、`models.py` L215/L257 均命中；意见原文与清单逐字比对，未改写 | ☐ 待确认 |
+| 2026-11-10 | Claude Code | 黄 | 依据红队回应将 `specs/design.md` 0.4.1 升 **0.5**：应送达集合 + `push_status` 五态（RT-01）、CLI 退出码 0/1/2/3（RT-02）、新增 3.4.1 `push_detail`（`at`/`error`，RT-07）、架构图拆团队日报直达路径（RT-04）、凭证异常分层（RT-05）、归属键 `strip+casefold` 与 `identity.py`（RT-06）、跨天任务规则（RT-08）、`MultiNotifier` 弃用（RT-09） | `specs/design.md`（133 增 / 16 删），提交 `90116c2` | 与 `docs/赵蕊-红队回应.md` 八条落点逐项对照；1.4/3.4/3.4.1/5.2/5.3 的判定与退出码口径交叉检查一致；变更记录 0.5 逐条回指 RT 编号 | ☐ 待确认 |
+| 2026-11-10 | Claude Code | 黄 | 随 design 0.5 将 `specs/tasks.md` 升 **0.1.2**：同步 TK-103（退出码四码）、TK-303（跨天验收边界）、TK-604（退出码五条不变量）、TK-707（应送达集合 + `all()` + `at`/`error`）、TK-903 版本号与 C7 覆盖矩阵 | `specs/tasks.md`（10 增 / 9 删），提交 `4f58742` | 与 design 3.4 退出码表、2.2 跨天规则、3.4.1 字段逐条对齐；任务总数与依赖 DAG 未变；提交前确认 `git diff` 仅任务表 10 处与表头/版本号 | ☐ 待确认 |
 
 ---
 
@@ -91,5 +95,5 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 周次 | 会话条数 | 绿 | 黄 | 红 | 黑 |
 | --- | --- | --- | --- | --- | --- |
 | 第 1 周 | 24 | 5 | 19 | 0 | 0 |
-| 第 2 周 | 9 | 1 | 8 | 0 | 0 |
+| 第 2 周 | 15 | 1 | 14 | 0 | 0 |
 
