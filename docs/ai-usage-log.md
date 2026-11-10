@@ -74,6 +74,7 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-09 | Claude Code | 黄 | 拆解 Superpowers 技能包 `subagent-driven-development`：触发描述的路由作用 / 工作步骤 / `references`(7) 与 `scripts`(4) 各自承担什么 | `docs/赵蕊-技能拆解笔记.md`（正文 228 汉字），PR #7 合并 `4165f40` | 素材为公开仓库 obra/superpowers v7.0.2（commit `22f0b46`），本地克隆 `D:\superpowers` 可复核；脚本用途取自脚本头注释，非推测 | ☐ 待确认 |
 | 2026-11-09 | Claude Code | 黄 | 系统分析报告框架版 v0.1：6 章 + 附录 A–E、47 张表、56 个标题、40 余处【待补·责任人｜字数】提示块；附录 C 证据索引填真实运行记录 E1–E4 | `docs/系统分析报告-框架版.docx`，PR #8 合并 `947129e` | 转换校验 312 段 0 缺失、标题样式绑定 56/56；表 4-1 字段与 `orchestrator.py` 建表语句逐字段比对；图注来源已标明（杨佳莹待供图 / 赵蕊自绘） | ☐ 待确认 |
 | 2026-11-10 | Claude Code（DeepSeek） | 黄 | 建立 specs/ 规范版本总表并修正 README 目录结构描述 | `specs/README.md`（版本总表：proposal 0.4.2 / design 0.4.1 / tasks 0.1.1） | 三个版本号与提交号逐一用 git log 实查核对；发现 proposal 头部状态行滞后已在表内备注 | ☑ 已确认 |
+| 2026-11-10 | WorkBuddy | 黄 | 技能拆解笔记起草：拆解 Superpowers `brainstorming` 技能（触发描述 / 工作步骤 / 配套脚本三要素，避开已拆的 subagent-driven-development） | `docs/于悦-技能拆解笔记.md`（正文 269 汉字，格式对齐赵蕊笔记） | 触发描述逐字取自 `SKILL.md` frontmatter；文件构成 `find` 实测（scripts/ 5 个文件）；脚本用途取自脚本头注释（start-server.sh 写明随机高端口输出 JSON）；字数用脚本复核 | ☑ 已确认 |
 
 ---
 
