@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-11-10T10:36:00.000Z" agent="Mozilla/5.0" version="24.7.17" type="device">
+  <diagram id="seq-3-2" name="图 3-2 采集工作痕迹时序图">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1440" pageHeight="880" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="box1" value=": 使用者" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="105" y="40" width="190" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="box2" value=": 命令行界面边界类" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="365" y="40" width="190" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="box3" value=": 工作痕迹采集控制类" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="625" y="40" width="190" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="box4" value=": 工作痕迹数据源" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="885" y="40" width="190" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="box5" value=": 统一数据模型表" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="1145" y="40" width="190" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" value="" style="shape=umlActor;html=1;strokeColor=#000000;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="178" y="4" width="44" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="life1" value="" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="76" as="sourcePoint" />
+            <mxPoint x="200" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life2" value="" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="76" as="sourcePoint" />
+            <mxPoint x="460" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life3" value="" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="76" as="sourcePoint" />
+            <mxPoint x="720" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life4" value="" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="76" as="sourcePoint" />
+            <mxPoint x="980" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life5" value="" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="76" as="sourcePoint" />
+            <mxPoint x="1240" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="actB" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="454" y="132" width="12" height="506" as="geometry" />
+        </mxCell>
+        <mxCell id="actC" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="714" y="192" width="12" height="386" as="geometry" />
+        </mxCell>
+        <mxCell id="actD" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="974" y="252" width="12" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="actE" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="1234" y="442" width="12" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="msg1" value="//输入 smart-daily --source local-git --day 2026-11-09" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="140" as="sourcePoint" />
+            <mxPoint x="460" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg2" value="//调用 collect(since, until)" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="200" as="sourcePoint" />
+            <mxPoint x="720" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg3" value="//collect_with_fallback 按序尝试数据源" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="260" as="sourcePoint" />
+            <mxPoint x="980" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg4" value="//捕获 SourceUnavailableError，切下一个源" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="320" />
+              <mxPoint x="790" y="346" />
+            </Array>
+            <mxPoint x="720" y="320" as="sourcePoint" />
+            <mxPoint x="720" y="346" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg5" value="//返回 RawRecord 列表与生效数据源" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="390" as="sourcePoint" />
+            <mxPoint x="720" y="390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg6" value="//normalize(entries) 归一化为 WorkItem" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="450" as="sourcePoint" />
+            <mxPoint x="1240" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg7" value="//返回 WorkItem 列表" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="510" as="sourcePoint" />
+            <mxPoint x="720" y="510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg8" value="//返回 (items, used_source)" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="570" as="sourcePoint" />
+            <mxPoint x="460" y="570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg9" value="//显示采集条数与生效数据源" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="630" as="sourcePoint" />
+            <mxPoint x="200" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="title" value="图 3-2  采集工作痕迹时序图" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="830" width="400" height="28" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

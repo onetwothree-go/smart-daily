@@ -1,0 +1,100 @@
+<mxfile host="Electron" agent="Mozilla/5.0">
+  <diagram id="seq-3-6" name="图 3-6  查询历史日报时序图">
+    <mxGraphModel dx="1209" dy="1206" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1200" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="box1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 使用者" vertex="1">
+          <mxGeometry height="36" width="190" x="105" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 命令行界面边界类" vertex="1">
+          <mxGeometry height="36" width="190" x="365" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 日报查询控制类" vertex="1">
+          <mxGeometry height="36" width="190" x="625" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 日报数据库表" vertex="1">
+          <mxGeometry height="36" width="190" x="885" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" parent="1" style="shape=umlActor;html=1;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="70" width="44" x="178" y="-30" as="geometry" />
+        </mxCell>
+        <mxCell id="life1" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="76" as="sourcePoint" />
+            <mxPoint x="200" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life2" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="76" as="sourcePoint" />
+            <mxPoint x="460" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life3" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="76" as="sourcePoint" />
+            <mxPoint x="720" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life4" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="76" as="sourcePoint" />
+            <mxPoint x="980" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="act2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="316" width="12" x="454" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="act3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="196" width="12" x="714" y="192" as="geometry" />
+        </mxCell>
+        <mxCell id="act4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="76" width="12" x="974" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="msg1" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//执行 smart-daily --list --day 2026-11-09">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="140" as="sourcePoint" />
+            <mxPoint x="460" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg2" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//调用 list_reports(day)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="200" as="sourcePoint" />
+            <mxPoint x="720" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg3" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//按日期查询历史日报记录">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="260" as="sourcePoint" />
+            <mxPoint x="980" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg4" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回记录列表">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="320" as="sourcePoint" />
+            <mxPoint x="720" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg5" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回 list[dict]">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="380" as="sourcePoint" />
+            <mxPoint x="460" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" value="图 3-6  查询历史日报时序图" vertex="1">
+          <mxGeometry height="28" width="400" x="330" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="GudxQbKkc2yuCRv5xJ6Y-1" parent="1" style="shape=umlBoundary;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="90" width="110" x="390" y="-50" as="geometry" />
+        </mxCell>
+        <mxCell id="GudxQbKkc2yuCRv5xJ6Y-2" parent="1" style="ellipse;shape=umlControl;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="90" width="90" x="675" y="-50" as="geometry" />
+        </mxCell>
+        <mxCell id="GudxQbKkc2yuCRv5xJ6Y-3" parent="1" style="ellipse;shape=umlEntity;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="90" x="930" y="-40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
