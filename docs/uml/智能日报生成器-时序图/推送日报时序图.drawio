@@ -1,0 +1,149 @@
+<mxfile host="Electron" agent="Mozilla/5.0">
+  <diagram id="seq-3-5" name="图 3-5  推送日报时序图">
+    <mxGraphModel dx="1438" dy="1351" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1440" pageHeight="880" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="box1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 使用者" vertex="1">
+          <mxGeometry height="36" width="190" x="105" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 命令行界面边界类" vertex="1">
+          <mxGeometry height="36" width="190" x="365" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 日报推送控制类" vertex="1">
+          <mxGeometry height="36" width="190" x="625" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 成员映射表" vertex="1">
+          <mxGeometry height="36" width="190" x="885" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 推送通道表" vertex="1">
+          <mxGeometry height="36" width="190" x="1145" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" parent="1" style="shape=umlActor;html=1;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="70" width="44" x="178" y="-30" as="geometry" />
+        </mxCell>
+        <mxCell id="life1" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="76" as="sourcePoint" />
+            <mxPoint x="200" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life2" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="76" as="sourcePoint" />
+            <mxPoint x="460" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life3" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="76" as="sourcePoint" />
+            <mxPoint x="720" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life4" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="76" as="sourcePoint" />
+            <mxPoint x="980" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life5" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="76" as="sourcePoint" />
+            <mxPoint x="1240" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="act2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="616" width="12" x="454" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="act3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="496" width="12" x="714" y="192" as="geometry" />
+        </mxCell>
+        <mxCell id="act4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="76" width="12" x="974" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="act5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="196" width="12" x="1234" y="372" as="geometry" />
+        </mxCell>
+        <mxCell id="msg1" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//执行 smart-daily --day 2026-11-09（不带 --no-notify）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="140" as="sourcePoint" />
+            <mxPoint x="460" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg2" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//调用 run(notify=True)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="200" as="sourcePoint" />
+            <mxPoint x="720" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg3" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//load_member_emails() / resolve_recipients(member)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="260" as="sourcePoint" />
+            <mxPoint x="980" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg4" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回收件人列表">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="320" as="sourcePoint" />
+            <mxPoint x="720" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg5" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//send(个人日报, text, recipients) 逐成员邮件">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="380" as="sourcePoint" />
+            <mxPoint x="1240" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg6" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回邮件通道 ok / 失败原因">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="440" as="sourcePoint" />
+            <mxPoint x="720" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg7" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//send(团队日报, team_text) 飞书群">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="500" as="sourcePoint" />
+            <mxPoint x="1240" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg8" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回飞书通道 ok / 失败原因">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="560" as="sourcePoint" />
+            <mxPoint x="720" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg9" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//汇总 push_detail">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="620" />
+              <mxPoint x="790" y="646" />
+            </Array>
+            <mxPoint x="720" y="620" as="sourcePoint" />
+            <mxPoint x="720" y="646" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg10" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回 pushed 与 push_detail">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="680" as="sourcePoint" />
+            <mxPoint x="460" y="680" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" value="&amp;nbsp;推送日报时序图" vertex="1">
+          <mxGeometry height="28" width="400" x="460" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="F7fxgaWp0EE20jSrth3A-1" parent="1" style="shape=umlBoundary;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="100" x="400" y="-40" as="geometry" />
+        </mxCell>
+        <mxCell id="F7fxgaWp0EE20jSrth3A-2" parent="1" style="ellipse;shape=umlEntity;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="940" y="-40" as="geometry" />
+        </mxCell>
+        <mxCell id="F7fxgaWp0EE20jSrth3A-5" parent="1" style="ellipse;shape=umlEntity;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="1200" y="-40" as="geometry" />
+        </mxCell>
+        <mxCell id="F7fxgaWp0EE20jSrth3A-6" parent="1" style="ellipse;shape=umlControl;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="90" width="80" x="675" y="-50" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

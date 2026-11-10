@@ -1,0 +1,139 @@
+<mxfile host="Electron" agent="Mozilla/5.0">
+  <diagram id="seq-3-3" name="图 3-3  生成个人日报时序图">
+    <mxGraphModel dx="1411" dy="1333" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1440" pageHeight="880" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="box1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 使用者" vertex="1">
+          <mxGeometry height="36" width="190" x="105" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 命令行界面边界类" vertex="1">
+          <mxGeometry height="36" width="190" x="365" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 日报生成控制类" vertex="1">
+          <mxGeometry height="36" width="190" x="625" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 日报生成规则表" vertex="1">
+          <mxGeometry height="36" width="190" x="885" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="box5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;align=center;verticalAlign=middle;fontSize=12;fontStyle=1;fontFamily=Helvetica;" value=": 日报数据库表" vertex="1">
+          <mxGeometry height="36" width="190" x="1145" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" parent="1" style="shape=umlActor;html=1;strokeColor=#000000;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="60" width="44" x="178" y="-20" as="geometry" />
+        </mxCell>
+        <mxCell id="life1" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="76" as="sourcePoint" />
+            <mxPoint x="200" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life2" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="76" as="sourcePoint" />
+            <mxPoint x="460" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life3" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="76" as="sourcePoint" />
+            <mxPoint x="720" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life4" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="76" as="sourcePoint" />
+            <mxPoint x="980" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="life5" edge="1" parent="1" style="endArrow=none;dashed=1;dashPattern=6 6;strokeColor=#000000;strokeWidth=1;html=1;rounded=0;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="76" as="sourcePoint" />
+            <mxPoint x="1240" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="act2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="556" width="12" x="454" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="act3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="436" width="12" x="714" y="192" as="geometry" />
+        </mxCell>
+        <mxCell id="act4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="196" width="12" x="974" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="act5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A61C00;strokeWidth=1;" value="" vertex="1">
+          <mxGeometry height="76" width="12" x="1234" y="492" as="geometry" />
+        </mxCell>
+        <mxCell id="msg1" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//触发 smart-daily --day 2026-11-09 --no-notify">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="140" as="sourcePoint" />
+            <mxPoint x="460" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg2" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//调用 run(day, notify=False)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="200" as="sourcePoint" />
+            <mxPoint x="720" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg3" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//group_by_member(items)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="260" as="sourcePoint" />
+            <mxPoint x="980" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg4" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回按成员分组结果">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="320" as="sourcePoint" />
+            <mxPoint x="720" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg5" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//build_personal_report(member, items, day) 逐成员">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="380" as="sourcePoint" />
+            <mxPoint x="980" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg6" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回个人日报正文">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="440" as="sourcePoint" />
+            <mxPoint x="720" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg7" edge="1" parent="1" style="endArrow=block;endFill=1;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//save_report(member, content, item_count, day, source)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="500" as="sourcePoint" />
+            <mxPoint x="1240" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg8" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回落库结果（UNIQUE 幂等）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1240" y="560" as="sourcePoint" />
+            <mxPoint x="720" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="msg9" edge="1" parent="1" style="dashed=1;dashPattern=6 4;endArrow=open;endFill=0;endSize=8;strokeColor=#A61C00;strokeWidth=1;html=1;rounded=0;fontSize=11;fontColor=#000000;labelBackgroundColor=#FFFFFF;align=center;verticalAlign=top;" value="//返回 saved_reports 数量">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="620" as="sourcePoint" />
+            <mxPoint x="460" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=14;fontStyle=1;" value="生成个人日报时序图" vertex="1">
+          <mxGeometry height="28" width="400" x="460" y="830" as="geometry" />
+        </mxCell>
+        <mxCell id="qEJdKlZKMqy9STz7rgPV-1" parent="1" style="shape=umlBoundary;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="100" x="410" y="-40" as="geometry" />
+        </mxCell>
+        <mxCell id="qEJdKlZKMqy9STz7rgPV-2" parent="1" style="ellipse;shape=umlControl;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="70" x="685" y="-40" as="geometry" />
+        </mxCell>
+        <mxCell id="qEJdKlZKMqy9STz7rgPV-3" parent="1" style="ellipse;shape=umlEntity;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="940" y="-40" as="geometry" />
+        </mxCell>
+        <mxCell id="qEJdKlZKMqy9STz7rgPV-4" parent="1" style="ellipse;shape=umlEntity;whiteSpace=wrap;html=1;" value="" vertex="1">
+          <mxGeometry height="80" width="80" x="1200" y="-40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
