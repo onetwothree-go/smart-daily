@@ -1,0 +1,38 @@
+W1 附录 · 离线集成验证完整输出
+采集日期：2026-11-10
+来源：GitHub Actions 真实运行日志 / 本机命令输出（凭证值一律不记录）
+────────────────────────────────────────────────────────────────────
+第 1 周 TC 离线集成验证
+被测脚本：scripts/notify_push.py（原文件，未改动）
+打桩方式：替换模块内 httpx.post，事件文件用临时 JSON，凭证用占位串
+映射来源：.github/workflows/notify.yml 的 MEMBER_DISPLAY_NAMES，共 8 条
+------------------------------------------------------------------------
+[PASS] TC-02 8 条映射全部命中 | 期望=True 实际=True
+[PASS] TC-02 归并后中文名个数 | 期望=4 实际=4
+[PASS] TC-02 大小写变体 ZZZZZZZR 归到赵蕊 | 期望=赵蕊 实际=赵蕊
+       映射逐条：zhaorui715→赵蕊，ZzzzzzzR→赵蕊，yjy120→杨佳莹，yuyue117→于悦，jchdhidhsh→方赫，fh→方赫，20233046方赫→方赫，fh0709→方赫
+[PASS] TC-03 回落显示原始登录名 | 期望=True 实际=True
+[PASS] TC-03 Actions 告警注解存在 | 期望=True 实际=True
+[PASS] TC-03 仍然发送（不静默丢记录） | 期望=1 实际=1
+[PASS] TC-03 退出码 | 期望=0 实际=0
+[PASS] TC-05 code=19024 退出码 | 期望=1 实际=1
+[PASS] TC-05 code=19024 打印对应提示 | 期望=True 实际=True
+[PASS] TC-05 code=19021 退出码 | 期望=1 实际=1
+[PASS] TC-05 code=19021 打印对应提示 | 期望=True 实际=True
+[PASS] TC-05 正常构造的正文含关键词「日报」 | 期望=True 实际=True
+[PASS] TC-07 5 个 commit 的 post 次数 | 期望=1 实际=1
+[PASS] TC-07 正文含 5 个编号提交 | 期望=5 实际=5
+[PASS] TC-07 正文条数口径（一次 push 1 条） | 期望=1 实际=1
+[PASS] TC-08 脚本不 import sqlite3 | 期望=True 实际=True
+[PASS] TC-08 脚本不 import orchestrator | 期望=True 实际=True
+[PASS] TC-08 跑完不产生任何 DB 文件 | 期望=0 实际=0
+[PASS] TC-06 notify_push.py 无 weekday 类判断 | 期望=0 实际=0
+[PASS] TC-06 workflow 无 cron/星期过滤 | 期望=True 实际=True
+[PASS] TC-01 code=0 退出码 | 期望=0 实际=0
+[PASS] TC-01 飞书返回码打印可查 | 期望=True 实际=True
+[PASS] TC-01 长标题截断到 60 字 | 期望=61 实际=61
+------------------------------------------------------------------------
+合计：23 项断言，PASS 23 / FAIL 0
+结论：全部断言均为离线打桩/静态可复现验证；真实群内到达时刻、4 人各推 1 次、周末触发不在本脚本判定范围内。
+────────────────────────────────────────────────────────────────────
+可复现命令：PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe docs/testing/证据/W1-verify-notify-offline.py

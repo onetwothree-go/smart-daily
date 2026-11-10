@@ -84,6 +84,9 @@ legend bottom
   - S9 实时提醒只作告知：一次 push 合并 1 条群消息、列全 commit 不截断、文本含「日报」二字；不落 SQLite、不进 G1 计数、不拼进日报正文（UC10 / C10）
   - C3「多人协作成果归属全部贡献者」本期不验收，故不设对应用例；UC4 只验收同一成员多登录名归并
   - include = 每次必然发生的公共行为；extend = 仅当 GITHUB_TOKEN 无效时降级 local-git（UCX / C2）
+  - 触发口径：本期 v1 按 S7 / N8 / I4「22:00 本机手动触发」；3f2b3ee 的本机计划任务为 v1.1 预研，不计入 v1 验收
+  - UC11 / UC12 为部署期配置，回指 S5 与 design 5.2 密钥红线，不属功能范围扩张
+  - 小组成员是数据来源主体、非触发者；触发者为 22:00 主编排与 GitHub push 事件
 endlegend
 
 @enduml

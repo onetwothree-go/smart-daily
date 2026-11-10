@@ -93,3 +93,4 @@ uv run smart-daily --list
 - [ ] 规范文档：`proposal.md` 初稿中，`design.md` / `tasks.md` 待写
 - [ ] 单元测试与集成测试（TDD 红绿循环记录）
 - [ ] v1.1 考勤数据采集（第 4 周变更涟漪演练）
+- [x] v1.1 预研（已实现、不计入本期 v1 验收）：`scripts/run_daily.ps1` + 本机计划任务 `SmartDaily-2200`（`3f2b3ee`）把 22:00 改为自动触发；本期仍按 proposal 0.4.2（含 11-10 补记） 的 S7 / N8 / I4 **手动触发**验收，口径见 `docs/方赫-N8范围冲突处置记录.md`

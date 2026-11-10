@@ -1,0 +1,37 @@
+E-10 G3/C3 身份归并实测：MEMBER_DISPLAY_NAMES 缺失 vs 配置（2026-11-10）
+执行人：于悦（工具代跑，判定由本人确认）
+数据：仓库 onetwothree-go/smart-daily 真实提交 10 条（--day 2026-11-10）
+
+--- 仓库内真实身份组合（GitHub API 全量拉取）---
+共 10 条提交，身份组合 7 种：
+  login=None           name=20233046方赫       4 条
+  login=None           name=fh0709           1 条
+  login=None           name=方赫               1 条
+  login=zhaorui715     name=赵蕊               1 条
+  login=yuyue117       name=yuyue117         1 条
+  login=yjy120         name=yjy120           1 条
+  login=jchdhidhsh     name=fh               1 条
+
+--- A 组：不配置 MEMBER_DISPLAY_NAMES ---
+成员数    : 7
+条目数    : 10
+## 20233046方赫（4 条）
+## fh0709（1 条）
+## 方赫（1 条）
+## 赵蕊（1 条）
+## yuyue117（1 条）
+## yjy120（1 条）
+## fh（1 条）
+
+--- B 组：配置 MEMBER_DISPLAY_NAMES（8 条映射）---
+成员数    : 4
+条目数    : 10
+## 方赫（7 条）
+## 赵蕊（1 条）
+## 于悦（1 条）
+## 杨佳莹（1 条）
+
+===== 结论 =====
+A 组（未配置）：共 7 名「成员」，其中方赫一人占 4 个身份（20233046方赫 4 条 / fh0709 1 条 / 方赫 1 条 / fh 1 条），于悦、杨佳莹显示为登录名，成员归属全部失真
+B 组（已配置）：归一为 4 名成员，方赫 7 条（4+1+1+1 合并），赵蕊/于悦/杨佳莹各 1 条，合计 10 条不重不漏
+缺陷定位：.env.example 未包含 MEMBER_DISPLAY_NAMES 键，照模板配置永远配不出归并规则

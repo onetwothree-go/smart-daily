@@ -1,0 +1,19 @@
+E-04 G5 / C2 降级链实测（2026-11-10）
+执行人：于悦（工具代跑）
+
+===== 一、真实运行：假 token 注入（GITHUB_TOKEN=0123456789abcdef，仓库指向 onetwothree-go/smart-daily）=====
+命令：DB_PATH=<临时库> GITHUB_TOKEN=0123456789abcdef GITHUB_REPO_OWNER=onetwothree-go GITHUB_REPO_NAME=smart-daily uv run python -m smart_daily.cli --no-notify
+结果：退出码 0；数据源=local-git；成员 8 / 条目 140；主流程未中断
+说明：本机 hosts 将 api.github.com 指向 127.0.0.1（第 31 行），TLS 被本地中间人替换，
+      Python 报 CERTIFICATE_VERIFY_FAILED，请求未真正到达 GitHub，故 401 路径本身未验证。
+
+===== 二、桩注入验证降级留痕（不依赖网络）=====
+生效数据源        : local-git （期望 local-git）
+条目数 / 成员数   : 1 / 1 （期望主流程不中断、有产出）
+输出含 '401'      : False （期望 True：应记录降级原因）
+输出含 'Bad cred' : False
+实际输出全文      : （空——什么都没打印）
+
+===== 三、结论 =====
+降级生效 ✅ / 主流程不中断 ✅ / 退码 0 ✅ / 降级原因留痕 ❌（collect_with_fallback 只在全部失败时把 errors 拼进异常，成功降级时 errors 被丢弃，无任何打印）
+对应 design ADR-103「故障原因留痕（errors 聚合）」：仅体现为全失败时的异常信息，成功降级时无留痕。
