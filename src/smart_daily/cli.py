@@ -10,11 +10,28 @@
 from __future__ import annotations
 
 import argparse
+import sqlite3
 import sys
 from datetime import date, datetime, timezone
 
+from .collectors.base import SourceUnavailableError
 from .collectors.mock import MockCollector
 from .orchestrator import DailyReportOrchestrator
+
+
+def _day_arg(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"日期格式应为 YYYY-MM-DD：{value}") from exc
+
+
+_PUSH_FAIL = {"partial", "failed", "no_channel"}
+
+
+def _exit_code(push_status: str) -> int:
+    """按 design 3.4 四码表把 push_status 映射为进程退出码（0 / 3）。"""
+    return 3 if push_status in _PUSH_FAIL else 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,6 +56,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--day",
+        type=_day_arg,
         help="报告日期，格式 YYYY-MM-DD。默认取数据中最新一条的时间",
     )
     parser.add_argument(
@@ -58,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         orch.db_path = __import__("pathlib").Path(
             __import__("os").getenv("DB_PATH", "data/daily_report.db")
         )
-        rows = orch.list_reports(date.fromisoformat(args.day) if args.day else None)
+        rows = orch.list_reports(args.day)
         if not rows:
             print("尚无已保存的日报记录")
             return 0
@@ -86,8 +104,11 @@ def main(argv: list[str] | None = None) -> int:
 
     orch = DailyReportOrchestrator(sources=sources)
 
-    day = date.fromisoformat(args.day) if args.day else None
-    result = orch.run(day=day, notify=not args.no_notify)
+    try:
+        result = orch.run(day=args.day, notify=not args.no_notify)
+    except (SourceUnavailableError, OSError, sqlite3.Error) as exc:
+        print(f"[error] 采集或落库失败：{exc}")
+        return 1
 
     print("\n" + "=" * 60)
     print(f"数据源    : {result['source']}")
@@ -96,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"条目数    : {result['items']}")
     print(f"已保存    : {result['saved_reports']} 份")
     print(f"已推送    : {result['pushed']}")
+    print(f"推送状态  : {result['push_status']}")
     print("=" * 60)
 
     detail = result.get("push_detail") or []
@@ -108,10 +130,9 @@ def main(argv: list[str] | None = None) -> int:
 
     print(result["team_report"])
 
-    if not args.no_notify and not result["pushed"]:
-        print("[push] 存在失败通道，退出码 1（C7：全部通道 ok 才算送达）")
-        return 1
-    return 0
+    if args.no_notify:
+        return 0
+    return _exit_code(result["push_status"])
 
 
 if __name__ == "__main__":
