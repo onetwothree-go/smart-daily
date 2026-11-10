@@ -1,0 +1,26 @@
+E-11 凭证有效性验证（2026-11-10 22:26）
+执行人：于悦（工具代跑，判定由本人确认）　凭证值一律不记录
+方法：只读调用，不发信、不推送；SMTP 仅登录不投递
+
+【1】SMTP 163 登录验证（不发信）
+    ✓ 登录成功　19997043369@163.com　（发件人默认与此一致，符合 163 的 From 校验）
+
+【2】飞书自建应用凭证（换 tenant_access_token）
+    ✗ code=21001 msg=Access denied due to platform policy. If you have questions, contact customer support for help.
+
+【3】GitHub PAT（读仓库元信息）
+    ✓ 认证通过　仓库 onetwothree-go/smart-daily　默认分支 main
+
+【4】飞书群机器人 Webhook（只校验，不发消息）
+    域名 open.feishu.cn　路径段数 8　长度 81
+    （真正发送会往团队群发消息，留到你点头再测）
+
+===== 说明 =====
+SMTP：163 邮箱登录成功，发件人字段与登录账号一致（符合 163 的 From 校验要求），端口 465 走 SSL
+GitHub：细粒度 PAT 认证通过，可读 onetwothree-go/smart-daily（默认分支 main）；需注入系统证书库绕过本机 hosts 中间人
+飞书自建应用：21001 Access denied due to platform policy —— 租户资质限制，非配置错误；design 0.5 §275/§546 已记载该错误码语义
+飞书 Webhook：格式合法（open.feishu.cn，81 字符），实际投递另见 E-09（code=0 成功）
+
+===== 影响 =====
+1) 飞书采集源不可用 → 团队日报实际只有「代码提交」一类来源，「任务进展」「群内消息」恒为空
+2) C1/G1 的三源合计无法用真实数据验证，只能以 mock 数据 + 桩注入覆盖

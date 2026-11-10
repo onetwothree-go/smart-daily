@@ -1,0 +1,31 @@
+E-08 G3-① 未映射账号告警 + C8 三源全失效（2026-11-10）
+执行人：于悦（工具代跑，判定由本人确认）
+
+===== 一、G3-① 未映射账号是否显式告警 =====
+构造：方赫、赵蕊（在 MEMBER_DISPLAY_NAMES 内）+ 王五（不在映射内）
+命令：构造 CommitEntry → 跑 DailyReportOrchestrator.run(notify=False) → 抓 stdout
+
+成员数 / 条目数 : 3 / 3 （王五未被丢弃，计入第 3 名成员）
+stdout 全文     : （空）
+告警关键词检索  : {'未映射': False, '未登记': False, '未知': False, '未配置': False}
+
+推送侧无邮箱成员：
+  方赫: 解析到 1 个收件人
+  王五: 解析到 0 个收件人
+  说明：王五解析为 0 个收件人，且无任何日志提示（members.py docstring 承诺「只在日志里提示」，实现未落地）
+
+===== 二、C8 三源全失效（编排层）=====
+抛出类型：SourceUnavailableError ✓
+异常信息： 所有数据源均不可用 -> github: github 凭证无效（401） | feishu: feishu 凭证无效（401） | local-git: local-git 凭证无效（401）
+
+===== 三、C8 三源全失效（CLI 层退出码）=====
+命令：桩注入 LocalGitCollector.collect 抛 SourceUnavailableError → cli.main(['--source','local-git','--no-notify'])
+[source] 使用本地 Git 数据源
+[push] 飞书群机器人 Webhook 通道已就绪
+[push] SMTP 邮件通道已就绪
+[error] 采集或落库失败：所有数据源均不可用 -> local-git: local-git 采集失败（测试桩：目录不是 Git 仓库）
+CLI 返回码： 1 （design 3.4：采集失败非 0）
+
+===== 结论 =====
+G3-①：未映射账号被计入独立成员、未被丢弃，但【无任何告警输出】→ 期望「日志出现身份未映射」未达成
+C8 全失效：抛 SourceUnavailableError ✓ / errors 聚合完整 ✓ / CLI 退码 1 ✓ → 达成
