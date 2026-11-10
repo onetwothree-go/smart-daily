@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from .collectors.base import SourceUnavailableError, WorkSource, collect_with_fallback
@@ -28,6 +28,13 @@ from .push.members import load_member_emails, resolve_recipients
 from .push.notifiers import EmailNotifier, FeishuWebhookNotifier, Notifier
 
 DB_PATH = os.getenv("DB_PATH", "data/daily_report.db")
+
+
+def _day_window(day: date) -> tuple[datetime, datetime]:
+    """报告日期对应的本地自然日窗口 [当天 00:00, 次日 00:00)。"""
+    start = datetime.combine(day, time.min).astimezone()
+    end = datetime.combine(day + timedelta(days=1), time.min).astimezone()
+    return start, end
 
 
 class DailyReportOrchestrator:
@@ -191,11 +198,15 @@ class DailyReportOrchestrator:
             （ok / partial / failed / no_channel / skipped），``pushed`` 恒等于
             ``push_status == "ok"``；退出码由 CLI 依 design 3.4 映射，编排层不决定进程生死。
         """
-        items, used = self.collect(since=since, until=until)
         if day is None:
-            # 用本地日期归属 —— 采集层拿到的是 UTC 时间戳，
-            # 直接取 .date() 在东八区会让日报标题差一天
-            day = local_date(items[0].timestamp) if items else date.today()
+            day = date.today()
+        if since is None or until is None:
+            win_start, win_end = _day_window(day)
+            since = since if since is not None else win_start
+            until = until if until is not None else win_end
+        items, used = self.collect(since=since, until=until)
+        # 各数据源对时间窗口的时区解释不一致，回到编排层按本地日历精确裁剪一次
+        items = [w for w in items if local_date(w.timestamp) == day]
 
         groups = group_by_member(items)
         team_text = build_team_report(groups, day=day)
