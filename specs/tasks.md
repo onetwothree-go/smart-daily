@@ -1,10 +1,11 @@
 # tasks.md —— 智能日报生成器 v1 任务拆解
 
-> 状态：**0.1.1 依据开发工程师评审意见修订（仍待开发/测试评审签字）** · 原作者：赵蕊（架构师） · 修订：杨佳莹（开发工程师） · 日期：2026-11-09
-> 输入：`specs/proposal.md` **0.4.2**（S1–S9 / N1–N9 / C1–C10 / §6.2）、`specs/design.md` **0.4.1**（1.x 分层、2.x 数据模型、3.x 接口契约、4 ADR、5 非功能约束）；红队评审待办 T-01–T-07 已并入本表 TK-7xx / TK-8xx 系列（见「评审 T-xx」标注），不再引用仓库中不存在的外部评审单
+> 状态：**0.1.2 随 design 0.5 同步红队评审修订（仍待开发/测试评审签字）** · 原作者：赵蕊（架构师） · 修订：杨佳莹（开发工程师）、赵蕊（架构师，0.1.2） · 日期：2026-11-10
+> 输入：`specs/proposal.md` **0.4.2**（S1–S9 / N1–N9 / C1–C10 / §6.2）、`specs/design.md` **0.5**（1.x 分层、2.x 数据模型、3.x 接口契约含 3.4.1 推送明细、4 ADR、5 非功能约束）；红队评审待办 T-01–T-07 已并入本表 TK-7xx / TK-8xx 系列（见「评审 T-xx」标注），不再引用仓库中不存在的外部评审单
 > **本表不是"待开发愿望清单"**：`src/` 已实现的照实标 ✅，实现了但没验证的标 ☐，需要补做的标 ⏳ 并给验收命令。这样它才能作为 `v1-sdd` 打 tag 的基线，而不是一张自我表扬的清单。
 > 阅读顺序：§2 依赖图 → 各阶段表 → §12 覆盖矩阵（确认 proposal 每条范围都有任务承接）。
 > 修订说明（0.1.1）：依据开发工程师评审意见（会话内提出，未单独成文）修订 3 条发现——输入版本号与死引用、任务表补「预估」列、TK-903 与 TK-804 口径。原作者署名仍为架构师赵蕊，本次属评审—修订循环，签字栏不代填。
+> 修订说明（0.1.2，2026-11-10）：**随 `design.md` 0.5 同步红队评审 4 处口径**——TK-103（退出码表改为 0/1/2/3 四码，引 design 3.4）、TK-303（补跨天任务归属验收边界，引 design 2.2）、TK-604（退出码验收细化到 `push_status` 映射）、TK-707（C7 判定改为「应送达集合 + `all()`」，回执须含 `at`/`error`，引 design 3.4/3.4.1）。对应回应见 `docs/赵蕊-红队回应.md`，本次不改任务条目总数与依赖 DAG。
 
 ---
 
@@ -102,7 +103,7 @@ flowchart LR
 | --- | --- | --- | --- | --- | --- | --- |
 | TK-101 | 建包骨架与依赖锁定 | `pyproject.toml`、`uv.lock`、`src/smart_daily/{collectors,push}/`、`main.py` 入口 | — | 0.5d | ①`uv sync` 在干净环境成功；②`uv run python -c "import smart_daily"` 返回 0；③运行依赖只有 `httpx`（`uv pip list` 可核）；④`pyproject.toml` 的入口必须写 `smart_daily.cli:main`（**现状写的是 `smart_daily:main`，属缺陷，随本任务修**） | ⏳（骨架在，入口待修） |
 | TK-102 | 配置与环境变量约定 | `.env.example`、`.gitignore`、`DB_PATH`/`MEMBER_*`/凭证变量清单 | TK-101 | 0.5d | ①`.env.example` 含全部变量且值为占位；②`git check-ignore -v .env` 命中；③故意把 `.env` 改名后运行 → 报"凭证缺失→降级"，不崩溃 | ✅ |
-| TK-103 | 日志前缀与退出码约定 | `[source]`/`[push]` 打印规范；CLI 退出码表 | TK-101 | 0.5d | ①同一运行中每行日志能看出属于哪个源/哪个通道；②退出码表写进 `--help` 或 README：0 成功 / 2 参数错 / 1 采集或落库失败 / **推送有失败项时非 0**（见 TK-707） | ☐（前缀有，退出码未定义） |
+| TK-103 | 日志前缀与退出码约定 | `[source]`/`[push]` 打印规范；CLI 退出码表 | TK-101 | 0.5d | ①同一运行中每行日志能看出属于哪个源/哪个通道；②退出码表按 **design 3.4** 写进 `--help` 或 README，四码固定：`0` 成功（含 `push_status="skipped"`）/ `1` 采集或落库失败 / `2` 参数错误（argparse）/ `3` 推送存在失败项（`partial`/`failed`/`no_channel`）；③`--list` 恒返回 `0`（无记录也算正常）；④文档与代码实际返回值一致，不得留「非 0」这类模糊表述 | ☐（前缀有；0.5 已定四码表，待实现） |
 
 ---
 
@@ -122,7 +123,7 @@ flowchart LR
 | --- | --- | --- | --- | --- | --- | --- |
 | TK-301 | GitHub 提交采集 | `collectors/github.py`：`from_env()`、`collect_commits()`、手动翻页、错误语义 | TK-203 | 1d | ①给定 `main` 上时间窗内的提交 → 返回条数与 GitHub 页面一致（单成员 100 条窗口内误差 0）；②无效 token → 抛 `SourceUnavailableError`（含 401/403 语义），**不返回 `[]`**；③空仓库（409）→ 抛异常并说明"仓库为空"；④未配 `GITHUB_REPO_OWNER/NAME` → 直接判定不可用，**不发请求**（断言 [3]） | ✅ |
 | TK-302 | 飞书 tenant_access_token 缓存 | `collectors/feishu.py` 的 token 管理 | TK-203 | 1d | ①同一进程内多次调用只取一次 token（计数断言 = 1）；②过期前 300 秒刷新；③`app_id/secret` 缺失 → 抛 `SourceUnavailableError` 且信息含中文提示（如 21001 租户资质） | ✅ |
-| TK-303 | 飞书任务采集 | 同上，任务接口 → `TaskEntry` | TK-302 | 1d | ①返回条目含 task_id/summary/created_at/completed；②时间归属用 `created_at`（与 design 2.2 一致）；③分页翻完取全，不因单页上限漏条 | ☐（凭证就绪，待真实数据） |
+| TK-303 | 飞书任务采集 | 同上，任务接口 → `TaskEntry` | TK-302 | 1d | ①返回条目含 task_id/summary/created_at/completed；②时间归属用 `created_at`（design 2.2：归属日 = `local_date(created_at)`）；③分页翻完取全，不因单页上限漏条；④**跨天用例**（design 2.2 跨天规则，构造 `created_at=2026-11-09T22:30+08:00`、`completed_at=2026-11-10T09:00+08:00`、`completed=True`）：`--day 2026-11-09` 该任务出现且 `item_count` 含 1；`--day 2026-11-10` **不出现**；两次合计出现 1 次（不重复计数） | ☐（凭证就绪，待真实数据） |
 | TK-304 | 飞书群消息采集（单群限定） | 同上，群消息接口 → `MessageEntry` | TK-302 | 1d | ①只读 `FEISHU_CHAT_ID` 指定群，其他群/私聊**零条目**（对应 S3/N7 红线）；②消息超过 N 条时分页取全；③群 ID 缺失 → 抛不可用，不静默返回 `[]` | ☐（同上） |
 | TK-305 | local-git 兜底采集 | `collectors/local_git.py` | TK-203 | 1d | ①只读本地仓库，不发任何网络请求（可用断网复跑验证）；②仓库不存在/非 git 目录 → 抛不可用；③与 GitHub 采集同一时间窗结果集应一致（同一仓库抽样比对） | ✅ |
 | TK-306 | mock 演示源 | `collectors/mock.py`（内置 4 人样例） | TK-203 | 1d | ①`--mock` 下**不依赖任何凭证**即可产出完整日报；②mock **不出现在默认降级链**里（构造无凭证环境跑默认链 → 结果不含演示数据） | ✅ |
@@ -158,7 +159,7 @@ flowchart LR
 | TK-601 | 编排主流程 | `orchestrator.py::run()` | TK-504、TK-305 | 0.5d | ①顺序为 采集→归属日→分组→团队→逐人个人→落库→推送；②任一推送失败不影响落库（查库可证）；③返回字典含 `date/source/members/items/saved_reports/pushed/push_detail/team_report`（字段名与 design 3.4 逐字一致） | ✅ |
 | TK-602 | SQLite 幂等落库 | `_ensure_db`、`save_report` | TK-601 | 0.5d | ①同日两次运行 → `(report_date, member)` 行数不变（C5）；②内容为最后一次运行结果；③`DB_PATH` 指向不可写路径 → 抛错且日报文本已打印到终端（不丢数据） | ✅ |
 | TK-603 | 历史查询 | `list_reports(day=None)` | TK-602 | 0.5d | ①按日期倒序；②`--list` 输出不含全文，只元数据；③排序键是 `report_date` 而**不是** `created_at`（后者是"最后写入时间"，见 design 2.3） | ✅ |
-| TK-604 | CLI | `cli.py`（`--mock`/`--source`/`--no-notify`/`--day`/`--list`） | TK-603 | 0.5d | ①五个参数行为与 design 3.4 表一致；②`--day` 指定日期时落库日期=该日；③`--list` 不触发采集（可用断网验证）；④退出码遵循 TK-103 的表 | ☐（参数齐，退出码待统一） |
+| TK-604 | CLI | `cli.py`（`--mock`/`--source`/`--no-notify`/`--day`/`--list`） | TK-603 | 0.5d | ①五个参数行为与 design 3.4 表一致；②`--day` 指定日期时落库日期=该日；③`--list` 不触发采集（可用断网验证）；④退出码按 **design 3.4 五条不变量**验收：`notify=True` 时 `pushed=False` **当且仅当**退出码 `3`；`--no-notify` 退出码 `0`；`notify=True` 但未配任何通道 → `push_status="no_channel"` 且退出码 `3`；`--list` 恒 `0` | ☐（参数齐；退出码仍恒 0，待按 3.4 实现） |
 
 ---
 
@@ -172,7 +173,7 @@ flowchart LR
 | TK-704 | 模板骨架一致性（C4） | `tests/test_generator.py` | TK-701 | 1d | ①个人/团队模板去变量后逐字一致；②20 条与 0 条成员都全量出现 | ⏳ |
 | TK-705 | 性能观察项（C6，评审 T-04） | 计时断言 | TK-701 | 1d | ①构造 100 条提交，打印耗时；②**只作观察、不进硬验收**（proposal 已降级），但必须有一条可复跑的计时输出 | ⏳ |
 | TK-706 | 采集遗漏人工对账流程 | `docs/testing/对账记录模板.md` | TK-604 | 1d | ①每次发布前用 CLI 汇总 / `--list` / 群消息三处对照；②差异逐条记录并注明原因（proposal 要求"人工核验方式"入文档） | ⏳ |
-| **TK-707** | **C7 送达判定修正（评审 T-01）** | `orchestrator.py`、`cli.py` | TK-701 | 1d | ①`pushed = all(...)`（4 邮件 + 1 群全部 ok 才真）；②任一通道失败 → CLI 退出码非 0；③`push_detail` 能指出**哪一条**失败（通道+范围+原因） | ⏳ **P0** |
+| **TK-707** | **C7 送达判定修正（评审 T-01 / RT-01、RT-02、RT-07）** | `orchestrator.py`、`cli.py` | TK-701 | 1.5d | ①`pushed = all(...)` 且分母是**应送达集合**（`len(groups)+1`：每人恰好 1 条 + 团队 1 条），`all([])==True` 不得判成送达成功（design 3.4）；②无邮箱/无通道的成员**仍产生记录**（`ok=False, error="no_recipient"/"no_channel"`），不得跳过不记账（现状 L235-238/L245-248 的缺口）；③任一通道失败 → `push_status≠"ok"` → CLI 退出码 `3`（design 3.4 退出码表）；④`push_detail` 能指出**哪一条**失败，元素含 `channel`/`scope`/`ok`/**`at`**/**`error`**（design 3.4.1） | ⏳ **P0** |
 | TK-708 | C1–C10 逐条核对表 | `docs/testing/成功标准核对表.md` | TK-702…707 | 1d | ①C1–C10 每条对应到 ≥1 个任务编号与 ≥1 条验收证据；②无证据的条目必须显式写"未验收 + 原因"，不许留空 | ⏳ |
 
 ---
@@ -196,7 +197,7 @@ flowchart LR
 | --- | --- | --- | --- | --- | --- | --- |
 | TK-901 | 敏感信息扫描（评审 T-05） | CI 步骤（gitleaks 或等价） | TK-701 | 0.5d | ①故意提交一个假 AWS key → CI 红；②正常 PR → 绿；③扫描结果不含任何真实凭证值时也不得打印密钥片段 | ⏳ |
 | **TK-902** | **dev → main 发布合并（评审 T-03）** | 一次 PR + merge commit | TK-708 | 0.5d | ①合并后默认分支上同时存在 `specs/design.md`、`specs/tasks.md`、`scripts/notify_push.py`、`.github/workflows/notify.yml`（可用 `git ls-tree main` 核对）；②main 上 `uv run python -m smart_daily.cli --mock` 可跑 | ⏳ **P0** |
-| TK-903 | 打标签 | `v1-sdd`（附三份规范版本号） | TK-902 | 0.5d | ①`git show v1-sdd` 的 tag message 列出 proposal 0.4.2 / design 0.4.1 / tasks 0.1.1；②tag 落在 main 的发布提交上 | ⏳ |
+| TK-903 | 打标签 | `v1-sdd`（附三份规范版本号） | TK-902 | 0.5d | ①`git show v1-sdd` 的 tag message 列出 proposal 0.4.2 / design 0.5 / tasks 0.1.2；②tag 落在 main 的发布提交上 | ⏳ |
 
 ---
 
@@ -226,7 +227,7 @@ flowchart LR
 | C4 模板骨架一致 | TK-404、TK-704 | 去变量后逐字比对 |
 | C5 同日重跑不追加 | TK-602、TK-703 | |
 | C6 100 条 < 30s | TK-705 | **观察项**，不进硬验收 |
-| C7 5 条送达全 ok | **TK-707** | 现状 `any()` 与契约相反，P0 |
+| C7 5 条送达全 ok | **TK-707** | 判定口径与契约相反（现状 `any()`），P0；design 0.5 的 3.4/3.4.1 已定「应送达集合 + `all()` + `at`/`error`」 |
 | C8 两种空可区分 | TK-703 | 现在只有"全失败抛异常"有实现 |
 | C9 跨时区归属 | TK-201、TK-703 | |
 | C10 实时提醒 | TK-801–TK-804 | `code=0` 只算正向通过，负向见 TK-803 |
@@ -236,7 +237,7 @@ flowchart LR
 | 排除项 | 任务表里的守卫 |
 | --- | --- |
 | N1 AI 摘要 | 生成层无任何模型调用；TK-403 断言"纯函数、无网络" |
-| N5 实时刷新 / 提醒计入条目 | TK-801 明确不写库；design 1.4 隔离表；TK-707 只统计 5 条 |
+| N5 实时刷新 / 提醒计入条目 | TK-801 明确不写库；design 1.4 隔离表；TK-707 只统计应送达集合（4 邮件 + 1 群），不含实时提醒 |
 | N8 自动定时汇总 / 自动重试 | 仓库只有 push 工作流，无 `schedule`；TK-802 验收里核对触发条件 |
 | N9 服务化 / 多机部署 | TK-902 只做分支发布，不引入部署 |
 
