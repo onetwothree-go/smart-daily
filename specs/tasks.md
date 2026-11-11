@@ -228,7 +228,7 @@ flowchart LR
 
 | 编号 | 任务 | 产出 | 依赖 | 预估 | 验收标准 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- |
-| **TK-701** | **断言脚本回填（评审 T-02）** | `scripts/verify_collectors.py`（34 项断言） | TK-306 | 1d | ①`uv run python scripts/verify_collectors.py` 全绿、打印 `34/34`；②覆盖 design 3.1 表格中标注的编号 [1][2][3][4][5][8][9][10][12]；③接入 CI，PR 上必须绿 | ⏳ **P0** |
+| **TK-701** | **断言脚本回填（评审 T-02）** | `scripts/verify_collectors.py`（34 项断言） | TK-306 | 1d | ①`uv run python scripts/verify_collectors.py` 全绿、打印 `34/34`；②覆盖 design 3.1 表格中标注的编号 [1][2][3][4][5][8][9][10][12]；③接入 CI，PR 上必须绿 | ✅（2026-11-11 已实现并有实测证据：`docs/testing/证据/TK-701-验证脚本输出-2026-11-11.txt`，34/34） |
 | TK-702 | 失效注入用例（C2） | `tests/test_fallback.py` | TK-701 | 1d | ①把 `GITHUB_TOKEN` 设为无效值 → 降级到 local-git、主流程不中断、日志有"降级原因"；②全过程无崩溃栈 | ⏳ |
 | TK-703 | 幂等 / 时区 / 空数据三件套（C5/C9/C8） | `tests/test_orchestrator.py` | TK-701 | 1d | ①连跑两次行数不变；②东八区 23:30 的提交归当日；③"当天无数据"与"三源全坏"两种空**输出不同**（前者落"今日无工作记录"，后者抛异常） | ⏳ |
 | TK-704 | 模板骨架一致性（C4） | `tests/test_generator.py` | TK-701 | 1d | ①个人/团队模板去变量后逐字一致；②20 条与 0 条成员都全量出现 | ⏳ |
