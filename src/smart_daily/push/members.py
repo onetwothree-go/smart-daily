@@ -68,4 +68,7 @@ def resolve_recipients(member: str, mapping: dict[str, list[str]] | None = None)
     for key, emails in mapping.items():
         if key.split("@")[0] == prefix:
             return list(emails)
+    # 模块 docstring 承诺「未知成员只在日志里提示」：不抛异常，只打一条日志，
+    # 与 Actions 侧 notify_push.py 的「身份未映射」告警口径一致
+    print(f"[push] 身份未映射：{member} 不在 MEMBER_EMAILS 中，跳过该成员的个人日报")
     return []

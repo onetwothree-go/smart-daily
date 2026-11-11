@@ -93,9 +93,13 @@ def collect_with_fallback(
             raw = src.collect(since=since, until=until, author=author)
         except SourceUnavailableError as exc:
             errors.append(f"{src.name}: {exc}")
+            # 降级成功时 errors 不会进异常消息，必须同步打到 stdout，
+            # 否则日志里只有「生效数据源 = xxx」，看不到前一个源为什么挂了
+            print(f"[source] {src.name} 不可用：{exc}")
             continue
         except Exception as exc:  # noqa: BLE001 - 任何数据源异常都不应中断主流程
             errors.append(f"{src.name}: {type(exc).__name__}: {exc}")
+            print(f"[source] {src.name} 不可用：{type(exc).__name__}: {exc}")
             continue
         return normalize(raw), src.name
 
