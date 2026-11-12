@@ -1,0 +1,39 @@
+E-01 自动化验收用例全量运行输出
+执行日期：2026-11-10
+执行命令：uv run python -m unittest discover -s tests -v
+运行机：本机 Windows / Python 3.13.14
+---- 输出开始 ----
+test_record_id逐条对账 (test_acceptance_pure.TestC1EntryCount.test_record_id逐条对账) ... ok
+test_按来源分组的条数自洽 (test_acceptance_pure.TestC1EntryCount.test_按来源分组的条数自洽) ... ok
+test_条目数等于提交加任务 (test_acceptance_pure.TestC1EntryCount.test_条目数等于提交加任务) ... ok
+test_0条成员仍被列出 (test_acceptance_pure.TestC4SkeletonConsistency.test_0条成员仍被列出) ... ok
+test_20条不截断 (test_acceptance_pure.TestC4SkeletonConsistency.test_20条不截断) ... ok
+test_四份个人日报骨架一致 (test_acceptance_pure.TestC4SkeletonConsistency.test_四份个人日报骨架一致) ... ok
+test_团队日报含全部四位成员 (test_acceptance_pure.TestC4SkeletonConsistency.test_团队日报含全部四位成员) ... ok
+test_个人日报空数据显式文案 (test_acceptance_pure.TestC8LegalEmpty.test_个人日报空数据显式文案) ... ok
+test_团队日报全组零记录仍产出 (test_acceptance_pure.TestC8LegalEmpty.test_团队日报全组零记录仍产出) ... ok
+test_零记录成员不丢人 (test_acceptance_pure.TestC8LegalEmpty.test_零记录成员不丢人) ... ok
+test_UTC16点计入次日 (test_acceptance_pure.TestC9Timezone.test_UTC16点计入次日) ... ok
+test_不能用直接date的老写法 (test_acceptance_pure.TestC9Timezone.test_不能用直接date的老写法) ... ok
+test_东八区2330计入当日 (test_acceptance_pure.TestC9Timezone.test_东八区2330计入当日) ... ok
+test_三源合计条数 (test_acceptance_pure.TestG1EntryCount.test_三源合计条数) ... ok
+test_同一动作跨三源不合并 (test_acceptance_pure.TestG1EntryCount.test_同一动作跨三源不合并) ... ok
+test_三个登录名归并为一份 (test_acceptance_pure.TestG3IdentityMerge.test_三个登录名归并为一份) ... ok
+test_不串人 (test_acceptance_pure.TestG3IdentityMerge.test_不串人) ... ok
+test_内容覆盖更新而非追加 (test_acceptance_runtime.TestC5Idempotent.test_内容覆盖更新而非追加) ... ok
+test_同日重跑记录数不变 (test_acceptance_runtime.TestC5Idempotent.test_同日重跑记录数不变) ... ok
+test_日期与成员联合唯一约束存在 (test_acceptance_runtime.TestC5Idempotent.test_日期与成员联合唯一约束存在) ... ok
+test_一封邮件失败不算送达 (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_一封邮件失败不算送达) ... ok
+test_不推送判skipped (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_不推送判skipped) ... ok
+test_五通道全ok判送达成功 (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_五通道全ok判送达成功) ... ok
+test_全部失败判failed (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_全部失败判failed) ... ok
+test_四封邮件数正确 (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_四封邮件数正确) ... ok
+test_无通道判no_channel (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_无通道判no_channel) ... ok
+test_群消息失败不算送达 (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_群消息失败不算送达) ... ok
+test_邮件只发个人日报 (test_acceptance_runtime.TestC7DeliveryFiveChannels.test_邮件只发个人日报) ... ok
+
+----------------------------------------------------------------------
+Ran 28 tests in 0.504s
+
+OK
+---- 输出结束 ----

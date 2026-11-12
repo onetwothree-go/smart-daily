@@ -1,0 +1,86 @@
+TK-701 采集层验证脚本运行输出
+日期：2026-11-11
+命令：uv run --env-file .env python scripts/verify_collectors.py
+位置：仓库根目录；数据源与推送通道配置取自本机 .env（凭证值不记录）
+退出码：0
+结论：34 项断言全部通过，失败 0，末行 34/34
+
+--- 原始输出 ---
+==============================================================
+  采集层验证 —— 数据源可替换与降级链路
+==============================================================
+
+[1] 本地 Git 采集器（过渡数据源）
+  [PASS] 本地仓库可读                                 读到 173 条提交
+  [PASS] 数据模型字段完整                               字段校验通过 173 条
+  [PASS] 贡献者列表可读                                9 位贡献者
+  [PASS] 时间窗口过滤生效                               未来窗口返回 0 条（应为 0）
+
+[2] GitHub 采集器异常识别
+  [PASS] 空仓库抛出降级异常                              正确识别：网络请求失败：[SSL: CERTIFICATE_VERIFY_FAILED] certif
+
+[3] GitHub 凭证/仓库地址缺失时的判定
+  [PASS] 仓库未配置时判定不可用                            小组仓库地址未配置（GITHUB_REPO_OWNER / GITHUB_REPO_NAME
+
+[4] 降级链路（首选失败 → 自动切换）
+[source] github 不可用：网络请求失败：[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1032)
+  [PASS] 主流程未被中断                                生效数据源 = local-git，173 条
+  [PASS] 产出模型统一                                 全部为 WorkItem
+  [PASS] 按时间倒序排列                                时间序校验通过
+
+[5] 全部数据源失败时的行为
+[source] broken 不可用：故意失败
+[source] broken 不可用：故意失败
+  [PASS] 全部失败时抛出明确异常                            异常信息含失败原因：True
+
+[6] 归一化层的健壮性
+  [PASS] WorkItem 二次归一化不报错                      173 → 173
+  [PASS] 非法记录类型明确报错                             无法归一化的记录类型：dict
+
+[7] 飞书采集器凭证未就绪时的表现
+  [PASS] 凭证齐备时构造成功                              飞书数据源已就绪
+
+[8] 空列表作为合法返回值的语义
+  [PASS] 空列表被接受为合法结果                            生效数据源 = empty-but-healthy（源可用，空列表不代表失败）
+  [PASS] 空列表不触发异常                               返回 0 条（符合契约）
+
+[9] 抛异常的数据源必须让降级链继续
+[source] proper-broken 不可用：全部通道不可用
+  [PASS] 抛异常的源让链路继续                             生效数据源 = local-git
+  [PASS] 兜底源产出非空结果                              173 条
+
+[10] 真实飞书采集器的失败语义
+[feishu] 任务采集不可用：获取 tenant_access_token 失败：21001 Access denied due to platform policy. If you have questions, contact customer support for help.（租户身份限制：App ID / Secret 本身正确，但当前租户无 OpenAPI 调用资质。个人版租户不支持开发自建应用，请在飞书客户端创建「免费团队」（角色选企业或组织负责人），在新团队下重建应用并更换凭证）
+[feishu] 群列表不可用：获取 tenant_access_token 失败：21001 Access denied due to platform policy. If you have questions, contact customer support for help.（租户身份限制：App ID / Secret 本身正确，但当前租户无 OpenAPI 调用资质。个人版租户不支持开发自建应用，请在飞书客户端创建「免费团队」（角色选企业或组织负责人），在新团队下重建应用并更换凭证）
+[feishu] 未找到可用群（需把机器人拉进群），本期只采任务
+  [PASS] 全通道不通时抛出降级异常                           飞书数据源全部通道不可用 -> 任务：获取 tenant_access_token 失败：2
+
+[11] mock 数据源（无凭证兜底）
+  [PASS] mock 无需凭证即可产出记录                        19 条原始记录
+  [PASS] mock 可独立作为唯一数据源                        生效数据源 = mock，19 条
+  [PASS] mock 条目全部落在当天                          跨天条目 0 条（应为 0）
+  [PASS] 三种记录类型都能取到事件时间                         统一取到 19 个时间戳
+
+[12] 日期归属的时区正确性
+  [PASS] UTC 时间戳按本地日历归属                         local_date = 2026-11-03
+  [PASS] 跨日边界取到正确的本地日期                          UTC 11-03 17:00 -> 本地 11-04 01:00 -> 归属 2026-11-04
+
+[13] 成员邮箱映射
+  [PASS] 按成员名匹配邮箱                               ['zhangsan@qq.com']
+  [PASS] 一个成员可配多个邮箱                             ['a@163.com', 'b@163.com']
+  [PASS] 邮箱前缀退化匹配                               ['zhangsan@qq.com']
+[push] 身份未映射：unknown 不在 MEMBER_EMAILS 中，跳过该成员的个人日报
+  [PASS] 未知成员返回空列表                              []
+
+[14] 推送通道的协议实现完整性
+  [PASS] EmailNotifier 实现 name 属性               name = 'email'
+  [PASS] FeishuWebhookNotifier 实现 name 属性       name = 'feishu-webhook'
+  [PASS] MultiNotifier 实现 name 属性               name = 'multi'
+  [PASS] EmailNotifier 满足 Notifier 协议           isinstance 检查通过
+  [PASS] FeishuWebhookNotifier 满足 Notifier 协议   isinstance 检查通过
+  [PASS] MultiNotifier 满足 Notifier 协议           isinstance 检查通过
+
+==============================================================
+  合计 34 项，通过 34，失败 0
+==============================================================
+34/34

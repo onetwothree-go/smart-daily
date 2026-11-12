@@ -1,50 +1,92 @@
 @startuml 智能日报生成器-用例图
+' ============================================================
+' 智能日报生成器 · 用例图（2026-11-10 重画版，需求分析师：方赫）
+' 事实源：specs/proposal.md 0.4.2 的 S1–S9 / C1–C10
+' 红队自检（附录 A）：
+'   1) 用例名一律「动词 + 名词」；
+'   2) include = 必然发生的公共行为，extend = 有触发条件的可选分支；
+'   3) 每个用例都能追溯到 proposal 范围条目，无孤立用例。
+' 与旧图的差异：
+'   - 删除「归属协作成果」：C3 明确「多人协作成果归属全部贡献者」本期不验收，属范围蔓延；
+'   - 新增「推送实时提醒」(S9/C10)、「保存日报快照」(S8/C5)、「归并成员身份」(S5/C3)；
+'   - 新增外部系统参与者 GitHub push 事件（S9 由 Actions 事件驱动，非人触发）；
+'   - 新增 extend 分支「降级本地 Git 采集」(C2)。
+' ============================================================
+title 智能日报生成器 用例图（第 2 周 · 需求分析师 方赫 · 2026-11-10）
 left to right direction
+skinparam defaultFontName "Microsoft YaHei"
 skinparam packageStyle rectangle
-
-actor "小组成员" as Member
-actor "团队负责人" as Leader
-actor "配置管理员" as Admin
-
-rectangle "智能日报生成器" {
-  usecase "采集 GitHub 提交" as UC1
-  usecase "采集飞书任务" as UC2
-  usecase "采集飞书群消息" as UC3
-  usecase "生成个人日报" as UC4
-  usecase "归属协作成果" as UC5
-  usecase "汇总团队日报" as UC6
-  usecase "推送日报\n(邮件/飞书机器人)" as UC7
-  usecase "查询历史日报" as UC8
-  usecase "配置数据源凭证" as UC9
-  usecase "维护成员映射" as UC10
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor #FFF8E7
+  BorderColor #A9711B
+  ArrowColor #666666
+  FontSize 12
+}
+skinparam actor {
+  BackgroundColor #EAF2F8
+  BorderColor #2E6DA4
+}
+skinparam rectangle {
+  BorderColor #333333
+  FontSize 14
+}
+skinparam legend {
+  BackgroundColor #F7F9F9
+  BorderColor #7F8C8D
+  FontSize 11
 }
 
+actor "小组成员" as Member
+actor "运行者\n（团队负责人）" as Operator
+actor "配置管理员" as Admin
+actor "GitHub push 事件\n（外部系统）" as GH
+
+rectangle "智能日报生成器（系统边界）" {
+  usecase "采集 GitHub 提交\n（S1 · C1/C3）" as UC1
+  usecase "降级本地 Git 采集\n（C2 · 可选分支）" as UCX
+  usecase "采集飞书任务流转\n（S2 · C1）" as UC2
+  usecase "采集飞书群消息\n（S3 · C1）" as UC3
+  usecase "查询历史日报\n（S8 · --list）" as UC8
+  usecase "生成个人日报\n（S4 · C1/C4）" as UC5
+  usecase "归并成员身份\n（S5 · C3）" as UC4
+  usecase "保存日报快照\n（S8 · C5）" as UC7
+  usecase "汇总团队日报\n（S6 · C4）" as UC6
+  usecase "推送日报\n（S7 · C7）" as UC9
+  usecase "推送实时提醒\n（S9 · C10）" as UC10
+  usecase "配置数据源凭证\n（S1–S3/S9 凭证红线）" as UC11
+  usecase "维护成员映射\n（S5）" as UC12
+}
+
+' ---- 参与者关联 ----
 Member --> UC1
 Member --> UC2
 Member --> UC3
-Member --> UC4
 Member --> UC8
+Operator --> UC6 : 22:00 本机手动触发
+Operator --> UC8
+Admin --> UC11
+Admin --> UC12
+GH --> UC10 : 仅 main / dev 的 push
 
-UC4 ..> UC5 : <<include>>
-UC6 ..> UC4 : <<include>>
-UC6 ..> UC7 : <<include>>
+' ---- include：必然发生 ----
+UC5 ..> UC4 : <<include>>
+UC5 ..> UC7 : <<include>>
+UC6 ..> UC5 : <<include>>
+UC6 ..> UC9 : <<include>>
 
-Leader --> UC6
-Leader --> UC7
-Leader --> UC8
+' ---- extend：满足触发条件才发生 ----
+UCX ..> UC1 : <<extend>>
 
-Admin --> UC9
-Admin --> UC10
-
-note right of UC5
-  依据提交与任务的
-  关联关系自动归属
-  到全部贡献者名下
-end note
-
-note bottom of UC9
-  凭证一律走环境变量
-  严禁写入代码或仓库
-end note
+legend bottom
+  <b>边界与判据</b>（条目细节一律回指 specs/proposal.md 0.4.2，图文不互相复制）
+  - 凭证：环境变量 / GitHub Actions Secrets，严禁写入代码或仓库；MEMBER_EMAILS 绝不进仓库（UC11）
+  - S9 实时提醒只作告知：一次 push 合并 1 条群消息、列全 commit 不截断、文本含「日报」二字；不落 SQLite、不进 G1 计数、不拼进日报正文（UC10 / C10）
+  - C3「多人协作成果归属全部贡献者」本期不验收，故不设对应用例；UC4 只验收同一成员多登录名归并
+  - include = 每次必然发生的公共行为；extend = 仅当 GITHUB_TOKEN 无效时降级 local-git（UCX / C2）
+  - 触发口径：本期 v1 按 S7 / N8 / I4「22:00 本机手动触发」；3f2b3ee 的本机计划任务为 v1.1 预研，不计入 v1 验收
+  - UC11 / UC12 为部署期配置，回指 S5 与 design 5.2 密钥红线，不属功能范围扩张
+  - 小组成员是数据来源主体、非触发者；触发者为 22:00 主编排与 GitHub push 事件
+endlegend
 
 @enduml

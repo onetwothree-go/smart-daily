@@ -1,0 +1,41 @@
+name: push 实时提交通知
+
+# 触发范围：只认 main 与 dev（Q20 / ADR-104 ②）
+# 不写 branches 过滤 → 每个 docs/xxx 等 PR 分支的推送都会刷一次群
+on:
+  push:
+    branches: [main, dev]
+
+# 最小权限：只检出代码，不需要写仓库（Q21：不调 GitHub API，故也不需要 token）
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    name: 发送 push 提醒到飞书群
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码（脚本与 src/）
+        uses: actions/checkout@v4
+
+      - name: 安装 Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: 安装唯一外部依赖 httpx
+        run: pip install httpx
+
+      - name: 读取事件文件并推送提醒
+        env:
+          # ① ② 两条 Webhook 凭证：只从 Secrets 注入，不写死、不打印
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          FEISHU_WEBHOOK_SECRET: ${{ secrets.FEISHU_WEBHOOK_SECRET }}
+          # ③ 触发者登录名（比 commits[].author.name 准，ADR-104 ③）
+          ACTOR: ${{ github.actor }}
+          # ④ 显示名映射：公开信息，明文写（4 人 8 个登录名/别名，见 docs/小组角色分工与轮换表.md）
+          # 20233046方赫 / fh0709 为方赫的历史与当前 git 署名，补齐以免触发「身份未映射」告警
+          MEMBER_DISPLAY_NAMES: 'zhaorui715:赵蕊,ZzzzzzzR:赵蕊,yjy120:杨佳莹,yuyue117:于悦,jchdhidhsh:方赫,fh:方赫,20233046方赫:方赫,fh0709:方赫'
+          # GITHUB_EVENT_PATH 由 runner 自动注入，无需配置
+        run: python scripts/notify_push.py

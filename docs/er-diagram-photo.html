@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ER 图 — daily_reports SQLite 表结构（design.md §2.3）</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: #f5f5f0;
+  display: flex;
+  justify-content: center;
+  padding: 40px 24px;
+}
+.card {
+  background: #fff;
+  padding: 48px 56px;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  max-width: 960px;
+  width: 100%;
+}
+h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+.sub {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 36px;
+}
+.er-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: 440px;
+}
+svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.footer-note {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid #e8e8e0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.7;
+}
+.footer-note strong { color: #333; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>ER 图 — SQLite 表结构</h1>
+  <p class="sub">与 <code>specs/design.md</code> §2.3 一致 &nbsp;·&nbsp; <strong>daily_reports</strong> 已实现 &nbsp;·&nbsp; <strong>work_items</strong> 本期约定（默认不建）</p>
+
+  <div class="er-wrapper">
+    <svg viewBox="0 0 840 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ER diagram">
+
+      <!-- ============ daily_reports 表 ============ -->
+      <!-- 表头 -->
+      <rect x="30" y="50" width="320" height="36" rx="0" fill="#2a78d6" />
+      <text x="190" y="73" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">daily_reports</text>
+
+      <!-- 表体 -->
+      <rect x="30" y="86" width="320" height="28" rx="0" fill="#fff" stroke="#2a78d6" stroke-width="1" />
+      <rect x="30" y="114" width="320" height="28" rx="0" fill="#fff" stroke="#2a78d6" stroke-width="1" />
+      <rect x="30" y="142" width="320" height="28" rx="0" fill="#fff" stroke="#2a78d6" stroke-width="1" />
+
+      <!-- 横线分隔（PK 区 → 数据区） -->
+      <line x1="30" y1="170" x2="350" y2="170" stroke="#2a78d6" stroke-width="1" />
+
+      <rect x="30" y="170" width="320" height="28" rx="0" fill="#fff" stroke="#2a78d6" stroke-width="1" />
+      <rect x="30" y="198" width="320" height="28" rx="0" fill="#fff" stroke="#2a78d6" stroke-width="1" />
+      <rect x="30" y="226" width="320" height="28" rx="0" fill="#fff" stroke="#2a78d6" stroke-width="1" />
+      <rect x="30" y="254" width="320" height="28" rx="0" fill="#fff" stroke="#2a78d6" stroke-width="1" />
+
+      <!-- 底部约束行 -->
+      <rect x="30" y="282" width="320" height="52" rx="0" fill="#f0f5fb" stroke="#2a78d6" stroke-width="1" />
+
+      <!-- 字段标注 -->
+      <!-- id (PK) -->
+      <text x="46" y="105" font-size="13" font-weight="600" font-family="monospace" fill="#1a1a1a">id</text>
+      <text x="330" y="105" text-anchor="end" font-size="11" fill="#888">INTEGER</text>
+      <text x="244" y="105" text-anchor="end" font-size="11" fill="#888">PK 自增</text>
+
+      <!-- report_date (UK) -->
+      <text x="46" y="133" font-size="13" font-family="monospace" fill="#1a1a1a">report_date</text>
+      <text x="330" y="133" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="244" y="133" text-anchor="end" font-size="11" fill="#888">UK NOT NULL</text>
+
+      <!-- member (UK) -->
+      <text x="46" y="161" font-size="13" font-family="monospace" fill="#1a1a1a">member</text>
+      <text x="330" y="161" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="244" y="161" text-anchor="end" font-size="11" fill="#888">UK NOT NULL</text>
+
+      <!-- content -->
+      <text x="46" y="189" font-size="13" font-family="monospace" fill="#1a1a1a">content</text>
+      <text x="330" y="189" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="244" y="189" text-anchor="end" font-size="11" fill="#888">NOT NULL</text>
+
+      <!-- item_count -->
+      <text x="46" y="217" font-size="13" font-family="monospace" fill="#1a1a1a">item_count</text>
+      <text x="330" y="217" text-anchor="end" font-size="11" fill="#888">INTEGER</text>
+      <text x="244" y="217" text-anchor="end" font-size="11" fill="#888">DEFAULT 0</text>
+
+      <!-- source_name -->
+      <text x="46" y="245" font-size="13" font-family="monospace" fill="#1a1a1a">source_name</text>
+      <text x="330" y="245" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="244" y="245" text-anchor="end" font-size="11" fill="#888">可空</text>
+
+      <!-- created_at -->
+      <text x="46" y="273" font-size="13" font-family="monospace" fill="#1a1a1a">created_at</text>
+      <text x="330" y="273" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="244" y="273" text-anchor="end" font-size="11" fill="#888">NOT NULL</text>
+
+      <!-- 约束脚注 -->
+      <text x="190" y="302" text-anchor="middle" font-size="12" font-weight="600" fill="#2a78d6">UNIQUE (report_date, member)</text>
+      <text x="190" y="322" text-anchor="middle" font-size="11" fill="#666">INSERT … ON CONFLICT DO UPDATE（幂等 upsert）</text>
+
+      <!-- ============ work_items 表 ============ -->
+      <!-- 表头 -->
+      <rect x="480" y="75" width="320" height="36" rx="0" fill="#c3c2b7" />
+      <text x="640" y="98" text-anchor="middle" font-size="15" font-weight="700" fill="#333">work_items</text>
+      <text x="632" y="98" font-size="11" fill="#777">📋 本期约定</text>
+
+      <!-- 表体 -->
+      <rect x="480" y="111" width="320" height="28" rx="0" fill="#fff" stroke="#aaa" stroke-width="1" />
+      <rect x="480" y="139" width="320" height="28" rx="0" fill="#fff" stroke="#aaa" stroke-width="1" />
+      <rect x="480" y="167" width="320" height="28" rx="0" fill="#fff" stroke="#aaa" stroke-width="1" />
+
+      <line x1="480" y1="195" x2="800" y2="195" stroke="#aaa" stroke-width="1" />
+
+      <rect x="480" y="195" width="320" height="28" rx="0" fill="#fff" stroke="#aaa" stroke-width="1" />
+      <rect x="480" y="223" width="320" height="28" rx="0" fill="#fff" stroke="#aaa" stroke-width="1" />
+      <rect x="480" y="251" width="320" height="28" rx="0" fill="#fff" stroke="#aaa" stroke-width="1" />
+
+      <rect x="480" y="279" width="320" height="52" rx="0" fill="#fafafa" stroke="#aaa" stroke-width="1" />
+
+      <!-- PK 竖线分隔 -->
+      <line x1="520" y1="195" x2="520" y2="279" stroke="#e0e0e0" stroke-width="0.5" />
+      <text x="500" y="214" text-anchor="middle" font-size="9" fill="#999">PK</text>
+
+      <!-- report_date (PK, FK) -->
+      <text x="496" y="130" font-size="13" font-family="monospace" fill="#1a1a1a">report_date</text>
+      <text x="784" y="130" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="660" y="130" text-anchor="end" font-size="11" fill="#888">PK / FK</text>
+
+      <!-- member -->
+      <text x="496" y="158" font-size="13" font-family="monospace" fill="#1a1a1a">member</text>
+      <text x="784" y="158" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="660" y="158" text-anchor="end" font-size="11" fill="#888">FK NOT NULL</text>
+
+      <!-- record_id (PK) -->
+      <text x="496" y="186" font-size="13" font-family="monospace" fill="#1a1a1a">record_id</text>
+      <text x="784" y="186" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="660" y="186" text-anchor="end" font-size="11" fill="#888">PK NOT NULL</text>
+
+      <!-- source -->
+      <text x="496" y="214" font-size="13" font-family="monospace" fill="#1a1a1a">source</text>
+      <text x="784" y="214" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="660" y="214" text-anchor="end" font-size="11" fill="#888">NOT NULL</text>
+
+      <!-- title -->
+      <text x="496" y="242" font-size="13" font-family="monospace" fill="#1a1a1a">title</text>
+      <text x="784" y="242" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="660" y="242" text-anchor="end" font-size="11" fill="#888">NOT NULL</text>
+
+      <!-- timestamp -->
+      <text x="496" y="270" font-size="13" font-family="monospace" fill="#1a1a1a">timestamp</text>
+      <text x="784" y="270" text-anchor="end" font-size="11" fill="#888">TEXT</text>
+      <text x="660" y="270" text-anchor="end" font-size="11" fill="#888">NOT NULL</text>
+
+      <!-- 约束脚注 -->
+      <text x="640" y="299" text-anchor="middle" font-size="12" font-weight="600" fill="#777">PRIMARY KEY (report_date, record_id)</text>
+      <text x="640" y="319" text-anchor="middle" font-size="11" fill="#999">逻辑外键 → daily_reports (report_date, member)</text>
+
+      <!-- ============ 关系线 ============ -->
+      <!-- 连线 -->
+      <line x1="350" y1="225" x2="480" y2="225" stroke="#555" stroke-width="1.5" />
+
+      <!-- 1 标注 -->
+      <line x1="354" y1="225" x2="354" y2="213" stroke="#555" stroke-width="1.5" />
+      <line x1="354" y1="225" x2="354" y2="237" stroke="#555" stroke-width="1.5" />
+
+      <!-- 多 标注 (crow's foot) -->
+      <line x1="476" y1="225" x2="484" y2="211" stroke="#555" stroke-width="1.5" />
+      <line x1="476" y1="225" x2="484" y2="239" stroke="#555" stroke-width="1.5" />
+      <line x1="476" y1="225" x2="476" y2="239" stroke="#555" stroke-width="1.5" />
+
+      <!-- 关系标签 -->
+      <rect x="379" y="206" width="62" height="18" rx="3" fill="#fff" />
+      <text x="410" y="219" text-anchor="middle" font-size="11" fill="#555">包含</text>
+
+      <text x="410" y="250" text-anchor="middle" font-size="10" fill="#999">一对多</text>
+
+      <!-- ============ 注释 ============ -->
+      <!-- daily_reports 注释 -->
+      <circle cx="54" cy="103" r="3" fill="#f5a623" />
+      <circle cx="54" cy="131" r="3" fill="#f5a623" />
+      <circle cx="54" cy="159" r="3" fill="#f5a623" />
+
+      <!-- work_items 注释 -->
+      <circle cx="504" cy="128" r="3" fill="#f5a623" />
+      <circle cx="504" cy="156" r="3" fill="#f5a623" />
+      <circle cx="504" cy="184" r="3" fill="#f5a623" />
+
+      <!-- 左上角标记 -->
+      <!-- work_items 虚线框 -->
+      <rect x="472" y="67" width="336" height="272" rx="0" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="8 4" />
+
+    </svg>
+  </div>
+
+  <div class="footer-note">
+    <strong>daily_reports</strong>：已实现（orchestrator.py::_ensure_db）。幂等键 UNIQUE(report_date, member)，同日同人重复执行覆盖而非追加。<br>
+    <strong>work_items</strong>：本期约定预留，默认不建。是否引入取决于对账测试的粒度要求。联合主键 (report_date, record_id) 天然幂等。<br>
+    <strong>关系</strong>：一对多，通过 (report_date, member) 做逻辑外键（SQLite 不强制外键约束，由应用层保证一致性）。<br>
+    <br>
+    ● 标记字段属于主键 / 唯一键 / 外键。&nbsp; &nbsp; · &nbsp; &nbsp;
+    <strong>来源</strong>：<a href="../specs/design.md">specs/design.md</a> §2.3
+  </div>
+</div>
+
+</body>
+</html>

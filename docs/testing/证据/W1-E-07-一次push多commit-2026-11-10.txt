@@ -1,0 +1,14 @@
+W1-E-07 TC-07 一次 push 多 commit 的刷屏口径
+采集日期：2026-11-10
+来源：GitHub Actions 真实运行日志 / 本机命令输出（凭证值一律不记录）
+────────────────────────────────────────────────────────────────────
+一次 push 含 ≥5 个 commit 的真实 run：1 次；含 1 个 commit 的 run：55 次。
+
+  run=42815992028  2026-11-10T12:28:05Z  提交数=7  文本块=1  code=0  https://github.com/onetwothree-go/smart-daily/actions/runs/42815992028
+    发送 push 提醒到飞书群	UNKNOWN STEP	2026-11-10T12:28:14.9507344Z 【日报·提交通知】方赫 向 dev 推送了 7 个提交
+    发送 push 提醒到飞书群	UNKNOWN STEP	2026-11-10T12:28:14.9521298Z HTTP 状态码：200｜耗时：1.52s
+    发送 push 提醒到飞书群	UNKNOWN STEP	2026-11-10T12:28:14.9521685Z 飞书返回：code=0 msg=success
+
+另：离线打桩构造 5 个 commit 的事件，post 次数 = 1、正文编号提交 = 5（见 W1-附录）。
+TC-07 判定：✅ 通过 —— 定稿口径为「一次 push 发 1 条」（design 3.5 / Q17），
+真实 7 commit 的 push 仍只产生 1 个提醒文本块，不多不少。

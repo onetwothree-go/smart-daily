@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
-from datetime import date, datetime, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from .collectors.base import SourceUnavailableError, WorkSource, collect_with_fallback
@@ -28,6 +28,13 @@ from .push.members import load_member_emails, resolve_recipients
 from .push.notifiers import EmailNotifier, FeishuWebhookNotifier, Notifier
 
 DB_PATH = os.getenv("DB_PATH", "data/daily_report.db")
+
+
+def _day_window(day: date) -> tuple[datetime, datetime]:
+    """报告日期对应的本地自然日窗口 [当天 00:00, 次日 00:00)。"""
+    start = datetime.combine(day, time.min).astimezone()
+    end = datetime.combine(day + timedelta(days=1), time.min).astimezone()
+    return start, end
 
 
 class DailyReportOrchestrator:
@@ -187,13 +194,19 @@ class DailyReportOrchestrator:
         """跑一次完整的日报生成流程。
 
         Returns:
-            包含生成结果与推送结果的字典。
+            包含生成结果与推送结果的字典。推送结果以 ``push_status`` 五态表达
+            （ok / partial / failed / no_channel / skipped），``pushed`` 恒等于
+            ``push_status == "ok"``；退出码由 CLI 依 design 3.4 映射，编排层不决定进程生死。
         """
-        items, used = self.collect(since=since, until=until)
         if day is None:
-            # 用本地日期归属 —— 采集层拿到的是 UTC 时间戳，
-            # 直接取 .date() 在东八区会让日报标题差一天
-            day = local_date(items[0].timestamp) if items else date.today()
+            day = date.today()
+        if since is None or until is None:
+            win_start, win_end = _day_window(day)
+            since = since if since is not None else win_start
+            until = until if until is not None else win_end
+        items, used = self.collect(since=since, until=until)
+        # 各数据源对时间窗口的时区解释不一致，回到编排层按本地日历精确裁剪一次
+        items = [w for w in items if local_date(w.timestamp) == day]
 
         groups = group_by_member(items)
         team_text = build_team_report(groups, day=day)
@@ -204,7 +217,6 @@ class DailyReportOrchestrator:
             self.save_report(member, text, len(member_items), day, used)
             saved += 1
 
-        pushed = False
         push_detail: list[dict[str, object]] = []
         if notify and self.notifiers:
             # 个人日报按成员分别发邮件 —— 每个人只收到自己的那份
@@ -212,7 +224,23 @@ class DailyReportOrchestrator:
             # 团队日报走群渠道（飞书机器人 Webhook 等）
             team_results = self._push_team_report(team_text, day)
             push_detail = email_results + team_results
-            pushed = any(r["ok"] for r in push_detail)
+
+        # design 3.4 的推送五态判定。注意：应送达集合（TK-707 ②）尚未落地，
+        # 这里的 "ok" 只代表「已产生的回执全 ok」，不代表应送达的每一条都有回执。
+        if not notify:
+            push_status = "skipped"
+        elif not self.notifiers or not push_detail:
+            # 无可用通道，或通道存在但没有产生任何回执
+            push_status = "no_channel"
+        elif all(r["ok"] for r in push_detail):
+            push_status = "ok"
+        elif any(r["ok"] for r in push_detail):
+            push_status = "partial"
+        else:
+            push_status = "failed"
+
+        # 保留防空列表语义：all([]) == True 不得判成功
+        pushed = push_status == "ok"
 
         return {
             "date": day.isoformat(),
@@ -221,6 +249,7 @@ class DailyReportOrchestrator:
             "items": len(items),
             "saved_reports": saved,
             "pushed": pushed,
+            "push_status": push_status,
             "push_detail": push_detail,
             "team_report": team_text,
         }
