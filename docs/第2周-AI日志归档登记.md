@@ -34,7 +34,7 @@
 | 06 | 2026-11-09 | 于悦 | docs/于悦-红队评审意见清单.md | commit 作者 yuyue117（6455276/12849f1） | ☑ |
 | 07 | 2026-11-09 | 赵蕊 | specs/design.md | commit 作者（10f4bee/12fe04d/0ebb5b8） | ☑ |
 | 08 | 2026-11-09 | 赵蕊 | docs/赵蕊-陷阱自查.md | 文件名 + commit 作者 | ☑ |
-| 09 | 2026-11-09 | 赵蕊 | docs/双轨建模对比.md | commit 作者（26343e2/f2ad46b） | ☑ |
+| 09 | 2026-11-09 | 赵蕊 | docs/赵蕊-双轨建模对比.md | commit 作者（26343e2/f2ad46b） | ☑ |
 | 10 | 2026-11-09 | 赵蕊 | .github/workflows/connectivity-test.yml | commit 作者（CI/连通性职责） | ☑ |
 | 11 | 2026-11-09 | 赵蕊 | .github/workflows/notify.yml | commit 作者（PR #3 系列） | ☑ |
 | 12 | 2026-11-09 | 赵蕊 | specs/design.md | commit 作者（PR #3 f78be14） | ☑ |
