@@ -21,6 +21,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
+from ..identity import lookup_display_name
 from .base import SourceUnavailableError
 from .models import CommitEntry, RawRecord
 # git log 的分隔符，用不可能出现在提交信息里的单元分隔符
@@ -93,11 +94,15 @@ class LocalGitCollector:
             if len(fields) < 5:
                 continue
             sha, an, ae, aI, subject = fields[:5]
+            # 本地 git 的 user.name 是自由文本（同一人可能有 as / yjy120 等多种写法），
+            # 与 GitHub 登录名走同一份 MEMBER_DISPLAY_NAMES 归并，避免同一人被拆成多份日报。
+            # 候选键按「姓名 → 邮箱本地部分」依次查；未命中回落原始姓名。
+            display = lookup_display_name(an, ae.partition("@")[0]) or an
             entries.append(
                 CommitEntry(
                     sha=sha[:8],
                     author_login=ae,
-                    author_name=an,
+                    author_name=display,
                     timestamp=datetime.fromisoformat(aI),
                     message=subject,
                     repo=self.repo_name,

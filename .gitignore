@@ -26,6 +26,15 @@ sessions/
 .idea/
 .vscode/
 *.swp
+*.bkp
+.$*
+
+# 本地工作数据（Agent 会话产物、改前备份，不入库）
+.workbuddy/
+
+# Word 打开时的锁文件
+~$*
+docs/~$*
 
 # 系统
 .DS_Store

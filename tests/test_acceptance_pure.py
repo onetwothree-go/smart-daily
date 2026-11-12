@@ -32,6 +32,7 @@ from smart_daily.collectors.models import (
     local_date,
     normalize,
 )
+from smart_daily.identity import lookup_display_name, parse_mapping
 from smart_daily.push.generator import (
     build_personal_report,
     build_team_report,
@@ -249,6 +250,24 @@ class TestG3IdentityMerge(unittest.TestCase):
         groups = group_by_member(normalize(entries))
         self.assertEqual({i.record_id for i in groups["甲"]}, {"a1"})
         self.assertEqual({i.record_id for i in groups["乙"]}, {"b1"})
+
+    def test_别名解析_strip且大小写不敏感(self) -> None:
+        """G3 / RT-06：匹配口径为 strip() + casefold()，非采集链路各写一套。"""
+        raw = "yjy120:杨佳莹,As:杨佳莹,zhaorui715:赵蕊,fh0709:方赫"
+        self.assertEqual(lookup_display_name(" YJY120 ", mapping_raw=raw), "杨佳莹")
+        self.assertEqual(lookup_display_name("as", mapping_raw=raw), "杨佳莹")
+        self.assertEqual(lookup_display_name("ZHAORUI715", mapping_raw=raw), "赵蕊")
+
+    def test_别名解析_多候选按优先级回落(self) -> None:
+        """本地 git 姓名未配置时，用邮箱本地部分继续查；都未命中才返回 None。"""
+        raw = "yang13039348457:杨佳莹"
+        self.assertEqual(
+            lookup_display_name("as", "yang13039348457", mapping_raw=raw), "杨佳莹"
+        )
+        self.assertIsNone(lookup_display_name("as", "nobody", mapping_raw=raw))
+
+    def test_别名解析_非法片段跳过(self) -> None:
+        self.assertEqual(parse_mapping("yjy120:杨佳莹,坏片段,:无键,键无值:"), {"yjy120": "杨佳莹"})
 
 
 class TestC4SkeletonConsistency(unittest.TestCase):

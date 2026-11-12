@@ -1,0 +1,72 @@
+W1-E-05-E2E  TC-05 关键词 / 签名：端到端补测（真实失败 run × 2）
+补测日期：2026-11-12（北京时间 22:20~22:21）
+来源：GitHub Actions 真实运行日志（凭证值一律不记录）
+关联：W1-E-05-错误码分支验证-2026-11-10.txt（11-10 离线打桩与「不伪造失败 run」留痕，原样保留）
+────────────────────────────────────────────────────────────────────
+一、11-10 的两个障碍，本次如何绕开（都不碰真实凭证）
+
+  障碍 1：触发 19021 需要改共享仓库 Secret，而真实 Secret 只存在于 Actions Secrets，
+          gh 只能列键名、不能读值，改了就无法还原。
+  → 解决：只在一次性隔离分支的 workflow 里，把
+          FEISHU_WEBHOOK_SECRET: ${{ secrets.FEISHU_WEBHOOK_SECRET }}
+          临时换成一个**字面错值**（tc05-invalid-secret-e2e-20261112，非真实凭证）。
+          GitHub Secret 本体从未改写，删分支即完全恢复。
+
+  障碍 2：scripts/notify_push.py 的 main() 有一道本地闸门
+          「if KEYWORD not in text: 拒发」，只把标题里的「日报」去掉会连 POST 都不发，
+          根本拿不到飞书返回码。
+  → 解决：测试分支上临时把该闸门改为 if False and ...，并把标题
+          【日报·提交通知】改为【提交通知】，让不含关键词的文本**真的 POST 到飞书**，
+          由飞书侧返回 19024。仅测试分支改动，dev 原版未动。
+
+  两次都在同一隔离分支 feature/w1-tc03-tc05-e2e 上各推 1 个 commit 触发。
+
+二、运行与证据
+
+  ── ① 关键词不匹配 ──────────────────────────────────────────────
+  run      : 43236180204
+  URL      : https://github.com/onetwothree-go/smart-daily/actions/runs/43236180204
+  head_sha : ee126d0
+  created  : 2026-11-12T14:20:36Z   updated: 2026-11-12T14:20:48Z
+  status   : completed   conclusion: failure（红灯）
+  日志关键行原文：
+    发送失败：关键词不匹配（消息必须含「日报」）
+    【提交通知】方赫 向 w1-tc03-tc05-e2e 推送了 1 个提交
+    HTTP 状态码：200｜耗时：0.84s
+    飞书返回：code=19024 msg=Key Words Not Found
+    ##[error]Process completed with exit code 1.
+
+  ── ② 签名校验不通过 ────────────────────────────────────────────
+  run      : 43236335742
+  URL      : https://github.com/onetwothree-go/smart-daily/actions/runs/43236335742
+  head_sha : d04dcca
+  created  : 2026-11-12T14:21:29Z   updated: 2026-11-12T14:21:46Z
+  status   : completed   conclusion: failure（红灯）
+  日志关键行原文：
+    发送失败：签名校验不通过（检查 FEISHU_WEBHOOK_SECRET 与 gen_sign 算法）
+    【日报·提交通知】方赫 向 w1-tc03-tc05-e2e 推送了 1 个提交
+    HTTP 状态码：200｜耗时：0.85s
+    飞书返回：code=19021 msg=sign match fail or timestamp is not within one hour from current time
+    ##[error]Process completed with exit code 1.
+
+三、逐条对期望结果（模板：2/2 红灯 + 错误码匹配）
+
+  ① 去掉正文「日报」→ code=19024  ✅ 飞书真实返回 19024 Key Words Not Found
+  ② 填错 Secret      → code=19021  ✅ 飞书真实返回 19021 sign match fail
+  ③ 两次 Actions 均亮红灯         ✅ 两次 conclusion = failure，退出码 1
+  ④ 错误码进日志、不静默失败      ✅ 两次均打印「发送失败：…」具体原因，无自动重试
+  ⑤ 不重试、不往群发自动告警      ✅ 两次 POST 均被飞书拒收，群内无这两条消息
+
+四、TC-05 判定：✅ 通过（2026-11-12 端到端补测，2/2 真实失败 run）
+  11-10 的「⏭ 跳过（端到端）／代码级通过」按证据链保留在执行记录中，
+  本次为追加补测与改判，不覆盖、不倒填原记录，也未把原 ⏭ 伪装成从未发生。
+
+五、隔离与恢复（重要）
+  - 测试分支已用 git push origin --delete 删除，远端 ls-remote 复查为 0 条；本地分支已删除。
+  - dev 与 origin/dev 无差异；.github/workflows/notify.yml 与 scripts/notify_push.py
+    经 git diff --exit-code origin/dev 校验为**原版，一个字节未改**（含本地关键词闸门）。
+  - 两条 GitHub Actions Secrets 未读取、未改写、未打印；workflow 里出现的错值
+    是测试字面量，不是真实凭证；本文件不含任何凭证值。
+  - 三次测试 push 期间 dev 未产生新的 notify run，未干扰全组日常通知。
+  - 说明：两次 conclusion=failure 是**期望结果**（Q21 要求失败留痕并亮红灯），
+    不是配置故障；删除分支后 dev 的常规通知仍为 success。

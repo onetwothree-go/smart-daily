@@ -1,0 +1,53 @@
+W1-E-03-E2E  TC-03 未映射身份：端到端补测（真实环境）
+补测日期：2026-11-12（北京时间 22:18~22:19）
+来源：GitHub Actions 真实运行日志（凭证值一律不记录）
+关联：W1-E-03-身份未映射告警-2026-11-10.txt（11-10 离线打桩与真实环境 0 次触发的留痕，原样保留）
+────────────────────────────────────────────────────────────────────
+一、为什么这次能端到端跑（11-10 缺的是「不在映射表内的账号」）
+
+  不新增 GitHub 账号、不改全组共用的 dev/main 映射，改为在**一次性隔离分支**
+  feature/w1-tc03-tc05-e2e 上，仅在该分支的 .github/workflows/notify.yml 中
+  临时把方赫的 4 个别名（jchdhidhsh / fh / 20233046方赫 / fh0709）从
+  MEMBER_DISPLAY_NAMES 摘除，并把该分支名临时加进 on.push.branches。
+  于是本次真实 push 的 github.actor = jchdhidhsh 就成了一个「未映射身份」。
+  这是模板 TC-03 步骤里原本认可的备选路径：「或临时从 workflow 摘掉一个别名做对照」。
+
+二、运行与证据
+
+  run      : 43235888593
+  URL      : https://github.com/onetwothree-go/smart-daily/actions/runs/43235888593
+  head_sha : c4074bf
+  branch   : feature/w1-tc03-tc05-e2e
+  actor    : jchdhidhsh
+  created  : 2026-11-12T14:18:54Z   updated: 2026-11-12T14:19:15Z
+  status   : completed   conclusion: success
+
+  run 日志关键行原文（gh run view 43235888593 --log）：
+    ##[warning]身份未映射：登录名 'jchdhidhsh' 不在 MEMBER_DISPLAY_NAMES 中，已回落显示原始登录名
+    --- 待发送文本 ---
+    【日报·提交通知】jchdhidhsh 向 w1-tc03-tc05-e2e 推送了 1 个提交
+    1. c4074bf test: W1-TC03 端到端补测（临时分支：摘除当前 actor 映射）
+    时间：2026-11-12 22:19（北京时间）
+    HTTP 状态码：200｜耗时：1.30s
+    飞书返回：code=0 msg=success
+
+  运行摘要 ANNOTATIONS 中亦可见该 warning 注解（.github#16）。
+
+三、逐条对期望结果
+
+  ① 回落显示原始登录名      ✅ 正文署名为 jchdhidhsh，未显示中文名「方赫」
+  ② 日志有「身份未映射」告警 ✅ 真实 ::warning:: 注解 1 次（非 commit 说明文字）
+  ③ 不静默丢记录            ✅ 飞书 code=0、HTTP 200、run 结论 success、退出码 0
+  ④ 不自动改判定/不丢 commit ✅ 正文列出本次 1 个 commit 原文
+
+四、TC-03 判定：✅ 通过（2026-11-12 端到端补测）
+  11-10 的「⏭ 跳过（端到端未触发；代码级通过）」按证据链保留在执行记录中，
+  本次为追加补测与改判，不覆盖、不倒填原记录。
+
+五、隔离与恢复（重要）
+  - 测试分支已用 git push origin --delete 删除，远端 ls-remote 复查为 0 条；本地分支已删除。
+  - dev 与 origin/dev 无差异；.github/workflows/notify.yml 与 scripts/notify_push.py
+    经 git diff --exit-code origin/dev 校验为**原版，一个字节未改**。
+  - 两条 GitHub Actions Secrets 未读取、未改写、未打印；本文件不含任何凭证值。
+  - 旁证：三次测试 push 期间，dev 分支未产生新的 notify run（最近一次 dev run 为
+    14:02:20Z，早于本次 14:18:54Z），未干扰全组日常通知；测试消息仅在 TC-03 成功投递 1 条。

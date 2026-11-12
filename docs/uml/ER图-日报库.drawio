@@ -1,0 +1,102 @@
+<mxfile host="Electron" agent="draw.io">
+  <diagram id="er-daily-reports" name="ER图-日报库">
+    <mxGraphModel dx="1120" dy="861" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ga" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontStyle=1;fontSize=13;" value="daily_reports" vertex="1">
+          <mxGeometry height="310" width="400" x="90" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="gaHead" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontStyle=1;fontSize=13;" value="daily_reports" vertex="1">
+          <mxGeometry height="36" width="400" as="geometry" />
+        </mxCell>
+        <mxCell id="gaR1" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=10;" value="id　　PK 自增　　INTEGER" vertex="1">
+          <mxGeometry height="30" width="400" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="gaR2" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=10;" value="report_date　　UK NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="gaR3" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=10;" value="member　　UK NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="gaR4" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=10;" value="content　　NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="gaR5" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=10;" value="item_count　　DEFAULT 0　　INTEGER" vertex="1">
+          <mxGeometry height="30" width="400" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="gaR6" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=10;" value="source_name　　可空　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="gaR7" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=12;align=left;spacingLeft=10;" value="created_at　　NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="gaF1" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontStyle=1;fontSize=13;" value="UNIQUE (report_date, member)" vertex="1">
+          <mxGeometry height="32" width="400" y="246" as="geometry" />
+        </mxCell>
+        <mxCell id="gaF2" parent="ga" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontStyle=1;fontSize=13;" value="INSERT ... ON CONFLICT DO UPDATE（幂等 upsert）" vertex="1">
+          <mxGeometry height="32" width="400" y="278" as="geometry" />
+        </mxCell>
+        <mxCell id="box" parent="1" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=none;strokeColor=#999999;arcSize=4;" value="" vertex="1">
+          <mxGeometry height="350" width="480" x="660" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="note" parent="1" style="text;html=1;fontColor=#888888;fontSize=12;align=left;verticalAlign=top;" value="注" vertex="1">
+          <mxGeometry height="20" width="30" x="1100" y="56" as="geometry" />
+        </mxCell>
+        <mxCell id="gb" parent="1" style="group" value="work_items" vertex="1">
+          <mxGeometry height="278" width="400" x="660" y="98" as="geometry" />
+        </mxCell>
+        <mxCell id="gbHead" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontStyle=1;fontSize=13;" value="work_items" vertex="1">
+          <mxGeometry height="36" width="400" as="geometry" />
+        </mxCell>
+        <mxCell id="gbR1" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;align=left;spacingLeft=10;" value="report_date　　PK / FK　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="gbR2" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;align=left;spacingLeft=10;" value="member　　FK NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="66" as="geometry" />
+        </mxCell>
+        <mxCell id="gbR3" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;align=left;spacingLeft=10;" value="record_id　　PK NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="gbR4" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;align=left;spacingLeft=10;" value="source　　NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="gbR5" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;align=left;spacingLeft=10;" value="title　　NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="gbR6" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;align=left;spacingLeft=10;" value="timestamp　　NOT NULL　　TEXT" vertex="1">
+          <mxGeometry height="30" width="400" y="186" as="geometry" />
+        </mxCell>
+        <mxCell id="gbF1" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;fontStyle=1;" value="PRIMARY KEY (report_date, record_id)" vertex="1">
+          <mxGeometry height="32" width="400" y="216" as="geometry" />
+        </mxCell>
+        <mxCell id="gbF2" parent="gb" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=11;fontColor=#777777;" value="逻辑外键 → daily_reports (report_date, member)" vertex="1">
+          <mxGeometry height="30" width="400" y="248" as="geometry" />
+        </mxCell>
+        <mxCell id="rel" edge="1" parent="1" source="ga" style="endArrow=none;html=1;strokeColor=#333333;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.52;entryDx=0;entryDy=0;edgeStyle=none;" target="gb" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="relContain" connectable="0" parent="rel" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontColor=#333333;" value="包含" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-14" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="relCard" connectable="0" parent="rel" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=11;fontColor=#888888;" value="一对多" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="relOne" connectable="0" parent="rel" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontColor=#333333;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.9" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="relMany" connectable="0" parent="rel" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=12;fontColor=#333333;" value="n" vertex="1">
+          <mxGeometry relative="1" x="0.9" as="geometry">
+            <mxPoint y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

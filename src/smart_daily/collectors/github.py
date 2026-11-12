@@ -23,6 +23,7 @@ from typing import Any, Iterator
 
 import httpx
 
+from ..identity import lookup_display_name
 from .base import SourceUnavailableError
 from .models import CommitEntry, RawRecord
 
@@ -36,15 +37,11 @@ def _display_name(login: str, fallback: str) -> str:
     映射走环境变量 MEMBER_DISPLAY_NAMES（配置管理员维护，
     格式：login:显示名,login:显示名），未配置或未命中时原样返回 fallback。
     新成员提交过代码后，把其登录名补进 .env 即可。
+
+    解析收敛到 ``identity.lookup_display_name``（design.md 2.2【本期约定】）：
+    strip + casefold 的匹配口径与实时通道共用同一份实现。
     """
-    raw = os.getenv("MEMBER_DISPLAY_NAMES", "")
-    for pair in raw.split(","):
-        pair = pair.strip()
-        if ":" in pair:
-            key, value = pair.split(":", 1)
-            if key.strip() == login:
-                return value.strip()
-    return fallback
+    return lookup_display_name(login) or fallback
 
 
 class GitHubCollector:
