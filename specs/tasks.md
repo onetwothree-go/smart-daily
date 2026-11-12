@@ -258,8 +258,8 @@ flowchart LR
 | 编号 | 任务 | 产出 | 依赖 | 预估 | 验收标准 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- |
 | TK-901 | 敏感信息扫描（评审 T-05） | CI 步骤（gitleaks 或等价） | TK-701 | 0.5d | ①故意提交一个假 AWS key → CI 红；②正常 PR → 绿；③扫描结果不含任何真实凭证值时也不得打印密钥片段 | ⏳ |
-| **TK-902** | **dev → main 发布合并（评审 T-03）** | 一次 PR + merge commit | TK-708 | 0.5d | ①合并后默认分支上同时存在 `specs/design.md`、`specs/tasks.md`、`scripts/notify_push.py`、`.github/workflows/notify.yml`（可用 `git ls-tree main` 核对）；②main 上 `uv run python -m smart_daily.cli --mock` 可跑 | ⏳ **P0** |
-| TK-903 | 打标签 | `v1-sdd`（附三份规范版本号） | TK-902 | 0.5d | ①`git show v1-sdd` 的 tag message 列出 proposal 0.4.2 / design 0.5.1 / tasks 0.1.4；②tag 落在 main 的发布提交上 | ⏳ |
+| **TK-902** | **dev → main 发布合并（评审 T-03）** | 一次 PR + merge commit | TK-708 | 0.5d | ①合并后默认分支上同时存在 `specs/design.md`、`specs/tasks.md`、`scripts/notify_push.py`、`.github/workflows/notify.yml`（可用 `git ls-tree main` 核对）；②main 上 `uv run python -m smart_daily.cli --mock` 可跑 | ✅（2026-11-12 配置管理员执行：--no-ff 合并 `a2d4940` 并推送，两条验收均实测通过——`git ls-tree main` 四文件齐全、mock 演示正常出报告） |
+| TK-903 | 打标签 | `v1-sdd`（附三份规范版本号） | TK-902 | 0.5d | ①`git show v1-sdd` 的 tag message 列出 proposal 0.4.2 / design 0.5.1 / tasks 0.1.4；②tag 落在 main 的发布提交上 | ✅（2026-11-12 配置管理员执行：v1-sdd 打在 main 发布提交 `a2d4940`，message 含日期/基线/三版本号 0.4.2·0.5.1·0.1.4/已知限制；dev 上原同名标签依标签规范第 1 条改名 `v1-sdd-rc1` 保留） |
 
 ---
 
