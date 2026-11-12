@@ -104,7 +104,7 @@
 - [x] **本人（方赫）名下 9 行** `☐ 待确认` 已于 2026-11-12 22:48 经本人授权代勾为 ☑（见 `docs/ai-usage-log.md` 22:48 补记）；**组内他人 ☐ 行仍待各自核对，配置管理员不代改、不代勾**
 - [ ] 组内确认工具列口径：如实填写 `Claude Code` / `WorkBuddy` 即可，不为对齐分工单改写（沿用第 1 周结论）
 - [ ] 归档结果发全组确认
-- [ ] 本表提交 `dev`，随 TK-902 的 dev → main PR 合入
+- [x] 本表已提交 `dev`；**dev → main PR #12 已于 2026-11-12 22:59 创建**（https://github.com/onetwothree-go/smart-daily/pull/12），待组内按 `BRANCHING.md` 第 5 条至少一人 Review 后合并；原 TK-902 的 PR #11 已合并
 
 ## 六、可直接贴群的话术
 
