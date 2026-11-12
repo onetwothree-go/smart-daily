@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import os
+import ssl
 from datetime import datetime, timezone
 from typing import Any, Iterator
 
@@ -63,6 +64,10 @@ class GitHubCollector:
         self._client = httpx.Client(
             base_url=GITHUB_API,
             timeout=timeout,
+            # 部分本机终端会注入 HTTPS 代理，httpx 默认用 certifi 证书库，
+            # 不信任该代理的根证书会报 CERTIFICATE_VERIFY_FAILED 并误判数据源不可用。
+            # 改用系统证书库，代理环境与直连环境都能正常校验（两条路径均已实测 200）。
+            verify=ssl.create_default_context(),
             headers={
                 "Authorization": f"Bearer {token}",
                 "Accept": "application/vnd.github+json",
@@ -144,6 +149,10 @@ class GitHubCollector:
         if "/" not in target:
             raise SourceUnavailableError(f"仓库标识不合法：{target!r}，应为 owner/name")
         params: dict[str, Any] = {"per_page": min(per_page, 100)}
+        # 分支口径（2026-11-12）：proposal.md S1 采集 main 默认分支、I2 规定
+        # dev/feature 未合并提交不进日报。发布已把 dev 合并进 main，主分支重新
+        # 有数据，回归规范只读 main；GITHUB_BRANCH 仅作应急覆盖。
+        params["sha"] = os.getenv("GITHUB_BRANCH", "main")
         if since:
             params["since"] = since.astimezone(timezone.utc).isoformat()
         if until:
@@ -152,6 +161,12 @@ class GitHubCollector:
             params["author"] = author
 
         raw = self._get(f"/repos/{target}/commits", params)
+        if not raw:
+            # 空列表仍是合法结果（C8），但不能再「静默成功」：留一行可查的原因
+            print(
+                f"[source] github: {params['sha']} 分支本窗口 0 条提交；"
+                "若提交都推在 dev，请确认是否已合并到 main 或设置 GITHUB_BRANCH"
+            )
         return [self._to_entry(item, target) for item in raw]
 
     def list_repo_members(self) -> list[dict[str, str]]:
