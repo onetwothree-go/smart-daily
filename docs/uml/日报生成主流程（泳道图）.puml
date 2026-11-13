@@ -1,0 +1,99 @@
+@startuml
+skinparam backgroundColor white
+skinparam activityBackgroundColor #FEFEFE
+skinparam activityBorderColor #333333
+skinparam swimlaneBorderColor #999999
+skinparam swimlaneTitleBackgroundColor #E8E8E8
+
+|用户（本机）|
+start
+:执行命令
+uv run --env-file .env
+python -m smart_daily;
+
+|CLI 入口 cli.py|
+:解析命令行参数
+mode=source / --day
+--notify / --list;
+if (--list 查历史?) then (是)
+  :list_reports() 查库
+  打印历史日报表;
+  |用户（本机）|
+  stop
+else (否)
+  :组装数据源列表 sources
+  默认: GitHub → 飞书 → local-git
+  --mock: 仅 MockCollector;
+  :调用 orchestrator.run(day, notify);
+endif
+
+|主编排 orchestrator.py|
+:collect() 委托采集层取
+WorkItem 列表，生效原名;
+
+|采集层 collectors|
+:进入 collect_with_fallback
+按优先级枚举降级链;
+:调用当前数据源
+src.collect(since, until);
+note right: 失败自动切换下一个源\n直至成功或全部数据源耗尽
+
+|外部系统|
+:返回 RawRecord 列表
+GitHub API / 飞书
+本地 Git / mock;
+
+|采集层 collectors|
+:normalize() 统一归一化为 WorkItem
+入口做一次，下游不可二次归一化;
+
+|主编排 orchestrator.py|
+:day = local_date(items[0].timestamp)
+东八区日期归属（避免 UTC 差一天）;
+:group_by_member()
+按成员分组;
+:build_team_report()
+生成团队日报;
+:逐成员 build_personal_report()
+→ save_report() 落库;
+note right: SQLite 幂等策略 (C):\nINSERT ON CONFLICT(report_date, member)\nDO UPDATE
+
+|推送层 push/notifiers|
+if (notify 且推送通道非空?) then (否 --no-notify)
+  :跳过推送，仅生成并落库;
+else (是)
+  :resolve_recipients()
+  查 MEMBER_EMAILS 成员→邮箱映射
+  未配置的成员跳过并记日志;
+  fork
+    :EmailNotifier.send()
+    个人日报逐成员经 SMTP 发送;
+    |外部系统|
+    :SMTP 服务器
+    投递个人日报邮件;
+  fork again
+    :FeishuWebhookNotifier
+    payload sign = gen_sign(timestamp, secret)
+    POST 群 Webhook（团队日报）;
+    |外部系统|
+    :飞书机器人
+    校验签名与关键词「日报」
+    code=0 则消息入群;
+  end fork
+  |推送层 push/notifiers|
+  :汇总 push_detail (channel/scope/ok)
+  pushed = any(ok);
+  note right: 已知缺陷：站内(C) 意见 vs 通知\n当通知为 any() (orchestrator.py:215)\n→ 停为 TR-707，发布前修正
+endif
+
+|主编排 orchestrator.py|
+:返回结果字典并打印摘要
+数据源/报告日期/成员数/条目数
+退出码 0;
+
+|用户（本机）|
+:查询步骤摘要
+核对个人/团队报表
+与飞书群收到的团队日报;
+stop
+@enduml
