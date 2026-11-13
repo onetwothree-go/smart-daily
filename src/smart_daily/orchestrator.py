@@ -11,6 +11,13 @@
   3. 幂等 —— 同一 (日期, 成员) 重复运行时覆盖而非追加。
 """
 
+# --- 答辩口径 · 主编排入口（见答辩稿 2.6.1 / 链路①）---
+# 主流程：collect -> 按报告日裁剪 -> 分组 -> 生成 -> 逐人落库 -> 推送
+# 规范：C5 幂等（UNIQUE(report_date, member) + ON CONFLICT DO UPDATE）、
+#       C7 送达判定（push_status 五态，all() 全 ok 才算成功）、I15 只存成品快照。
+# _day_window 取本地自然日 [00:00, 次日 00:00)，采集后按 local_date 再裁一次，
+# 防止 UTC / 本地日历解释差异把历史提交混进当天（11-10 修复）。
+
 from __future__ import annotations
 
 import os

@@ -11,6 +11,12 @@
   3. 凭证只从环境变量读 —— SMTP 授权码、飞书 Webhook 都在 .env 里。
 """
 
+# --- 答辩口径 · 推送层通道（见答辩稿 2.6.1）---
+# Notifier 协议由 EmailNotifier / FeishuWebhookNotifier / MultiNotifier 实现。
+# gen_sign() 是 HMAC-SHA256 + Base64 飞书签名的单点实现，实时提醒链路复用（RT-07）。
+# 失败只返回 False 不抛异常：推送失败不该让已落库的日报丢掉（design 3.4 / C7）；
+# 飞书判 code == 0 才算成功，19021 / 19022 / 19024 给中文提示。
+
 from __future__ import annotations
 
 import base64

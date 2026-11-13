@@ -19,6 +19,11 @@
     uv run python -m unittest discover -s tests -v
 """
 
+# --- 答辩口径 · 验收用例纯函数层 17 条（见答辩稿 2.7 / 第 6 章②）---
+# C1 条目数、C8 合法空、C9 时区、G1 三源不合并、G3 身份归并、C4 条目行格式；
+# 2026-11-12 另补 3 条 G3 身份归并用例（条数随测试扩充，以实际 unittest 输出为准）；
+# 不需要凭证：uv run python -m unittest discover -s tests -v
+
 from __future__ import annotations
 
 import re

@@ -7,6 +7,12 @@
     uv run --env-file .env python -m smart_daily.cli --source mock
 """
 
+# --- 答辩口径 · 命令行入口（四层架构第 4 层，见答辩稿 2.6.1）---
+# 参数：--day / --no-notify / --source / --mock / --list
+# 退出码四态：0 成功或只查询、1 采集或落库失败、2 参数格式错（argparse）、3 推送失败
+# 依据 specs/design.md 3.4：22:00 计划任务靠退出码判断成败，推送失败绝不能返回 0；
+# --no-notify 只生成不推送，现场演示一律用它，避免把测试日报发到群里。
+
 from __future__ import annotations
 
 import argparse

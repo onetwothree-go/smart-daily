@@ -13,6 +13,10 @@ design.md 的接口契约章节可以直接引用这里的输出作为证据。
 运行：uv run --env-file .env python scripts/verify_collectors.py
 """
 
+# --- 答辩口径 · TK-701 集成验证（见答辩稿 2.7 / 第 6 章①）---
+# 14 组函数累计 34 条 record() 检查点，末行打印「通过/总数」（如 34/34）。
+# 覆盖降级链、空列表语义、归一化容错、本地日历、邮箱映射与 Notifier 协议完整性。
+
 from __future__ import annotations
 
 import sys

@@ -17,6 +17,10 @@
     uv run python -m unittest discover -s tests -v
 """
 
+# --- 答辩口径 · 验收用例运行时层 11 条（见答辩稿 2.7 / 第 6 章②）---
+# 临时 SQLite + 假通道：C5 幂等、C7 五通道送达、群/邮件失败、no_channel、skipped；
+# 与纯函数层一起由 unittest discover 跑，不需凭证（总条数以实际输出为准）。
+
 from __future__ import annotations
 
 import sqlite3
