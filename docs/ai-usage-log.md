@@ -122,6 +122,8 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-13 | Claude Code | 黄 | 【杨佳莹】按需求方裁定修正 22:00 自动定时的定性（proposal 0.4.2 补记 8）：本机计划任务 `SmartDaily-2200`（`3f2b3ee`）属 **N8 计划列兑现、非范围变更**，项目当前即 v1.1；修正 11-10「v1.1 预研、不计入 v1 验收」的旧定性，v1 基线正文与历史补记原样保留 | `specs/proposal.md`（补记 8）、`specs/tasks.md`（§12.3 N8 守卫行）、`README.md`（v1.1 待办区）、`docs/方赫-N8范围冲突处置记录.md`（新增第五节、原「可核验出处」改为第六节），本次提交 | 改动为定性表述与指路引用，未改 S1–S9 / N1–N9 / C1–C10 编号与正文、Q1–Q21 原文、任何用例判定与验收结论；第一节～第四节原文未动；`git diff` 确认 4 个文件仅新增补记 / 替换守卫行与 README 一行；提交与 AI 日志由本人经 Claude Code 登记，正文代为整理并如实注明 | ☐ 待确认 |
 | 2026-11-16 | Claude Code | 黄 | v2 工程初始化与设计结论带入：从 baseline `6e851c4` 建 `v2-superpowers` 分支，搭建 v2 骨架（pyproject.toml / README.md / __init__.py / .gitkeep），写初始化记录；范围严格限定，未写任何业务实现 | `v2/pyproject.toml`、`v2/README.md`、`v2/src/smart_daily_v2/__init__.py`、`v2/tests/.gitkeep`、`v2/scripts/.gitkeep`、`docs/赵蕊-v2初始化记录.md`，待提交 | 五步自查逐条执行并截图：v1 源码未动 / 仅 1 个 .py / 无 smart_daily import / blob 去重为空 / import 成功；README 四个小节设计结论对照 design.md ADR-101~104 与 tasks.md TK-707/RT-06 等逐一核对 | ☐ 待确认 |
 
+| 2026-11-16 | WorkBuddy | 黄 | v2 方案由「长驻分支」改为「目录隔离」并同步全部受影响文档：`git merge --no-ff 58b921f` 把 v2 骨架并入 `dev` 的 `v2/` 子目录（排除故意留 F401 的 `2bb4650`）；`BRANCHING.md` 增分支模型与规则 6–8；`ci.yml` 触发由 `v2-superpowers` 改为 `dev` + `paths: v2/**`；初始化记录补「方案变更」节；角色准入记录红线改为「dev 可 push」；`.env.example` 补 `GITHUB_BRANCH` 应急说明 | `BRANCHING.md`、`.github/workflows/ci.yml`、`.env.example`、`docs/赵蕊-v2初始化记录.md`、`docs/赵蕊-第3周-角色与准入记录.md` | 合并后四项复核全部为空/无命中：v1 的 `src tests specs` 零改动、blob 去重为空、无 `smart_daily` import、新增文件仅 `v2/*` 与两份 docs；`--no-notify` 试跑产出 4 条含 v2 三条，数据源 `local-git` | ☐ 待确认 |
+
 ---
 
 ## 本周自查

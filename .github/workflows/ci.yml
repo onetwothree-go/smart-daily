@@ -1,0 +1,67 @@
+name: CI 门禁
+
+# 触发口径（2026-11-16 由分支改为目录）：v2 工程落在 dev 的 v2/ 子目录，
+# 与 v1 的 src/、tests/ 同级共存、互不 import。故按路径过滤，只在 v2/ 或本
+# 工作流自身变更时触发，避免 v1 的文档/代码提交白白跑一遍 CI。
+on:
+  pull_request:
+  push:
+    branches: [dev]
+    paths:
+      - "v2/**"
+      - ".github/workflows/ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Ruff 静态扫描
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安装 uv
+        run: pip install uv
+      - name: 安装依赖（含 dev）
+        run: uv sync --dev
+      - name: Ruff 规则检查
+        run: uv run ruff check .
+      - name: Ruff 格式检查
+        run: uv run ruff format --check .
+
+  test:
+    name: 测试 + 覆盖率
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: 安装 uv
+        run: pip install uv
+      - name: 安装依赖（含 dev）
+        run: uv sync --dev
+      - name: 运行测试并采集覆盖率
+        run: >
+          uv run pytest -q
+          --cov=smart_daily_v2
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=80
+      - name: 归档覆盖率报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: v2/coverage.xml
