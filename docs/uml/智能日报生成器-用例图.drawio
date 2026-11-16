@@ -1,0 +1,142 @@
+<mxfile host="Electron" agent="draw.io">
+  <diagram id="usecase-smart-daily" name="智能日报生成器-用例图">
+    <mxGraphModel dx="1400" dy="1120" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1120" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="智能日报生成器 用例图（第 2 周 · 需求分析师 方赫 · 2026-11-10）" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fontSize=17;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="16" width="920" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary" value="智能日报生成器（系统边界）" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1.5;verticalAlign=top;align=center;spacingTop=6;fontSize=14;fontStyle=1;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="280" y="70" width="940" height="800" as="geometry" />
+        </mxCell>
+        <mxCell id="aMember" value="" style="shape=umlActor;html=1;whiteSpace=wrap;fillColor=#EAF2F8;strokeColor=#2E6DA4;strokeWidth=1.5;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="80" y="200" width="40" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="aMemberLbl" value="小组成员" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="266" width="140" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="aOperator" value="" style="shape=umlActor;html=1;whiteSpace=wrap;fillColor=#EAF2F8;strokeColor=#2E6DA4;strokeWidth=1.5;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="80" y="440" width="40" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="aOperatorLbl" value="运行者&lt;br&gt;（团队负责人）" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="506" width="140" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="aAdmin" value="" style="shape=umlActor;html=1;whiteSpace=wrap;fillColor=#EAF2F8;strokeColor=#2E6DA4;strokeWidth=1.5;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="80" y="600" width="40" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="aAdminLbl" value="配置管理员" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="666" width="140" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="aGH" value="" style="shape=umlActor;html=1;whiteSpace=wrap;fillColor=#EAF2F8;strokeColor=#2E6DA4;strokeWidth=1.5;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="80" y="760" width="40" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="aGHLbl" value="GitHub push 事件&lt;br&gt;（外部系统）" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="826" width="140" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="UCX" value="降级本地 Git 采集&lt;br&gt;（C2 · 可选分支）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="110" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC2" value="采集飞书任务流转&lt;br&gt;（S2 · C1）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="205" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC3" value="采集飞书群消息&lt;br&gt;（S3 · C1）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="295" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC8" value="查询历史日报&lt;br&gt;（S8 · --list）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="385" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC6" value="汇总团队日报&lt;br&gt;（S6 · C4）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="480" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC11" value="配置数据源凭证&lt;br&gt;（S1–S3/S9 凭证红线）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="585" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC12" value="维护成员映射&lt;br&gt;（S5）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="675" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC10" value="推送实时提醒&lt;br&gt;（S9 · C10）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="320" y="765" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC1" value="采集 GitHub 提交&lt;br&gt;（S1 · C1/C3）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="620" y="110" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC5" value="生成个人日报&lt;br&gt;（S4 · C1/C4）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="620" y="480" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC9" value="推送日报&lt;br&gt;（S7 · C7）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="620" y="585" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC7" value="保存日报快照&lt;br&gt;（S8 · C5）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="920" y="390" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="UC4" value="归并成员身份&lt;br&gt;（S5 · C3）" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFF8E7;strokeColor=#A9711B;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="920" y="570" width="210" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="e_M_UC1" value="" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aMember" target="UC1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="170" y="96" />
+              <mxPoint x="600" y="96" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_M_UC2" value="" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aMember" target="UC2">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_M_UC3" value="" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aMember" target="UC3">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_M_UC8" value="" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aMember" target="UC8">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_O_UC6" value="22:00 本机手动触发" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aOperator" target="UC6">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_O_UC8" value="" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aOperator" target="UC8">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_A_UC11" value="" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aAdmin" target="UC11">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_A_UC12" value="" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aAdmin" target="UC12">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_G_UC10" value="仅 main / dev 的 push" style="endArrow=none;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="aGH" target="UC10">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d_UC5_UC4" value="«include»" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontStyle=2;fontColor=#555555;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="UC5" target="UC4">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d_UC5_UC7" value="«include»" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontStyle=2;fontColor=#555555;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="UC5" target="UC7">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d_UC6_UC5" value="«include»" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontStyle=2;fontColor=#555555;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="UC6" target="UC5">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d_UC6_UC9" value="«include»" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontStyle=2;fontColor=#555555;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="UC6" target="UC9">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d_UCX_UC1" value="«extend»" style="endArrow=open;endFill=0;dashed=1;html=1;strokeColor=#666666;strokeWidth=1;edgeStyle=none;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;labelBackgroundColor=#FFFFFF;fontSize=11;fontStyle=2;fontColor=#555555;fontFamily=Microsoft YaHei;" edge="1" parent="1" source="UCX" target="UC1">
+          <mxGeometry relative="1" as="geometry">
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;边界与判据&lt;/b&gt;（条目细节一律回指 specs/proposal.md 0.4.2，图文不互相复制）&lt;br&gt;- 凭证：环境变量 / GitHub Actions Secrets，严禁写入代码或仓库；MEMBER_EMAILS 绝不进仓库（UC11）&lt;br&gt;- S9 实时提醒只作告知：一次 push 合并 1 条群消息、列全 commit 不截断、文本含「日报」二字；不落 SQLite、不进 G1 计数、不拼进日报正文（UC10 / C10）&lt;br&gt;- C3「多人协作成果归属全部贡献者」本期不验收，故不设对应用例；UC4 只验收同一成员多登录名归并&lt;br&gt;- include = 每次必然发生的公共行为；extend = 仅当 GITHUB_TOKEN 无效时降级 local-git（UCX / C2）&lt;br&gt;- 触发口径：本期 v1 按 S7 / N8 / I4「22:00 本机手动触发」；3f2b3ee 的本机计划任务为 v1.1 预研，不计入 v1 验收&lt;br&gt;- UC11 / UC12 为部署期配置，回指 S5 与 design 5.2 密钥红线，不属功能范围扩张&lt;br&gt;- 小组成员是数据来源主体、非触发者；触发者为 22:00 主编排与 GitHub push 事件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F9F9;strokeColor=#7F8C8D;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;spacingRight=10;fontSize=11;fontColor=#333333;fontFamily=Microsoft YaHei;" vertex="1" parent="1">
+          <mxGeometry x="80" y="900" width="1140" height="170" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
