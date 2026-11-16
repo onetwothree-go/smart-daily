@@ -297,13 +297,32 @@ class DailyReportOrchestrator:
     def _push_team_report(self, team_text: str, day: date) -> list[dict[str, object]]:
         """把团队日报推到群渠道（飞书机器人 Webhook 等）。
 
-        邮件通道不参与团队日报分发 —— 团队日报是给全组看的，
-        群机器人才是它的正确载体。
+        团队日报是给全组看的，群渠道（飞书机器人 Webhook 等）照发不误，
+        仍是它的正确载体。若配置了 REPORT_RECIPIENTS 环境变量（非空），
+        邮件通道会额外按该列表多发一份团队日报给指定收件人 ——
+        老师邮箱只是「额外多出来的一条」，两条通道互不依赖，各自
+        try、各自记一条回执，任一失败都不影响另一条。
+        REPORT_RECIPIENTS 未配置或为空时，邮件通道跳过团队日报，
+        维持「邮件只发个人日报」的原行为，且不产生回执。
+        注意：额外收件人只直接取自 REPORT_RECIPIENTS，与 MEMBER_EMAILS
+        及 resolve_recipients 完全无关。
         """
         results: list[dict[str, object]] = []
         for n in self.notifiers:
             if isinstance(n, EmailNotifier):
-                continue  # 邮件只发个人日报
+                raw = os.getenv("REPORT_RECIPIENTS", "").strip()
+                report_recipients = [r.strip() for r in raw.split(",") if r.strip()]
+                if not report_recipients:
+                    continue  # 未配置收件人，邮件仍只发个人日报，不产生回执
+                try:
+                    ok = n.send(f"团队日报 {day.isoformat()}", team_text, report_recipients)
+                except Exception as exc:  # noqa: BLE001 - 推送失败不阻断
+                    print(f"[push] 通道 {n.name} 异常：{exc}")
+                    ok = False
+                results.append(
+                    {"channel": n.name, "scope": "team:report_recipients", "ok": bool(ok)}
+                )
+                continue
             try:
                 ok = n.send(f"团队日报 {day.isoformat()}", team_text, [])
             except Exception as exc:  # noqa: BLE001 - 推送失败不阻断
