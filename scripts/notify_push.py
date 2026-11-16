@@ -19,6 +19,12 @@
 退出码：0 = 飞书返回 code 0；1 = 任一环节失败（让 workflow 亮红灯，Q21 要求可查痕迹）
 """
 
+# --- 答辩口径 · GitHub push 实时提醒（独立链路，见答辩稿 2.6.2 链路② / N5 / S9）---
+# 读 GITHUB_EVENT_PATH 事件文件，不调 GitHub API、不需要 GITHUB_TOKEN。
+# 一次 push 合并为 1 条群消息并列全 commit（I24）；只在 main / dev 触发（I25）。
+# 不读 SQLite、不走采集层、不生成日报条目、不进 G1 计数（I20/I21/I22）。
+# 文本必须含「日报」二字（飞书机器人自定义关键词）；失败退出码 1 让 workflow 亮红灯（I28）。
+
 from __future__ import annotations
 
 import json

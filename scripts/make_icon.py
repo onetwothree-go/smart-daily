@@ -11,6 +11,9 @@
     圆角方形纯色底 + 居中白色字符（内置 5x7 点阵字体，覆盖 A-Z 与 0-9）。
 """
 
+# --- 答辩口径 · 第 1 周环境验证辅助脚本（见答辩稿 2.6.2）---
+# 纯 Python 生成 .ico，不参与日报主链路，也不读凭证。
+
 from __future__ import annotations
 
 import struct

@@ -15,6 +15,12 @@
     业务逻辑与接口契约属「黄色」等级 —— 人工验证并留审查记录，未审查即视为未完成。
 """
 
+# --- 答辩口径 · 采集层协议与降级链（见答辩稿 2.6.1 / 链路③）---
+# WorkSource 协议：name + collect(since, until, author)；三源顺序 GitHub -> 飞书 -> 本地 Git。
+# ADR-103「异常驱动降级」：只有抛 SourceUnavailableError 才切下一个源；
+# 空列表是「源正常但当天没数据」的合法结果，必须停下来，不能继续兜底（I11/C8）。
+# 全部失败时抛聚合异常，并带上每个源的原因，便于定位。
+
 from __future__ import annotations
 
 from datetime import datetime

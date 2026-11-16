@@ -21,6 +21,11 @@
   user_access_token 授权一次 —— 这是第 2 周需要权衡的设计点。
 """
 
+# --- 答辩口径 · 采集层飞书源（见答辩稿 2.6.1）---
+# 采任务与群消息；tenant_access_token 内存缓存、过期前 300 秒刷新。
+# 21001（个人版租户无 OpenAPI 资质）给中文提示；两条通道全失败必须抛 SourceUnavailableError，
+# 否则降级链会误判「本源成功但空」而跳过后面的本地 Git 兜底（I11）。
+
 from __future__ import annotations
 
 import os

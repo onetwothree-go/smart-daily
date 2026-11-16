@@ -11,6 +11,10 @@ dependencies = [
     "httpx>=0.28.1",
 ]
 
+# --- 答辩口径 · 入口点已知缺陷（见答辩稿 2.6.3）---
+# TK-101 ④ 要求 smart_daily.cli:main，此处登记为 smart_daily:main。
+# 这是已登记在内的已知缺陷，如实说明、不硬说没问题；不影响 python -m smart_daily.cli 运行，
+# 也未擅自修改，避免影响已验收的可运行版本。
 [project.scripts]
 smart-daily = "smart_daily:main"
 

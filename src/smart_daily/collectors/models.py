@@ -12,6 +12,11 @@
 而是通过 WorkItem 归一化后的统一视图，这样生成逻辑不必为每种数据源写一遍。
 """
 
+# --- 答辩口径 · 采集层统一数据模型（见答辩稿 2.6.1）---
+# CommitEntry / MessageEntry / TaskEntry 是 frozen dataclass，normalize() 统一压成 WorkItem；
+# 生成层只认 WorkItem 这一种输入，因此不必为每个数据源各写一套逻辑。
+# local_date() 用 astimezone().date() 取本地日历，避免东八区晚 8 点后 UTC 日期错一天（I3/C9）。
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

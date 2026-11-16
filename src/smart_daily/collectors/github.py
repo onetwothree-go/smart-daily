@@ -14,6 +14,13 @@
 第 1 周只需确认接口契约正确，不需要实现完整业务逻辑。
 """
 
+# --- 答辩口径 · 采集层 GitHub 源（见答辩稿 2.6.1 / D17）---
+# 只读 GET /repos/{owner}/{repo}/commits；401/403/404/409 统一转 SourceUnavailableError。
+# 分支口径 S1 / I2：默认 sha=main，GITHUB_BRANCH 仅作应急覆盖；dev/feature 未合并不进日报。
+# 窗口 since/until 转 UTC；条目时间取 commit.author.date，由编排层按本地日历二次裁剪。
+# 系统证书库 verify=ssl.create_default_context() 避免代理环境下误降级为空日报；
+# 显示名统一走 identity.lookup_display_name（design 2.2 收敛到唯一实现，RT-06）。
+
 from __future__ import annotations
 
 import os

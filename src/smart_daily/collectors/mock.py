@@ -16,6 +16,10 @@
 所以无论何时运行，日报内容都落在「当天」，符合日报场景的时间语义。
 """
 
+# --- 答辩口径 · 采集层演示源（见答辩稿 2.6.1）---
+# 不依赖凭证与网络；基准取本地当前时间、条目按小时偏移，保证落在当天。
+# 指导书 FAQ 点名的无凭证演示手段；不自动挂进默认降级链，靠 --mock / --source mock 显式指定。
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone

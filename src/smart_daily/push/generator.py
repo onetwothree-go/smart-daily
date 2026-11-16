@@ -13,6 +13,12 @@
   3. 零手工 —— 日报条目完全由采集数据拼装，不需要人工补写。
 """
 
+# --- 答辩口径 · 生成层（见答辩稿 2.6.1）---
+# 四个纯函数：group_by_member / format_item / build_personal_report / build_team_report；
+# 不碰网络、不读文件、无全局状态，相同输入必得相同输出，是 G4「格式统一」可测的根基。
+# C4 口径 A：团队按成员分组、个人按来源分组，整体骨架不同，
+# 但共用 format_item() 产出「- [HH:MM] （类型）标题」，条目行格式逐字一致。
+
 from __future__ import annotations
 
 from collections import defaultdict

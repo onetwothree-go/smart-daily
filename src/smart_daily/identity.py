@@ -17,6 +17,11 @@
     strip() 去首尾空白 + casefold() 大小写不敏感。
 """
 
+# --- 答辩口径 · 身份映射唯一实现（design.md 2.2 / 3.5 契约 2）---
+# 采集链路（GitHub / 本地 Git）与实时通道（scripts/notify_push.py）共用本模块，
+# 不得各写一套解析循环，否则两条链路的匹配口径会漂移（RT-06）。
+# 键可写 GitHub/Gitee 登录名、邮箱本地部分或 git user.name；strip + casefold 大小写不敏感。
+
 from __future__ import annotations
 
 import os

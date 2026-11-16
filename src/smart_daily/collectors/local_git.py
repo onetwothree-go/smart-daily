@@ -15,6 +15,11 @@
     只读操作（git log），不修改仓库任何内容。
 """
 
+# --- 答辩口径 · 采集层本地 Git 兜底（见答辩稿 2.6.1）---
+# git log --all --since/--until，纯只读、不发网络请求，断网也能跑；
+# 与 GitHub 源实现同一 WorkSource 协议，上层一行都不用改（可替换性）。
+# 身份映射与 GitHub 源共用 identity.lookup_display_name，避免同一人被拆成多份日报（I9/G3）。
+
 from __future__ import annotations
 
 import subprocess
