@@ -8,6 +8,25 @@ dependencies = [
     "httpx>=0.28.1",
 ]
 
+# dev 依赖用 [dependency-groups]（PEP 735）而非 optional-dependencies：
+# ci.yml 里跑的是 `uv sync --dev`，它装的是 dev 依赖组，不是 extras。
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+    "ruff>=0.11.0",
+]
+
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]
 build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
