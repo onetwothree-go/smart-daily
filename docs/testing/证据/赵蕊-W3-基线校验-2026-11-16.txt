@@ -1,0 +1,173 @@
+# 赵蕊 W3 基线校验（只读）
+# 生成时间：2026-11-16 10:25:55 +0800
+# 工作目录：/d/smart-daily
+
+## 1. 基线提交与工作树
+$ git rev-parse HEAD
+6e851c4aaed37434a680e89981a94d7136b438b7
+$ git log -1 --pretty="%H%n%ad%n%s" --date=iso
+6e851c4aaed37434a680e89981a94d7136b438b7
+2026-11-13 09:50:29 +0800
+docs: 补入泳道图 PlantUML 源文件；清理 ER 图旧稿与冗余 er-diagram 文件
+$ git status --short
+?? "docs/testing/\350\257\201\346\215\256/\350\265\265\350\225\212-W3-\345\237\272\347\272\277\346\240\241\351\252\214-2026-11-16.txt"
+$ git branch --list
+* dev
+  feature/push-notify
+  main
+
+## 2. 规范任务数与测试函数数
+$ grep -cE "^\| *\*{0,2}TK-[0-9]{3}" specs/tasks.md
+39
+$ grep -h "def test_" tests/*.py | wc -l
+31
+$ grep -c "def test_" tests/test_acceptance_pure.py tests/test_acceptance_runtime.py
+tests/test_acceptance_pure.py:20
+tests/test_acceptance_runtime.py:11
+
+## 3. tag 语义核查
+$ git show -s --format="%H%n%D%n%s%n%b" v1-sdd
+tag v1-sdd
+Tagger: yuyue117 <19997043369@163.com>
+
+v1-sdd · 阶段一 SDD 正式发布（采集 → 生成 → 推送全流程可运行）
+
+日期：2026-11-12
+基线：a2d4940（main，TK-902 发布合并提交，合并自 dev 6d29e80）
+规范版本：proposal 0.4.2 / design 0.5.1 / tasks 0.1.4
+集成测试：16 条全部通过（2026-11-11 复测改判后，详见 docs/testing/用例执行记录-第2周.md，证据 E-01~E-12）
+红队评审：9 条全部闭环；采集层验证脚本 34/34（scripts/verify_collectors.py）
+已知限制：飞书租户资质不足（21001），采集侧飞书源恒空，推送侧 Webhook 正常（code=0）
+说明：dev 上原 v1-sdd（b7656c7）已依标签规范改名 v1-sdd-rc1 保留
+a2d494071bcf40e2e916b469798867e79aa88369
+tag: v1-sdd
+release: TK-902 阶段一发布合并 dev -> main（v1 基线：集成测试 16/16 通过，含红队评审闭环与规范 0.4.2/0.5.1/0.1.4）
+
+$ git show -s --format="%H%n%D%n%s%n%b" v1-sdd-rc1
+tag v1-sdd-rc1
+Tagger: yuyue117 <19997043369@163.com>
+
+v1-sdd-rc1 · 阶段一 dev 基线（由 v1-sdd 改名而来，提交内容不变）
+
+日期：2026-11-10
+基线：b7656c7（dev）
+集成测试：16 行全部执行，10 通过 / 6 不通过（2026-11-11 复测改判前口径，缺陷已于 11-11 全部闭环）
+  详见 docs/testing/用例执行记录-第2周.md
+改名说明：2026-11-12 依 BRANCHING.md 标签规范第 1 条（dev 临时标签须以 -rc 结尾）由 v1-sdd 改名；
+本标签为过渡条款所指的规范写入前基线记录，正式 v1-sdd 以 main 发布提交 a2d4940 上的为准
+环境限制：飞书租户 21001（采集源不可用），推送侧 Webhook 正常
+b7656c760ed1f5f91df0c77fa8eb4b5380893f94
+tag: v1-sdd-rc1
+docs: 核对表表头去掉「留空」残留并补标 11-10 已补测完毕
+
+
+## 4. CI/工作流现状
+$ ls -1 .github/workflows
+notify.yml
+$ grep -nE "^on:|branches:|schedule:" .github/workflows/notify.yml
+5:on:
+7:    branches: [main, dev]
+
+## 5. 关键缺口的只读定位
+$ grep -n "应送达集合" src/smart_daily/orchestrator.py specs/design.md specs/tasks.md
+src/smart_daily/orchestrator.py:228:        # design 3.4 的推送五态判定。注意：应送达集合（TK-707 ②）尚未落地，
+specs/design.md:4:> 本版新增（0.5）：**推送判定链一并改写**——1.4 送达判定改为「应送达集合 + `push_status`」并标注 `any()` 现状（RT-01）；3.4 新增 `push_status` 五态、CLI 退出码 0/1/2/3 与五条不变量（RT-02）、新增 3.4.1 `push_detail` 结构（`at`/`error`，RT-07）；1.1 架构图拆出团队日报直达群渠道的独立边（RT-04）；5.2 纪律 1 分层写明采集 `SourceUnavailableError` 与推送 `ValueError`（RT-05）；2.2/3.5/ADR-104 统一归属键匹配为 `strip + casefold` 并收敛到 `identity.py`（RT-06）；2.2 写明跨天任务归属规则（RT-08）；3.3 记载 `MultiNotifier` 并声明弃用（RT-09）；2.3 新增 `push_receipts` v1.1 结构草案（RT-07）。0.4.1 及其前版本内容除上述修订处外不变。
+specs/design.md:335:2. **个人日报禁止走群渠道**：个人日报只经 `EmailNotifier`，收件人来自 `resolve_recipients`；未命中则跳过该成员，但**必须记一条失败回执**（`ok=False, error="no_recipient"`，与 3.4 应送达集合一致）。
+specs/design.md:339:**回执契约（RT-07，0.5 新增）**：每一次分发（每个成员的 1 封个人邮件、团队日报的 1 条群消息）**恰好产生 1 条** `push_detail`，字段按 3.4.1；`ok=False` 也必须有记录（与 3.4 应送达集合一致）。
+specs/design.md:375:| `ok` | 应送达集合内**每一条**都 ok | `True` |
+specs/design.md:383:**应送达集合的定义**（`notify=True` 时，RT-01）：
+specs/design.md:439:**C7 重判口径**：`at` 落地后，C7 判据 = 应送达集合 5/5 `ok=True` 且 `at <= 当日 23:59:59+08:00`；任一不满足即未送达。字段落地按 proposal §6.2 排在 v1.1，0.5 只负责结构。
+specs/design.md:581:| 推送 | `send()` 返回 False / 捕获一切异常记入 `push_detail`，**不抛出**；汇总判定：应送达集合全部 ok 才算送达（C7），`any()` 语义自 0.5 起弃用（见 1.4 现状标注）；失败不阻断落库，汇总结果经 `push_status` 交 CLI 映射为退出码 `3`（3.4） | 本期不重试，推送明细留痕（含 `at`/`error`，3.4.1）；指数退避重试列为 v1.1【本期约定】 |
+specs/design.md:623:| C7（4 邮件 + 1 群消息全 ok 才算送达） | **3.4 应送达集合与 `pushed=all` 判定**、3.4.1 推送明细（RT-07） |
+specs/design.md:642:| 2026-11-10 | **0.5** | **依据红队评审意见（于悦《红队评审意见清单》RT-01~09）修订，逐条回应见 `docs/赵蕊-红队回应.md`**：①**RT-01** 1.4 送达行改为「应送达集合 + `pushed=(push_status=="ok")`」并加 0.4.1 `any()` 现状标注，3.4 新增 `push_status` 五态与应送达集合定义，5.3 推送行补汇总判定，附录 A C7 落点改指 3.4/3.4.1；②**RT-02** 3.4 新增 CLI 进程退出码 0/1/2/3 与五条不变量，编排层不调 `sys.exit()`；③**RT-04** 1.1 架构图拆出「团队日报直达群渠道（不经 members.py）」独立边，1.2 职责表与 3.3 增两条分发硬规则及反例；④**RT-05** 5.2 纪律 1 拆 1a（采集 `SourceUnavailableError`）/1b（推送 `ValueError`）并补「为什么不统一类型」，3.3 补 `from_env` 契约，5.3 新增「推送通道工厂」行，1.2 职责表补「不抛采集层异常」；⑤**RT-06** 2.2 增映射匹配语义（`strip + casefold`）与 `identity.py` 唯一实现约定，3.5 契约 2 改写，ADR-104 ③ 补匹配语义；⑥**RT-07** 新增 3.4.1 `push_detail` 结构（`at`/`error`）与 C7 重判口径，3.3 补回执契约，5.4 可观测性改写，2.3 新增 `push_receipts` v1.1 结构草案；⑦**RT-08** 2.2 写明任务归属日 = `local_date(created_at)`、跨天规则、C1 口径对照与 TK-303 验收边界；⑧**RT-09** 3.3 记载 `MultiNotifier` 并声明弃用，1.2 职责表补「不提供多通道聚合」。**本次仅改 design，`tasks.md` 的 TK-103/TK-303/TK-604/TK-707 同步与于悦清单「闭环记录」回填另行提交** | 赵蕊（架构师） |
+specs/tasks.md:8:> 修订说明（0.1.2，2026-11-10）：**随 `design.md` 0.5 同步红队评审 4 处口径**——TK-103（退出码表改为 0/1/2/3 四码，引 design 3.4）、TK-303（补跨天任务归属验收边界，引 design 2.2）、TK-604（退出码验收细化到 `push_status` 映射）、TK-707（C7 判定改为「应送达集合 + `all()`」，回执须含 `at`/`error`，引 design 3.4/3.4.1）。对应回应见 `docs/赵蕊-红队回应.md`，本次不改任务条目总数与依赖 DAG。
+specs/tasks.md:240:| **TK-707** | **C7 送达判定修正（评审 T-01 / RT-01、RT-02、RT-07）** | `orchestrator.py`、`cli.py` | TK-701 | 1.5d | ①`pushed = all(...)` 且分母是**应送达集合**（`len(groups)+1`：每人恰好 1 条 + 团队 1 条），`all([])==True` 不得判成送达成功（design 3.4）；②无邮箱/无通道的成员**仍产生记录**（`ok=False, error="no_recipient"/"no_channel"`），不得跳过不记账（现状 L235-238/L245-248 的缺口）；③任一通道失败 → `push_status≠"ok"` → CLI 退出码 `3`（design 3.4 退出码表）；④`push_detail` 能指出**哪一条**失败，元素含 `channel`/`scope`/`ok`/**`at`**/**`error`**（design 3.4.1） | ⏳ **P0** |
+specs/tasks.md:294:| C7 5 条送达全 ok | **TK-707** | 判定口径与契约相反（现状 `any()`），P0；design 0.5 的 3.4/3.4.1 已定「应送达集合 + `all()` + `at`/`error`」 |
+specs/tasks.md:304:| N5 实时刷新 / 提醒计入条目 | TK-801 明确不写库；design 1.4 隔离表；TK-707 只统计应送达集合（4 邮件 + 1 群），不含实时提醒 |
+$ grep -n "no_recipient\|no_channel" src/smart_daily/orchestrator.py tests/test_acceptance_runtime.py specs/design.md
+src/smart_daily/orchestrator.py:198:            （ok / partial / failed / no_channel / skipped），``pushed`` 恒等于
+src/smart_daily/orchestrator.py:234:            push_status = "no_channel"
+tests/test_acceptance_runtime.py:265:    def test_无通道判no_channel(self) -> None:
+tests/test_acceptance_runtime.py:267:        self.assertEqual(result["push_status"], "no_channel")
+specs/design.md:335:2. **个人日报禁止走群渠道**：个人日报只经 `EmailNotifier`，收件人来自 `resolve_recipients`；未命中则跳过该成员，但**必须记一条失败回执**（`ok=False, error="no_recipient"`，与 3.4 应送达集合一致）。
+specs/design.md:378:| `no_channel` | `notify=True` 但无任何可用通道 | `False` |
+specs/design.md:385:1. **个人**：`groups` 中**每个成员恰好 1 条** `{"scope": "personal:<member>"}` 记录。成员无邮箱映射、或没有邮件通道时，**仍必须产生记录**，记 `ok=False` 并带 `error`（`"no_recipient"` / `"no_channel"`），不得像 0.4.1 的 L235-238、L245-248 那样跳过不记账。
+specs/design.md:386:2. **团队**：恰好 1 条 `{"scope": "team"}` 记录；无群渠道时记 `ok=False, error="no_channel"`。
+specs/design.md:409:| `3` | 推送存在失败项 | `notify=True` 且 `push_status ∈ {"partial", "failed", "no_channel"}` |
+specs/design.md:415:3. `notify=True` 但未配置任何通道 → `push_status="no_channel"`、退出码 `3`（区别于显式 `--no-notify` 的 `0`）；
+specs/design.md:437:- `error` 取值：异常类名（如 `SMTPAuthenticationError`）、HTTP 状态码（如 `HTTP 500`）、飞书错误码（如 `19024`）、编排层原因（`no_recipient` / `no_channel`）。
+$ grep -n "smart-daily = " pyproject.toml
+15:smart-daily = "smart_daily:main"
+$ grep -n "^def main" src/smart_daily/__init__.py src/smart_daily/cli.py src/smart_daily/orchestrator.py
+src/smart_daily/cli.py:70:def main(argv: list[str] | None = None) -> int:
+src/smart_daily/orchestrator.py:309:def main() -> None:
+$ nl -ba src/smart_daily/orchestrator.py | sed -n "228,243p"
+   228	        # design 3.4 的推送五态判定。注意：应送达集合（TK-707 ②）尚未落地，
+   229	        # 这里的 "ok" 只代表「已产生的回执全 ok」，不代表应送达的每一条都有回执。
+   230	        if not notify:
+   231	            push_status = "skipped"
+   232	        elif not self.notifiers or not push_detail:
+   233	            # 无可用通道，或通道存在但没有产生任何回执
+   234	            push_status = "no_channel"
+   235	        elif all(r["ok"] for r in push_detail):
+   236	            push_status = "ok"
+   237	        elif any(r["ok"] for r in push_detail):
+   238	            push_status = "partial"
+   239	        else:
+   240	            push_status = "failed"
+   241	
+   242	        # 保留防空列表语义：all([]) == True 不得判成功
+   243	        pushed = push_status == "ok"
+$ nl -ba tests/test_acceptance_runtime.py | sed -n "265,269p"
+   265	    def test_无通道判no_channel(self) -> None:
+   266	        result = self._run(notifiers=[])
+   267	        self.assertEqual(result["push_status"], "no_channel")
+   268	        self.assertFalse(result["pushed"])
+   269	        self.assertEqual(result["push_detail"], [], "无通道时不应产生任何回执")
+
+## 6. 阶段评审会结论留痕检索
+$ find docs -maxdepth 2 -type f | grep -E "11-15|1115|评审会|阶段"
+docs/方赫-阶段评审会答辩提纲.md
+$ git log --since=2026-11-14 --pretty="%h %ad %s" --date=short
+
+## 7. 泳道图过时备注定位
+$ nl -ba "docs/uml/日报生成主流程（泳道图）.puml" | sed -n "82,88p"
+    82	  end fork
+    83	  |推送层 push/notifiers|
+    84	  :汇总 push_detail (channel/scope/ok)
+    85	  pushed = any(ok);
+    86	  note right: 已知缺陷：站内(C) 意见 vs 通知\n当通知为 any() (orchestrator.py:215)\n→ 停为 TR-707，发布前修正
+    87	endif
+    88	
+
+## 8. AI 日志第 3 周段落检索
+$ grep -n "第 3 周\|2026-11-16" docs/ai-usage-log.md
+
+## 9. 泳道图备注所指缺陷的修复提交核查
+$ git show --stat --oneline 67bd661
+67bd661 fix(cli): 按 design 3.4 落地 0/1/2/3 四码退出码并同步评审意见与审查记录
+ docs/ai-usage-log.md                               |  3 +-
+ ...217\220\344\272\244\345\216\206\345\217\262.md" |  8 +++--
+ ...257\204\345\256\241\346\204\217\350\247\201.md" | 12 ++++----
+ src/smart_daily/cli.py                             | 35 +++++++++++++++++-----
+ src/smart_daily/orchestrator.py                    | 24 +++++++++++++--
+ 5 files changed, 62 insertions(+), 20 deletions(-)
+$ git show 67bd661 -- src/smart_daily/orchestrator.py | grep -nE "pushed|all\(|any\("
+19:+            （ok / partial / failed / no_channel / skipped），``pushed`` 恒等于
+28:-        pushed = False
+36:-            pushed = bool(push_detail) and all(r["ok"] for r in push_detail)
+45:+        elif all(r["ok"] for r in push_detail):
+47:+        elif any(r["ok"] for r in push_detail):
+52:+        # 保留防空列表语义：all([]) == True 不得判成功
+53:+        pushed = push_status == "ok"
+60:             "pushed": pushed,
+$ git show 3f2b3ee --stat --oneline
+3f2b3ee feat(v1.1): 22:00 日报改由本机计划任务自动触发，修正 C7 送达判定并补登 AI 使用日志
+ docs/ai-usage-log.md            | 4 +++-
+ docs/ai-usage-log/2026-W46.md   | 2 +-
+ pyproject.toml                  | 2 +-
+ scripts/run_daily.ps1           | 7 +++++++
+ src/smart_daily/cli.py          | 4 ++++
+ src/smart_daily/orchestrator.py | 2 +-
+ uv.lock                         | 2 +-
+ 7 files changed, 18 insertions(+), 5 deletions(-)
