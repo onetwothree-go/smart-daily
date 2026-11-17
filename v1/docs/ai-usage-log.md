@@ -315,3 +315,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：`v2/specs/tasks.md` 共 8 处修改（4 增 4 改），提交 `docs: [TK-V2-007] 按 issue #14 修订接口契约 K2/K8/K5`（随本条）。
 - 人工核验方式：逐字对照审核记录 §四 K2/K8 与 §五 K5 的修订文本；改后 grep 复核 8 处关键词全部命中，且 K1/K3/K4/K6（于悦、杨佳莹负责）的既有改动痕迹保留、未覆盖；`git diff --stat` 仅 `v2/specs/tasks.md` 一个文件，未碰任何代码（`v1/src` `v1/tests` 为空）。
 - 边界说明：本次属规范追认，不改代码、不倒填、不改任务状态标记；K2/K8 checkbox 待架构师关单前自查，本人在 issue #14 对应条目下回帖留痕（已改 + 提交号）。
+
+## 补记（2026-11-17，方赫第 3 周 TK-V2-103 采集协议与异常契约）
+
+- 新增方赫本人 2026-11-17 当天 1 条记录（开发工程师第二个 TDD 任务：采集层协议与异常契约），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（经自定义命令 `/task103` 触发），红→绿→重构完成 `v2/src/smart_daily_v2/sources/base.py` 与 `v2/tests/test_worksource.py`。
+- 产出：提交 `feat: [TK-V2-103] 实现采集协议与异常契约`（本条随该提交）。红输出 4 failed（全部 `No module named smart_daily_v2.sources`）；绿与重构后 4 passed，全量 `uv run pytest tests/ -q` 23 passed、`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `base.py`，确认 ① `WorkSource` 为 `@runtime_checkable` Protocol 且 `collect(*, since, until, author=None)` keyword-only（对应 issue #14 K5，本人修订）、② `AllSourcesUnavailableError(SourceUnavailableError)` 继承关系且子类自实现 `__init__` 调 `super()`（对应 K8，本人修订）、③ 协议文本无 github/feishu 等平台专有字段；`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）。
+- 工具链说明：本次 OpenRouter 免费层两次报 402（32000→16000 预留超限、16000→14269 预留超限），均通过本机 shim 压低 `max_tokens`（最终 8000）解决，属本机配置非仓库改动；末次 402 为 `in_flight_budget_exhausted`（并发预算），发生时单元与全量验证已完成，不影响产出。
