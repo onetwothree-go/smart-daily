@@ -307,3 +307,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：提交 `feat: [TK-V2-105] 实现配置与凭证读取`（本条随该提交）；红输出 3 failed（模块不存在）+ 2 passed（文件类验收），绿与重构后 5 passed，全量 `uv run pytest tests/ -q` 14 passed、`ruff check` / `ruff format --check` 全过、`git check-ignore -v .env` 命中。
 - 人工核验方式：本人逐行 review `config.py`（frozen dataclass / load_config 可注入 env / require_credential 缺凭证抛 ValueError 且不发 HTTP），确认无硬编码凭证（G6 扫描 0 命中）、`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）；红阶段真实失败输出已核对为"模块不存在"而非测试自崩。
 - 工具链说明：本次首次使用自定义命令 `/task105`（因 Windows 控制台无法粘贴长文本，改为手打命令触发整段提示词）；期间 OpenRouter 免费层因 `max_tokens=32000` 预留超限报 402，已在本地 shim 压至 16000 解决（属本机工具链配置，非仓库改动，不入库）。
+
+## 补记（2026-11-17，方赫按 issue #14 修订接口契约 K2/K8/K5）
+
+- 新增方赫本人 2026-11-17 当天 1 条记录（架构师杨佳莹 issue #14 分配的 3 条接口契约修订），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：WorkBuddy 依据架构师《接口契约变更审核记录》0.3 版给出的逐字改法，修订 `v2/specs/tasks.md`：K2（TK-V2-501 返回补 9 键含 `push_status` + 五态不变量，解除 504 退出码 3 无数据来源的阻断）、K8（TK-V2-103 声明 `AllSourcesUnavailableError` 继承 `SourceUnavailableError`，子类自实现 `__init__(errors)` 调 `super()`，防上层兜底静默穿透）、K5（103/104/201–203 的 `collect` 恢复 `*` keyword-only，防 since/until 顺序传反）。
+- 产出：`v2/specs/tasks.md` 共 8 处修改（4 增 4 改），提交 `docs: [TK-V2-007] 按 issue #14 修订接口契约 K2/K8/K5`（随本条）。
+- 人工核验方式：逐字对照审核记录 §四 K2/K8 与 §五 K5 的修订文本；改后 grep 复核 8 处关键词全部命中，且 K1/K3/K4/K6（于悦、杨佳莹负责）的既有改动痕迹保留、未覆盖；`git diff --stat` 仅 `v2/specs/tasks.md` 一个文件，未碰任何代码（`v1/src` `v1/tests` 为空）。
+- 边界说明：本次属规范追认，不改代码、不倒填、不改任务状态标记；K2/K8 checkbox 待架构师关单前自查，本人在 issue #14 对应条目下回帖留痕（已改 + 提交号）。
