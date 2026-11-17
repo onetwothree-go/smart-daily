@@ -6,6 +6,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "httpx>=0.28.1",
+    # Windows 无系统时区库，zoneinfo.ZoneInfo("Asia/Shanghai") 会抛 ZoneInfoNotFoundError；
+    # tzdata 提供 IANA 时区数据兜底（local_date 依赖东八区归属，见 TK-V2-102）。
+    "tzdata>=2025.2",
 ]
 
 # dev 依赖用 [dependency-groups]（PEP 735）而非 optional-dependencies：

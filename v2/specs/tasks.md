@@ -254,7 +254,7 @@ flowchart TD
 #### TK-V2-003 · dev 依赖与 ruff / pytest 配置
 - 交付物：`v2/pyproject.toml` 的 `[dependency-groups]`（PEP 735）、ruff 配置、`[tool.pytest.ini_options]`
 - 依赖 000 ｜ 预估 0.25d ｜ 状态 🟩 待核对（`fa9deab`）
-- 验收标准：① `uv sync --dev` 后 `ruff --version` / `pytest --version` 均可执行（CI 里找不到 ruff 即为失败）；② ruff `line-length=100`、`target-version=py313`、规则 `E,F,I,B`；③ 故意写 `import os` 未使用 → `ruff check` 报 F401 且退出码非 0；④ 运行依赖只有 `httpx`（ADR-101），`uv pip list` 可核。
+- 验收标准：① `uv sync --dev` 后 `ruff --version` / `pytest --version` 均可执行（CI 里找不到 ruff 即为失败）；② ruff `line-length=100`、`target-version=py313`、规则 `E,F,I,B`；③ 故意写 `import os` 未使用 → `ruff check` 报 F401 且退出码非 0；④ 运行依赖只有 `httpx`（ADR-101）与 `tzdata`（Windows 无系统时区库，`zoneinfo.ZoneInfo("Asia/Shanghai")` 需靠它，TK-V2-102 补入），`uv pip list` 可核。
 - 红/绿/提交：`ci: [TK-V2-003] 补入 v2 dev 依赖与 ruff/pytest 配置`
 
 #### TK-V2-004 · 删除旧分支并同步分支口径
