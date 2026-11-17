@@ -18,6 +18,7 @@ v2 工程设计备忘（只录结论，不贴代码）。
 - 生成层为纯函数，无副作用。
 - `Notifier.send()` 返回 `bool`，不抛异常。
 - `Notifier.from_env()` 缺凭证抛 `ValueError`；采集层缺凭证抛 `SourceUnavailableError`。
+- **团队日报分发**：群渠道 1 条（`send(subject, body, [])`）+ `REPORT_RECIPIENTS` 非空时 1 封外部邮件；两条通道各自独立 `try`、各自 1 条回执（`scope` 分别为 `team` / `team:report_recipients`）。外部收件人**只**来自 `REPORT_RECIPIENTS`，不复用 `MEMBER_EMAILS` / `resolve_recipients`；未配置时不发、不产生回执，应送达集合退回 `len(groups) + 1`（与 `v1/specs/design.md` 0.6 的 3.3 / 3.4 一致）。
 
 ## 3. 数据模型经验
 

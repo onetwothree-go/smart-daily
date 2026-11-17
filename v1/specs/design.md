@@ -1,6 +1,6 @@
 # design.md —— 智能日报生成器（Smart Daily Report Generator）
 
-> 状态：**0.5.1（0.5 增补：接口清单 / ER 附件 / ADR 备选项 / 可维护性约束）**（`docs/于悦-红队评审意见清单.md` 2026-11-09，RT-01~09）· 依据 `specs/proposal.md` **0.4.2（2026-11-09 定稿，含 Q16–Q21 / I20–I28、C10 与 §6.2 可测性回应）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。逐条回应见 `docs/赵蕊-红队回应.md`。
+> 状态：**0.6（团队日报外部邮件通道：分发规则 / 应送达集合 / 回执契约 / C7 计数 全链修订）**（`docs/于悦-红队评审意见清单.md` 2026-11-09，RT-01~09）· 依据 `specs/proposal.md` **0.4.2（2026-11-09 定稿，含 Q16–Q21 / I20–I28、C10 与 §6.2 可测性回应）**、`docs/技术栈候选清单.md`、`docs/采集层交接说明.md` 与 `src/smart_daily/` 当前工程实况撰写。逐条回应见 `docs/赵蕊-红队回应.md`。
 > 本版新增（0.5）：**推送判定链一并改写**——1.4 送达判定改为「应送达集合 + `push_status`」并标注 `any()` 现状（RT-01）；3.4 新增 `push_status` 五态、CLI 退出码 0/1/2/3 与五条不变量（RT-02）、新增 3.4.1 `push_detail` 结构（`at`/`error`，RT-07）；1.1 架构图拆出团队日报直达群渠道的独立边（RT-04）；5.2 纪律 1 分层写明采集 `SourceUnavailableError` 与推送 `ValueError`（RT-05）；2.2/3.5/ADR-104 统一归属键匹配为 `strip + casefold` 并收敛到 `identity.py`（RT-06）；2.2 写明跨天任务归属规则（RT-08）；3.3 记载 `MultiNotifier` 并声明弃用（RT-09）；2.3 新增 `push_receipts` v1.1 结构草案（RT-07）。0.4.1 及其前版本内容除上述修订处外不变。
 > 本版增补（0.5.1）：按交付项自检补齐文档结构——2.1 挂接 ER 图附件；ADR-101~104 各补「备选项」行；5.4 新增「可维护性」并把 Python 3.13 写入兼容性；§3 前言说明「单机 CLI 无入站 HTTP 接口」并新增 3.6 出站接口清单，同时标注 34 项断言待 RT-03 补提交。**不改变 0.5 的任何契约与判定口径。**
 > 0.4.1 变更：依据开发工程师评审意见修订 7 条（架构图改本机手动触发、ADR-104 后果改为实测已闭合、5.4 的 C6/G2 改为观察项等）。
@@ -59,7 +59,7 @@ flowchart TB
     MODELS -->|"normalize() → list[WorkItem]"| GEN
     GEN -->|"个人日报文本"| MEM
     MEM -->|"resolve_recipients(member)"| NOT
-    GEN -->|"团队日报文本（直达群渠道，不经 members.py）"| NOT
+    GEN -->|"团队日报文本（群渠道 + 外部邮件，均不经 members.py）"| NOT
     NOT -->|"send() 返回 bool"| ORCH
     ORCH -->|"save_report（幂等 upsert）"| DB
 
@@ -80,7 +80,7 @@ flowchart TB
 | | `collectors/mock.py` | 无凭证演示数据源，保证主流程永远可跑 | 不参与降级链自动挂载（仅 `--mock` 显式指定） |
 | **生成层** | `push/generator.py` | `WorkItem 列表 → 个人日报 / 团队日报文本`，**纯函数、零副作用** | 不碰网络、不读文件、不做 AI 摘要（本期范围排除，proposal N1） |
 | **推送层** | `push/notifiers.py` | `Notifier` 协议 + SMTP 邮件 / 飞书 Webhook（HMAC 签名）两个实现；`gen_sign()` 是签名算法的**唯一实现** | 推送失败只返回 False，**不抛异常、不阻断主流程**；**不抛采集层异常、不参与采集降级链**（5.2 纪律 1b）；**不提供多通道聚合**（`MultiNotifier` 已弃用，见 3.3） |
-| | `push/members.py` | **个人日报**的成员 → 收件邮箱映射（环境变量配置，精确/前缀/后缀三段匹配） | 未知成员不报错，只跳过并记日志；**不服务团队日报**——团队日报不带收件人，收件人参数恒为 `[]`（3.3 分发规则） |
+| | `push/members.py` | **个人日报**的成员 → 收件邮箱映射（环境变量配置，精确/前缀/后缀三段匹配） | 未知成员不报错，只跳过并记日志；**不服务团队日报**——群通道收件人参数恒为 `[]`，团队外部邮件的收件人只来自 `REPORT_RECIPIENTS`，与本映射物理分开（3.3 分发规则） |
 | **主编排入口** | `orchestrator.py` | 串接四层：采集 → 分组 → 生成 → 落库 → 推送；管理 SQLite 读写 | 不实现任何采集/渲染/推送细节 |
 | | `cli.py` | argparse 参数解析、历史查询（`--list`）模式 | 不含业务逻辑 |
 
@@ -104,7 +104,7 @@ proposal 0.4.2 把「每次 push 在群里提醒」定性为**提醒（notificat
 | 归属键 | `author_name` → `MEMBER_DISPLAY_NAMES` | `github.actor` → `MEMBER_DISPLAY_NAMES`（Q19/ADR-104） |
 | 落库 | 写 `daily_reports`（幂等 upsert） | **不写库**（Q16：不落库、不拼进日报） |
 | 计数 | 计入 G1 的「条目数 = 提交 + 任务 + 消息」 | **一次都不计入**（Q17） |
-| 送达 | 应送达 `len(groups) + 1` 条（本期 4 名成员即 4 封个人邮件 + 1 条群消息），**全部 ok 才算成功（C7）**；判定式 `pushed = (push_status == "ok")`（3.4） | 1 条群消息，`code=0` 即成功；**不计入 C7 的 5 条送达判定** |
+| 送达 | 应送达 `len(groups) + 2` 条（本期 4 名成员即 4 封个人邮件 + 1 条群消息 + 1 封团队外部邮件；`REPORT_RECIPIENTS` 未配置时为 `+1`），**全部 ok 才算成功（C7）**；判定式 `pushed = (push_status == "ok")`（3.4） | 1 条群消息，`code=0` 即成功；**不计入 C7 的 6 条送达判定** |
 | 失败语义 | 降级链兜底，全失败抛异常（C8） | 打印错误码 + `sys.exit(1)` 让 workflow 亮红灯；**不自动重试、不往群里发告警**，主流程不受影响（C10 / G5 / Q21） |
 | 频次 | 每日 1 次 | 每次 push 1 条汇总（Q19：合并成 1 条，不逐条发） |
 
@@ -316,7 +316,7 @@ class Notifier(Protocol):
 
 **已知实现 · 弃用声明（RT-09，0.5）**：`MultiNotifier`（`notifiers.py` L211-232）实现「任一通道成功即成功」（L232 `any(results)`）。**0.5 起声明弃用**，原因：
 
-1. 其布尔返回值无法承载 C7 的分通道回执（一个 `bool` 表达不了「4 邮件 + 1 群」的逐项成败），与 3.4.1 的 `push_detail` 结构不兼容；
+1. 其布尔返回值无法承载 C7 的分通道回执（一个 `bool` 表达不了「4 邮件 + 1 群 + 1 外部邮件」的逐项成败），与 3.4.1 的 `push_detail` 结构不兼容；
 2. 其 `any()` 语义与 3.4 的 `pushed = all(...)` 判定相抵，编排若误用即重演 RT-01；
 3. 聚合通道的职责属于**编排层**（`notifiers` 列表 + 3.4 判定），不属于推送层。
 
@@ -327,16 +327,17 @@ class Notifier(Protocol):
 | 日报类型 | 通道 | 收件人来源 |
 | --- | --- | --- |
 | 个人日报 | 仅邮件 | `resolve_recipients(member, load_member_emails())` |
-| 团队日报 | 仅群渠道 | Webhook 无需收件人列表（传 `[]`） |
+| 团队日报 · 群 | 仅群渠道 | Webhook 无需收件人列表（传 `[]`） |
+| 团队日报 · 外部邮件 | 仅邮件 | `REPORT_RECIPIENTS`（逗号分隔）；为空则不发、不产生回执 |
 
 **两条分发硬规则（RT-04，0.5 新增）**：
 
-1. **团队日报禁止经过 `resolve_recipients`**：`_push_team_report` 只调用 `send(subject, body, [])`，收件人参数是**显式空列表**（不是 `None`，也不是省略）；团队日报不得发邮件（proposal I5）。
+1. **团队日报禁止经过 `resolve_recipients`**：`_push_team_report` 对**群通道**只调用 `send(subject, body, [])`，收件人参数是**显式空列表**（不是 `None`，也不是省略）；团队日报的第二条通道（外部邮件）收件人**只来自 `REPORT_RECIPIENTS`**，不得复用 `resolve_recipients` / `MEMBER_EMAILS`（proposal I5，0.6 修订）。
 2. **个人日报禁止走群渠道**：个人日报只经 `EmailNotifier`，收件人来自 `resolve_recipients`；未命中则跳过该成员，但**必须记一条失败回执**（`ok=False, error="no_recipient"`，与 3.4 应送达集合一致）。
 
 > 反例（已发生过）：旧实现把团队日报交给「取收件人」的通用路径，导致邮件通道收到空收件人、个人邮件从未真正发出。1.1 架构图与实现都必须保持两条路径物理分开。
 
-**回执契约（RT-07，0.5 新增）**：每一次分发（每个成员的 1 封个人邮件、团队日报的 1 条群消息）**恰好产生 1 条** `push_detail`，字段按 3.4.1；`ok=False` 也必须有记录（与 3.4 应送达集合一致）。
+**回执契约（RT-07，0.5 新增）**：每一次分发（每个成员的 1 封个人邮件、团队日报的 1 条群消息、`REPORT_RECIPIENTS` 非空时的 1 封团队外部邮件）**恰好产生 1 条** `push_detail`，字段按 3.4.1；`ok=False` 也必须有记录（与 3.4 应送达集合一致）。
 
 **飞书 Webhook 两条硬性约束**（组内实测）：
 
@@ -383,8 +384,9 @@ class DailyReportOrchestrator:
 **应送达集合的定义**（`notify=True` 时，RT-01）：
 
 1. **个人**：`groups` 中**每个成员恰好 1 条** `{"scope": "personal:<member>"}` 记录。成员无邮箱映射、或没有邮件通道时，**仍必须产生记录**，记 `ok=False` 并带 `error`（`"no_recipient"` / `"no_channel"`），不得像 0.4.1 的 L235-238、L245-248 那样跳过不记账。
-2. **团队**：恰好 1 条 `{"scope": "team"}` 记录；无群渠道时记 `ok=False, error="no_channel"`。
-3. `notify=False`：不产生记录，`push_status="skipped"`。
+2. **团队 · 群**：恰好 1 条 `{"scope": "team"}` 记录；无群渠道时记 `ok=False, error="no_channel"`。
+3. **团队 · 外部邮件**：`REPORT_RECIPIENTS` 非空时恰好 1 条 `{"scope": "team:report_recipients"}` 记录；**为空时不产生记录**，应送达集合相应退回 `len(groups) + 1`，不判失败。
+4. `notify=False`：不产生记录，`push_status="skipped"`。
 
 **主流程顺序**（`run()`）：采集（降级链）→ 确定归属日（无数据则 `date.today()`）→ `group_by_member` → 生成团队日报 → 逐人生成个人日报并落库 → 推送（个人走邮件、团队走群渠道）→ 汇总推送明细。**任何推送失败不影响落库结果**——推送判定只决定 `push_status` 与 CLI 退出码，不影响已完成的落库。`run()` 只返回 `pushed` / `push_status`；**由 CLI 在下方退出码表中完成到进程退出码的映射**，编排层不调用 `sys.exit()`（保持层级职责：编排层不决定进程生死）。
 
@@ -436,7 +438,7 @@ class DailyReportOrchestrator:
 - `ok=True` 时 `at` 即**送达时刻**；`ok=False` 时 `at` 为**失败落定时刻**；
 - `error` 取值：异常类名（如 `SMTPAuthenticationError`）、HTTP 状态码（如 `HTTP 500`）、飞书错误码（如 `19024`）、编排层原因（`no_recipient` / `no_channel`）。
 
-**C7 重判口径**：`at` 落地后，C7 判据 = 应送达集合 5/5 `ok=True` 且 `at <= 当日 23:59:59+08:00`；任一不满足即未送达。字段落地按 proposal §6.2 排在 v1.1，0.5 只负责结构。
+**C7 重判口径**：`at` 落地后，C7 判据 = 应送达集合 6/6 `ok=True`（`REPORT_RECIPIENTS` 未配置时为 5/5） 且 `at <= 当日 23:59:59+08:00`；任一不满足即未送达。字段落地按 proposal §6.2 排在 v1.1，0.5 只负责结构。
 
 ### 3.5 实时提醒通道（`scripts/notify_push.py`，对应 proposal C10）
 
@@ -620,7 +622,7 @@ class DailyReportOrchestrator:
 | C3（身份归并 100%） | 2.2 成员归属的键选择（`MEMBER_DISPLAY_NAMES`） |
 | C5（同日重跑不追加） | 2.3 `UNIQUE(report_date, member)` + `ON CONFLICT DO UPDATE` |
 | C6 / G2（100 条 < 30s，性能观察项） | 5.1 采集频率、5.4 性能 |
-| C7（4 邮件 + 1 群消息全 ok 才算送达） | **3.4 应送达集合与 `pushed=all` 判定**、3.4.1 推送明细（RT-07） |
+| C7（4 邮件 + 1 群消息 + 1 外部邮件全 ok 才算送达） | **3.4 应送达集合与 `pushed=all` 判定**、3.4.1 推送明细（RT-07） |
 | C9（跨时区按本地日历日） | 1.3 契约 3、3.1 `local_date()` |
 | **C10（实时提醒：1 次 push 1 条、含关键词、中文名、code=0、失败不重试）** | **1.4 通道对比、3.5 接口契约、5.3 失败语义** |
 | N1（不做 AI 摘要） | 3.2 生成层「不做什么」 |
@@ -642,3 +644,4 @@ class DailyReportOrchestrator:
 | 2026-11-10 | **0.5** | **依据红队评审意见（于悦《红队评审意见清单》RT-01~09）修订，逐条回应见 `docs/赵蕊-红队回应.md`**：①**RT-01** 1.4 送达行改为「应送达集合 + `pushed=(push_status=="ok")`」并加 0.4.1 `any()` 现状标注，3.4 新增 `push_status` 五态与应送达集合定义，5.3 推送行补汇总判定，附录 A C7 落点改指 3.4/3.4.1；②**RT-02** 3.4 新增 CLI 进程退出码 0/1/2/3 与五条不变量，编排层不调 `sys.exit()`；③**RT-04** 1.1 架构图拆出「团队日报直达群渠道（不经 members.py）」独立边，1.2 职责表与 3.3 增两条分发硬规则及反例；④**RT-05** 5.2 纪律 1 拆 1a（采集 `SourceUnavailableError`）/1b（推送 `ValueError`）并补「为什么不统一类型」，3.3 补 `from_env` 契约，5.3 新增「推送通道工厂」行，1.2 职责表补「不抛采集层异常」；⑤**RT-06** 2.2 增映射匹配语义（`strip + casefold`）与 `identity.py` 唯一实现约定，3.5 契约 2 改写，ADR-104 ③ 补匹配语义；⑥**RT-07** 新增 3.4.1 `push_detail` 结构（`at`/`error`）与 C7 重判口径，3.3 补回执契约，5.4 可观测性改写，2.3 新增 `push_receipts` v1.1 结构草案；⑦**RT-08** 2.2 写明任务归属日 = `local_date(created_at)`、跨天规则、C1 口径对照与 TK-303 验收边界；⑧**RT-09** 3.3 记载 `MultiNotifier` 并声明弃用，1.2 职责表补「不提供多通道聚合」。**本次仅改 design，`tasks.md` 的 TK-103/TK-303/TK-604/TK-707 同步与于悦清单「闭环记录」回填另行提交** | 赵蕊（架构师） |
 | 2026-11-10 | **0.5.1** | 按交付项自检补齐文档结构：2.1 增 ER 图附件链接（`docs/er-diagram.md` / `docs/uml/ER图.png`）；ADR-101~104 各增「备选项」行；5.4 增「可维护性」行、兼容性补 Python 3.13；§3 前言说明本系统无入站 HTTP 接口，新增 3.6 出站 HTTP 接口清单（GitHub/飞书/Webhook 的方法、路径、入参、出参、错误码），并标注 34 项断言待 RT-03 补提交。**不改变 0.5 已定契约与判定口径** | 赵蕊（架构师） |
 | 2026-11-12 | 0.5.1 补记（不升版） | 依 proposal「0.4.2 补记 2」追认 C4 / G4 口径 A，把 §5 覆盖表 G4 / C4 条款由「模板骨架一致」同步为「条目行格式一致」；**3.2 接口契约与 ADR 正文不改**——`format_item()` 生成的条目行格式本就是生成层固定格式，实现无需变更。依据 E-07 实测与 E-12（11-11 需求方群内确认、于悦复测改判），C4 改判由于悦签字，全组 / 导师于 11-15 阶段评审会追认；本次为规范追认归档，不倒填 | 方赫（需求方裁定，经配置管理员归档） |
+| 2026-11-17 | **0.6** | **团队日报外部邮件通道（`REPORT_RECIPIENTS`）全链修订**——依据 2026-11-16 指导教师要求与 v1.1 已上线实现（`3a8b0e7`：`orchestrator.py::_push_team_report` 追加 `REPORT_RECIPIENTS` 通道与 `team:report_recipients` 回执，2026-11-16 22:00 实测送达），把设计从「团队日报只发群、不发邮件」改为「群 + 外部邮件双通道」：① 1.1 架构图团队日报边标签补外部邮件；② 1.2 职责表 `members.py` 行区分群通道（`[]`）与外部邮件（`REPORT_RECIPIENTS`）；③ 1.4 送达 `len(groups) + 1` → `+2`（未配置时退回 `+1`）、C7 计数 5 → 6；④ 3.3 分发规则表拆「团队 · 群 / 团队 · 外部邮件」两行、分发硬规则 1 改写为「群通道传 `[]`，外部邮件只读 `REPORT_RECIPIENTS`」、回执契约补第 3 类回执；⑤ 3.4 应送达集合新增 `team:report_recipients`（为空时不产生记录、退回 `len(groups)+1`，不判失败），原第 3 条顺延为第 4 条；⑥ 3.4.1 C7 重判口径 5/5 → 6/6；⑦ 附录 A C7 落点同步；⑧ 3.3 `MultiNotifier` 弃用理由① 计数同步。**属规范追认已落地实现：代码无需改动、不重跑测试、不倒填历史**；1.3 固化契约、1.5 排除项、2.x 数据模型、ADR-101~104、3.1/3.2 接口契约正文、3.5、5.x、proposal 编号体系均未改。同步 `v1/specs/proposal.md` 0.4.4、`v2/specs/tasks.md`（404 / 401 / 605）、`v2/README.md` §2 | 杨佳莹 |

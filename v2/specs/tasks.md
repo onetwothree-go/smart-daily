@@ -1,17 +1,17 @@
 # 智能日报生成器 v2 实现计划（tasks.md）
 
 > **目标路径**：`v2/specs/tasks.md`（dev 分支，v2 目录隔离）｜**本地文件名**：`于悦-第3周-v2-tasks.md`
-> **版本**：0.1.0（起草稿，待组内评审）｜**撰写**：于悦（第 3 周需求分析师）｜**日期**：2026-11-17
+> **版本**：0.1.1（0.1.0 + 团队日报外部邮件通道回填，见 §8.2-U6）｜**撰写**：于悦（第 3 周需求分析师）｜**修订**：杨佳莹 2026-11-17（404 / 401 / 605）｜**日期**：2026-11-17
 > **起草方式**：WorkBuddy 依据指导书、远端 dev 只读事实与 v1 规范起草；**复核：于悦待确认；组内评审签字：待落**。本文件不代签、不代勾销、不倒填。
 > **工作流**：Superpowers `writing-plans`（第 3 周起专一使用，不混用 SDD）。本文件同时是课程交付物 `tasks.md` 与该工作流的计划产物，只保留这一份，避免"两处不一致即缺陷"。
-> **关联规范**：`specs/proposal.md` 0.4.2（S1–S9 / N1–N9 / C1–C10）、`specs/design.md` 0.5.1（**v1 基线，只作文字参考**）、`v2/README.md`（ADR-101~104 结论、接口契约、v1 三个坑）、指导书第七部分第 3 周第 3 步、附录 B。
+> **关联规范**：`v1/specs/proposal.md` 0.4.4（S1–S9 / N1–N9 / C1–C10，**产品级需求基线，v1/v2 共用**）、`v1/specs/design.md` 0.6（**v1 设计，只作文字参考**）、`v2/README.md`（ADR-101~104 结论、接口契约、v1 三个坑）、指导书第七部分第 3 周第 3 步、附录 B。
 > **粒度依据**：教材第 6.5 节任务粒度，按指导书第 3 周转述执行——一条任务 = 一个可验证交付物 = 一次提交；每条含验收标准、依赖、预估、并行组标记。
 
 ---
 
 ## 0. 这份表和仓库现状的关系（先读）
 
-- 远端 dev 的 `v2/` 目录 11-16 已建，提交里已在用 **`TK-V2-000 / 002 / 003 / 004 / 006 / 101`**。本表**沿用这套编号**，不另起一套，也不覆盖 v1 的 `specs/tasks.md`（0.1.4，`TK-1xx~9xx`，已定稿，只读）。
+- 远端 dev 的 `v2/` 目录 11-16 已建，提交里已在用 **`TK-V2-000 / 002 / 003 / 004 / 006 / 101`**。本表**沿用这套编号**，不另起一套，也不覆盖 v1 的 `v1/specs/tasks.md`（0.1.4，`TK-1xx~9xx`，已定稿，只读）。
 - `001`、`005` 远端没出现过，**保留空号不复用**，免得日后对不上。
 - 下表把周一已发生的工作**回填成可验收的任务条目**，但状态一律写"🟩 上游自报绿，待核对"——**提交存在 ≠ 验收标准达成**，勾销由需求分析师在《第 3 周 tasks.md 进度维护记录》里逐条核过后才做。
 - 本表**不含任何 v1 源代码**。v1 的设计结论只按 `v2/README.md` 的文字带入（ADR、接口契约、数据模型经验、三个坑），代码全部从零写。
@@ -37,11 +37,11 @@
 
 **Tech Stack**：Python（`pyproject.toml` ruff target `py313`；周一实跑环境自报 3.14）、`httpx`（ADR-101 直连，无 ORM）、`sqlite3`（ADR-102）、`ruff` E/F/I/B + `pytest` + `coverage`、`uv sync --dev`、GitHub Actions（`.github/workflows/ci.yml`，触发 dev + `paths: v2/**`）。
 
-**Spec**：`v2/README.md` + `specs/proposal.md` 0.4.2。执行者两份都要读。
+**Spec**：`v2/README.md` + `v1/specs/proposal.md` 0.4.4。执行者两份都要读。
 
 | # | 全局约束（每条任务的验收标准隐含包含本节） |
 | --- | --- |
-| G1 | 所有新增/修改文件在 `v2/` 下；v1 的 `src/`、`tests/`、`specs/` 一行不动 |
+| G1 | 所有新增/修改文件在 `v2/` 下；`v1/` 下的 `src/`、`tests/`、`specs/` 一行不动 |
 | G2 | 禁止复制、改造 v1 源码与测试；`v2/` 下不得出现 `import smart_daily`；零复制校验可复跑 |
 | G3 | 测试先于实现：先写失败测试（红）→ 最小实现（绿）→ 重构；**没有验收标准的任务不许进入执行** |
 | G4 | 一次提交对应一个任务，message 格式 `feat\|fix\|test\|docs: [TK-V2-编号] 一句话说明`；合并前执行 `code-review` 并逐条回应 |
@@ -89,7 +89,7 @@
 | --- | --- | --- | --- |
 | R1 | 身份键为 `None` / 空串 / 首尾空格 / 大小写混用 | 显式 `TypeError` 或统一 `strip()+casefold()`，不静默丢条目（v1 坑 3 / RT-06） | 101、606 |
 | R2 | 三源全失效 vs 当天确实无数据 | 前者抛聚合异常，后者输出「今日无工作记录」，**两种空输出必须不同**（v1 坑 1 / C8） | 104、602、603 |
-| R3 | 5 个通道里只有 3 个 `ok` | 不得判送达成功，应送达集合 + `all()`（v1 坑 2 / C7） | 404、605 |
+| R3 | 6 个通道里只有 3 个 `ok` | 不得判送达成功，应送达集合 + `all()`（v1 坑 2 / C7） | 404、605 |
 | R4 | 东八区 23:30 与 UTC 16:00 的时间戳 | 归当日；`.date()` 与 `local_date()` 的差异要专打（C9） | 102、603 |
 | R5 | 缺凭证 / 凭证错误 | 采集层不发请求、抛 `SourceUnavailableError`；通知层 `from_env()` 抛 `ValueError`、`send()` 返回 `False` 不抛 | 105、402、602 |
 
@@ -242,7 +242,7 @@ flowchart TD
 #### TK-V2-000 · v2 工程骨架与设计结论文字带入
 - 交付物：`v2/README.md`、`pyproject.toml`、`uv.lock`、`.gitignore`、`src/smart_daily_v2/`、`tests/`、`scripts/`、`docs/赵蕊-v2初始化记录.md`
 - 依赖 — ｜ 预估 0.5d ｜ 状态 🟩 上游自报绿，待核对（`58b921f`、`973e2da`）
-- 验收标准：① 给定干净环境执行 `uv sync --dev` → 退出码 0、可 `import smart_daily_v2`；② `v2/README.md` 逐条含 ADR-101~104、接口契约、数据模型经验、v1 三个坑 → 文字齐、**全文无 v1 代码块**；③ `git diff dev~1 dev -- src/ tests/ specs/` → v1 三目录差异为 0 行；④ `grep -r "import smart_daily" v2/` → 0 命中。
+- 验收标准：① 给定干净环境执行 `uv sync --dev` → 退出码 0、可 `import smart_daily_v2`；② `v2/README.md` 逐条含 ADR-101~104、接口契约、数据模型经验、v1 三个坑 → 文字齐、**全文无 v1 代码块**；③ 对每条 v2 任务提交执行 `git diff 该提交~1 该提交 -- v1/` → 0 行（v2 的提交不得改动 v1；v1 已于 11-17 整体迁入 `v1/`，根目录不再有 `src/ tests/ specs/`，旧写法 `-- src/ tests/ specs/` 因路径不存在而失效）；另 `ls src tests specs 2>/dev/null` → 根目录三目录均不存在；④ `grep -r "import smart_daily" v2/` → 0 命中。
 - 红/绿/提交：本任务为工程基线，验收方式是复跑上述 4 条命令并留输出；`docs: [TK-V2-000] 初始化 v2 工程骨架与设计结论带入`
 
 #### TK-V2-002 · 目录隔离方案 + CI / 分支规范同步
@@ -373,8 +373,8 @@ flowchart TD
 #### TK-V2-401 · 成员→邮箱映射
 - 交付物：`notifiers/members.py`、`tests/test_notifiers.py`
 - 依赖 105 ｜ 预估 0.25d ｜ 状态 ⬜
-- Interfaces：`load_member_emails(env: Mapping[str, str] | None = None) -> dict[str, list[str]]`
-- 验收标准：① 给定 `MEMBER_EMAILS="甲:a@example.com;b@example.com"` → 解析出 2 个收件人；② 未配置 → 返回 `{}` 不抛异常；③ 仓库内 0 处真实邮箱（G6）。
+- Interfaces：`load_member_emails(env: Mapping[str, str] | None = None) -> dict[str, list[str]]`；`load_report_recipients(env: Mapping[str, str] | None = None) -> list[str]`
+- 验收标准：① 给定 `MEMBER_EMAILS="甲:a@example.com;b@example.com"` → 解析出 2 个收件人；② 未配置 → 返回 `{}` 不抛异常；③ 仓库内 0 处真实邮箱（G6）；④ 给定 `REPORT_RECIPIENTS="a@x.com, b@x.com"` → `load_report_recipients()` 返回 2 个已去空白的收件人、未配置返回 `[]` 且不抛异常；两个变量互不影响，**外部收件人不得混入 `MEMBER_EMAILS`，也不得经 `resolve_recipients` 处理**（design 0.6 3.3 硬规则 1）。
 - 红 / 绿 / 提交：`feat: [TK-V2-401] 实现成员邮箱映射`
 
 #### TK-V2-402 · SMTP 通道
@@ -394,8 +394,8 @@ flowchart TD
 #### TK-V2-404 · 分发规则与送达判定
 - 交付物：`notifiers/dispatch.py`、`tests/test_dispatch.py`
 - 依赖 402、403、304 ｜ 预估 0.5d ｜ 状态 ⬜
-- Interfaces：`dispatch(personal: Mapping[str, str], team: str, *, no_notify: bool = False) -> dict[str, bool]`；`all_delivered(expected: set[str], results: Mapping[str, bool]) -> bool`
-- 验收标准：① 给定 4 份个人日报 + 1 份团队日报 → 个人只走邮件、团队只走群、团队日报不发邮件（S7 / I5）；② 给定 `no_notify=True` → 5 个通道调用次数全 0，落库照常；③ **R3**：给定 `expected` 5 个通道、`results` 中仅 3 个 `True` → `all_delivered()` 返回 `False`（**禁止 `any()`**，v1 坑 2）；④ 全文 `grep -n "any(" v2/src/smart_daily_v2/notifiers/` → 送达判定处 0 命中。
+- Interfaces：`dispatch(personal: Mapping[str, str], team: str, *, no_notify: bool = False, team_recipients: Sequence[str] = ()) -> dict[str, bool]`；`all_delivered(expected: set[str], results: Mapping[str, bool]) -> bool`。`team_recipients` 由编排层经 `load_report_recipients()` 注入，**`dispatch` 本身不读环境变量**（保持层内不碰配置）
+- 验收标准：① 给定 4 份个人日报 + 1 份团队日报 + `REPORT_RECIPIENTS` 配置 1 个外部收件人 → 个人只走邮件；团队走群 + 外部邮件两条通道，**两条各自独立 try、各自 1 条回执**（`scope` 分别为 `team` / `team:report_recipients`，S7 / I5）；② 给定 `no_notify=True` → 6 个通道调用次数全 0，落库照常；③ **R3**：给定 `expected` 6 个通道、`results` 中仅 3 个 `True` → `all_delivered()` 返回 `False`（**禁止 `any()`**，v1 坑 2）；④ 全文 `grep -n "any(" v2/src/smart_daily_v2/notifiers/` → 送达判定处 0 命中；⑤ 给定 `REPORT_RECIPIENTS` 未配置 → 应送达集合退回 5 条（`len(groups) + 1`）、外部邮件通道不产生回执，**不得判失败**（design 0.6 3.4 第 3 条）。
 - 红 / 绿 / 提交：`feat: [TK-V2-404] 实现分发规则与应送达集合判定`
 
 ### ⑤ 主编排与 CLI（P5 串行）
@@ -457,7 +457,7 @@ flowchart TD
 #### TK-V2-605 · 送达判定用例（C7 / R3）
 - 交付物：`tests/test_integration_delivery.py`
 - 依赖 601、404 ｜ 预估 0.5d ｜ 并行组 P6-b ｜ 状态 ⬜
-- 验收标准：① 给定 4 邮件 + 1 群全 `True` → 判送达成功；② 给定其中任一 `False` → 判失败且 `pushed=False`（C7 / R3）；③ 实时提醒通道不计入这 5 条，SQLite 无新增提醒记录（S9 边界，若本周不重做该通道则本条只作口径登记）。
+- 验收标准：① 给定 4 邮件 + 1 群 + 1 外部邮件全 `True` → 判送达成功；② 给定其中任一 `False` → 判失败且 `pushed=False`（C7 / R3）；③ 实时提醒通道不计入这 6 条，SQLite 无新增提醒记录（S9 边界，若本周不重做该通道则本条只作口径登记）。
 - 红 / 绿 / 提交：`test: [TK-V2-605] 补齐送达判定用例`
 
 #### TK-V2-606 · 身份归并回归扩展（C3 / R1）
@@ -477,7 +477,7 @@ flowchart TD
 #### TK-V2-701 · 零复制与密钥红线自查
 - 交付物：`docs/于悦-第3周-零复制与密钥自查.md`（或并入组内统一自查记录）
 - 依赖 000 ｜ 预估 0.25d ｜ 并行组 P7-a ｜ 状态 ⬜
-- 验收标准：① `git diff` 比对 v1 的 `src/ tests/ specs/` → 0 行改动；② `grep -rn "import smart_daily" v2/` → 0 命中；③ 全仓扫描 token / 真实邮箱 / Webhook → 0 命中（G6）；④ 三条命令的真实输出贴进记录，不写"已检查"了事。
+- 验收标准：① `git diff` 比对 `v1/src/ v1/tests/ v1/specs/` → 0 行改动；② `grep -rn "import smart_daily" v2/` → 0 命中；③ 全仓扫描 token / 真实邮箱 / Webhook → 0 命中（G6）；④ 三条命令的真实输出贴进记录，不写"已检查"了事。
 - 红 / 绿 / 提交：`docs: [TK-V2-701] 归档零复制与密钥红线自查`
 
 #### TK-V2-702 · 静态扫描 / 覆盖率 / CI 门禁归档
@@ -537,13 +537,14 @@ flowchart TD
 | **U3** | **提交前缀口径**：远端已用 `chore:` / `ci:`（000/002/003/004），指导书第 5 步只给了 `feat\|fix\|test\|docs` 四种 | 已发生的提交不能偷改历史；如实登记为偏差，由组内统一后续口径 | 配置管理员 + 组内会；在进度维护记录里单列一行说明，不自行判不合格也不静默放过 |
 | **U4** | **第 3 周角色轮换表仍为"待定"**（`docs/小组角色分工与轮换表.md` 第 3 周行） | 本表署名与产出归属要与轮换表一致；第 2 周曾因表与署名不符专门更正 | 表维护人 / 组内会 |
 | **U5** | **教师公布的覆盖率阈值** | 未拿到前只能记录数值，不能判达标（G5） | 测试工程师转达老师口径 |
+| **U6** | **`REPORT_RECIPIENTS` 未配置时，应送达集合是 5 条还是 6 条** | 若固定按 6 条算，未配置外部收件人时 `all_delivered()` 永假、`push_status` 永为 `partial`，退出码恒为 `3` | 架构师已裁定：**未配置时退回 `len(groups) + 1`（5 条）**，外部邮件不产生回执、不判失败；404 / 605 已按此写（design 0.6 3.4 第 3 条） |
 
 ---
 
 ## 9. 交付与提交说明
 
-1. 本文件复制到仓库 **`v2/specs/tasks.md`**（新建 `v2/specs/` 目录），不要覆盖 `specs/tasks.md`（v1 定稿）。选这个路径是因为：v2 走目录隔离、CI 按 `paths: v2/**` 触发、且组内已有"两处不一致即缺陷"的纪律——**只保留这一份**，不再另建 `docs/superpowers/plans/` 下的副本。
-2. 建议提交 message：`docs: [TK-V2-007] 撰写 v2 tasks.md（含依赖图与并行组）`。按 `CLAUDE.md`，AI 参与的产出当天在 `docs/ai-usage-log.md` 加一行，工具如实写、状态留"待确认"。
+1. 本文件复制到仓库 **`v2/specs/tasks.md`**（新建 `v2/specs/` 目录），不要覆盖 `v1/specs/tasks.md`（v1 定稿）。选这个路径是因为：v2 走目录隔离、CI 按 `paths: v2/**` 触发、且组内已有"两处不一致即缺陷"的纪律——**只保留这一份**，不再另建 `docs/superpowers/plans/` 下的副本。
+2. 建议提交 message：`docs: [TK-V2-007] 撰写 v2 tasks.md（含依赖图与并行组）`。按 `CLAUDE.md`，AI 参与的产出当天在 `v1/docs/ai-usage-log.md` 加一行，工具如实写、状态留"待确认"。
 3. 提交前请本人逐条复核 §4 总览表、§5 依赖图、§8 待确认事项；**§7 自审是起草时做的，不代替本人核对**；组内评审签字栏留空，不代签。
 4. 《第 3 周 tasks.md 进度维护记录》另起一份文件，编号与本表对齐，逐日勾销用；两份分开留痕。
 5. 教材第 6.5 节的粒度按指导书第 3 步转述执行（一条任务 = 一个可验证交付物 = 一次提交）。本机教材电子版为扫描件，未逐字引用原示例表；上课时对照一眼原表粒度，若老师给的示例更粗/更细，按老师口径调整本表拆分数即可，编号与依赖结构不用动。
