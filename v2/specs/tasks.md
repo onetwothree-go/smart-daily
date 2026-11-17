@@ -33,7 +33,7 @@
 
 **Goal**：从零重做智能日报 v2，用 tasks.md 逐任务驱动 TDD 红→绿→重构，产出可运行、可验收、可追溯的 `v2/` 工程与测试。
 
-**Architecture**：采集层（异常驱动降级）→ 共享基础层（归一化只做一次）→ 生成层（纯函数）→ 推送层（应送达集合判定）→ 主编排（串行落库与分发）；v2 全部落在 `v2/`，与 v1 目录隔离、不共享文件。
+**Architecture**：采集层（异常驱动降级 → `fallback.py` 内统一 `normalize()` 一次）→ 共享基础层（`WorkItem` 数据模型）→ 生成层（纯函数）→ 推送层（应送达集合判定）→ 主编排（串行落库与分发，禁止二次归一化）；v2 全部落在 `v2/`，与 v1 目录隔离、不共享文件。
 
 **Tech Stack**：Python（`pyproject.toml` ruff target `py313`；周一实跑环境自报 3.14）、`httpx`（ADR-101 直连，无 ORM）、`sqlite3`（ADR-102）、`ruff` E/F/I/B + `pytest` + `coverage`、`uv sync --dev`、GitHub Actions（`.github/workflows/ci.yml`，触发 dev + `paths: v2/**`）。
 
@@ -288,7 +288,8 @@ flowchart TD
 - 交付物：`models.py`、`tests/test_models.py`
 - 依赖 000 ｜ 预估 0.5d ｜ 并行组 P1-b ｜ 状态 ⬜
 - Interfaces / Produces：`WorkItem`（frozen，字段 `record_id / source / member / kind / title / detail / occurred_at / local_day`）、`CommitEntry` / `TaskEntry` / `MessageEntry`、`local_date(ts: datetime) -> date`、`normalize(entries: list[...]) -> list[WorkItem]`
-- 验收标准：① 给定三型记录混合输入 → `normalize()` 输出按 `occurred_at` 倒序、条数与输入相等；② 给定已是 `WorkItem` 的输入 → 原样放行（二次归一化幂等，G7）；③ 给定未知类型 → 抛 `TypeError`，不静默丢弃；④ **R4**：给定 `2026-11-09T23:30+08:00` 与 `2026-11-10T00:00Z` → `local_date()` 分别返回 11-09 / 11-10，与 `ts.date()` 的差异有专门断言。
+- 归一化单点（issue #14 K4 方案甲）：采集器 201–203 只产 `RawRecord`（即 `CommitEntry` / `TaskEntry` / `MessageEntry` 三型原始记录），不自行归一化；`normalize()` 的**唯一调用点**在 `TK-V2-104` 的 `fallback.py` 内，本任务只提供定义与单测、不在此调用；下游一律禁止二次归一化（G7）。按架构师推荐方案甲写入；组内会若改选方案乙，需同步改本节、104 ④ 与 Architecture 三处。
+- 验收标准：① 给定三型记录混合输入 → `normalize()` 输出按 `occurred_at` 倒序、条数与输入相等；② 给定已是 `WorkItem` 的输入 → 原样放行（幂等防御性断言，不代表允许下游再次调用，G7）；③ 给定未知类型 → 抛 `TypeError`，不静默丢弃；④ **R4**：给定 `2026-11-09T23:30+08:00` 与 `2026-11-10T00:00Z` → `local_date()` 分别返回 11-09 / 11-10，与 `ts.date()` 的差异有专门断言。
 - 红：`test_normalize_sorts_and_keeps_count`、`test_normalize_idempotent`、`test_unknown_type_raises`、`test_local_date_utc8_boundary`
 - 绿 / 提交：`feat: [TK-V2-102] 实现 WorkItem 与单次归一化入口`
 
@@ -303,7 +304,7 @@ flowchart TD
 - 交付物：`sources/fallback.py`、`tests/test_fallback.py`
 - 依赖 103、105 ｜ 预估 0.5d ｜ 并行组 P1-b ｜ 状态 ⏸（口径待确认，见 §8-U1）
 - Interfaces / Produces：`collect_with_fallback(sources: Sequence[WorkSource], since, until, author=None) -> tuple[list[WorkItem], list[str]]`（条目 + 降级原因）
-- 验收标准：① 给定第一源抛 `SourceUnavailableError`、第二源返回 3 条 → 返回 (3 条, 含第一源原因的列表)，不中断；② 给定第一源返回 `[]`、第二源有数据 → 返回（空列表，第一源名），**不切第二源**（空列表 = 该源当天无数据，属合法结果；与"异常"严格区分）；③ **R2**：给定三源全抛异常 → 抛 `AllSourcesUnavailableError`，错误信息含 3 条原因，**不返回空列表**（v1 坑 1 / C8）；④ 返回的条目已是 `WorkItem`，编排层二次 `normalize()` 有断言/文档双保险（G7）。
+- 验收标准：① 给定第一源抛 `SourceUnavailableError`、第二源返回 3 条 → 返回 (3 条, 含第一源原因的列表)，不中断；② 给定第一源返回 `[]`、第二源有数据 → 返回（空列表，第一源名），**不切第二源**（空列表 = 该源当天无数据，属合法结果；与"异常"严格区分）；③ **R2**：给定三源全抛异常 → 抛 `AllSourcesUnavailableError`，错误信息含 3 条原因，**不返回空列表**（v1 坑 1 / C8）；④ `collect_with_fallback()` 内对合并后的 `RawRecord` 统一调用 `normalize()` **一次**（归一化单点，与 102 呼应）；返回的条目已是 `WorkItem`，编排层不得再次调用 `normalize()`（G7）；⑤ **K3**：给定第一源正常返回非空数据、全程未发生降级 → 第二元素（降级原因列表）返回 `[]`，不记任何源名；第一源返回空列表的情形见 ②，不属本条。
 - 红 / 绿 / 提交：`feat: [TK-V2-104] 实现异常驱动降级链`
 
 #### TK-V2-105 · 配置与凭证读取
