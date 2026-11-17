@@ -12,7 +12,7 @@ v2 工程设计备忘（只录结论，不贴代码）。
 ## 2. 接口契约要点
 
 - `WorkSource.collect()` 输入参数、输出 `list[WorkItem]`、异常协议见 ADR-103。
-- `collect_with_fallback()` 降级语义：采集失败时返回空列表，不中断流程。
+- `collect_with_fallback()` 降级语义：源抛 `SourceUnavailableError` → 切下一源；源返回空列表 → 停止降级并返回空结果（空列表 ≠ 失败）；全部源抛异常 → 抛 `AllSourcesUnavailableError`，不返回空列表（C8 / ADR-103）。
 - `normalize` 只执行一次，下游禁止二次归一化。
 - `local_date` 按东八区（Asia/Shanghai）归属。
 - 生成层为纯函数，无副作用。
