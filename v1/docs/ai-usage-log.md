@@ -270,3 +270,13 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - `docs/ai-usage-log/` 目录远端目前仅有 `2026-W46.md`（W47 为 404）。按 W46 抬头「维护人：配置管理员」，本轮**未擅自新建 W47 周归档文件、未代填他人行**，待其建立后本人再追加自己那一行。
 - 累计统计：在现有「第 2 周 60（黄 59）」基础上 +1 → **61（黄 60）**；11-16 组内五行未见对应统计更新，本条**不擅自重算全表**，沿用本日志既有「表格实际行数与统计口径不一致不擅自重算」的纪律，待配置管理员统一核对。
 - 本次只改 `docs/ai-usage-log.md` 一个文件；`v2/specs/tasks.md` 正文未动，未触发 `ci.yml`（其触发条件为 dev + `paths: v2/**`）。
+
+## 补记（2026-11-17 下午，v1 目录整体迁移与自动推送脚本路径调整）
+
+- 新增杨佳莹本人记录 1 条，留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签，评审签字栏仍空。
+- 工具列写 `WorkBuddy`（本次目录迁移与脚本改写由本机 AI 协助完成，非 `Claude Code` 会话）；四色记「黄」（结构调整须人工复核后用）。
+- 实际改动三处：① 将 v1 的 `docs/ scripts/ specs/ src/ tests/` 及运行必需件 `pyproject.toml`、`uv.lock`、`README.md`、`main.py`、`design.md`、`.env`、`data/` 整体移入 `v1/`（`.env` 与 `data/` 受 `.gitignore` 保护，未入库）；② `v1/scripts/run_daily.ps1` 的 `Set-Location` 改指 `D:\pro\smart-daily\v1`，其余逻辑未动；③ 根目录新建 `scripts/run_daily.ps1` 薄转发脚本（调用 v1 内脚本并透传退出码），使 Windows 计划任务 `SmartDaily-2200` 指向路径保持不变。
+- 验证口径：`v1` 下 `uv run --env-file .env python -c "import smart_daily.cli"` 导入成功（包实际来自 `v1/src`）；只读预览实跑当日，三数据源与 SMTP / 飞书通道全部就绪、`push_status=skipped`（未落库、未推送）。
+- 提交为本人经 `Claude Code` 完成：`f58ce4e refactor: v1 项目整体移入 v1/ 目录，根目录保留 v1/v2 双轨结构`，已推送 dev；main 因 11-16 PR #13 产生合并节点改为强推对齐（`f836e75…f58ce4e`）。
+- 遗留：`.github/workflows/notify.yml` 第 41 行仍写 `python scripts/notify_push.py`，脚本已移至 `v1/scripts/`，push 提醒工作流会失败；因当前 PAT 缺 `workflow` scope，计划由 GitHub 网页直接修改该行。
+- 累计统计在 61（黄 60）基础上 +1 → **62（黄 61）**；表格实际行数与统计口径不一致的旧问题仍不擅自重算。
