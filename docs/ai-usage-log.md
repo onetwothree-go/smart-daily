@@ -127,6 +127,7 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-16 | WorkBuddy | 黄 | 删除阶段二旧分支 `v2-superpowers` 并同步文档口径：先比对确认该分支相对 `dev` 仅多出故意留 F401 的 `2bb4650`（无有效内容），再 `git push origin --delete`；同步改 `BRANCHING.md` 阶段二分支处置段与初始化记录的 2 处「历史快照」表述 | `BRANCHING.md`、`docs/赵蕊-v2初始化记录.md` | 删除后 `git ls-remote --heads` 只剩 main/dev/connectivity-test；`git log dev..origin/v2-superpowers` 仅 1 条（2bb4650）；`git diff dev <branch> -- v2/` 仅 F401 与旧 optional-dependencies 两处差异 | ☐ 待确认 |
 | 2026-11-16 | Claude Code | 黄 | 【赵蕊】TK-V2-101 身份归并走 TDD 绿步：实现 `identity.py` 的 `normalize_key`（None 显式抛 TypeError）与 `normalize_members`（按 strip+casefold 归并，同键原始身份收集为列表），并新增 `v2/.gitignore` 挡运行产物（.venv / __pycache__ / .coverage / .pytest_cache / .ruff_cache / *.pyc）；口径依据 `v2/README.md` §2「单点归一化、下游禁止二次归一化」 | `v2/src/smart_daily_v2/identity.py`、`v2/.gitignore`（两笔提交，本次推送 dev） | 本机 `v2/.venv` 实跑：`ruff check .` 全过、`ruff format --check .` 4 文件均已格式化（首次检查报 identity.py 行尾需重排，已 `ruff format` 修正后再验）、`pytest -q` 9 passed、`--cov-fail-under=80` 实际 100%（identity.py 12 语句 0 未覆盖）；**如实注明**：以上为 Windows + Python 3.14 本机结果，CI 为 Ubuntu + Python 3.13，最终以 Actions 两 job 结论为准，若不一致按 CI 结果回修 | ☐ 待确认 |
 | 2026-11-16 | Claude Code | 黄 | 【赵蕊】第 3 周测试工程师产出：缺陷清单与系统化调试根因记录，共 6 条（DEF-01 采集吞异常 / DEF-02 `any(ok)` 误判 / DEF-03 大小写不敏 / DEF-04 CI Ruff 偶发红 / DEF-05 应送达集合未落地 / DEF-06 Actions 日志 403）；每条按「现象含提交号与 run id → 根因（已确认 / 待确认+待补证据）→ 影响面 → v2 修复口径 → 验证方式 → 状态」登记，任务号只写号段不写具体号 | `docs/赵蕊-缺陷清单与根因记录.md`（新增单文件，本次提交） | 全部结论用 git 命令复现而非凭记忆：`git show 130ccf7/3f2b3ee/d50d357 --stat`+对应 diff、`grep -n RT-06 docs/于悦-红队评审意见清单.md`、`sed -n '225,260p' specs/tasks.md`（TK-707 位于 240 行）、`git log --all --oneline -i --grep="fix:"`（6 条，其中 `3f2b3ee` 因提交信息为 `feat(v1.1)` 前缀不在结果内，已在文档注明检索会漏）；CI 侧经 GitHub API 核实 run `43843812521`（a1af126，两 job failure，Ruff job step6 红/step7 skipped）与 run `43861473674`（25115d3，两 job success）；本地复现 a1af126 的 test_identity.py 得 `Found 1 error`（I001，ruff 0.17.5）——**与任务简报所述「All checks passed」不符，已如实以实测登记并列为待查线索**；**如实注明**：job 日志接口返回 403（`Must have admin rights`，`.env` 中 GITHUB_TOKEN 为空），失败原始输出未取得，故 DEF-04 只记到 step 级、根因标「待确认」，未声称具体 rule 或行号；未跑测试、未改 specs/ 与 v2/ 任何文件 | ☑ 已确认（赵蕊，2026-11-16） |
+| 2026-11-17 | WorkBuddy | 黄 | 【于悦】第 3 周需求分析师产出：核查本机与远端 dev 的第 3 周环境、缺件与已有提交；按指导书第 3 周第 3 步 + 附录 B + Superpowers `writing-plans` 起草 v2 任务清单（36 条 TK-V2-xxx、七段链路、每条「给定输入 → 可观测输出 → 阈值」验收标准、mermaid 依赖图、并行组标记、Review Focus 5 条、§8 五项待组内确认口径）；随后经 git 通道提交 dev。提示要点：只沿用远端已用的 TK-V2 编号、不复制 v1 源码、周一已有提交只回填为「上游自报绿、待核对」不代勾销 | `v2/specs/tasks.md`（新建 `v2/specs/`），提交 `1b9ecb3`（dev，父提交 `96fa4aa`）；同一会话另有本地未入库的《第3周-于悦-缺件清单与任务清单》、进度维护记录与站会 / 互评 / 方法切换回顾 4 份模板 | AI 侧可核事实：远端 `v2/specs/tasks.md` 经 contents API 复核 `type=file`、47689 字节、blob sha `32979d3`，与本地草稿逐字一致；提交 `1b9ecb3` 作者与提交者均为于悦；36 条编号与远端已有 `000/002/003/004/006/101` 不冲突。**三源核验**：① 指导书第 3 周任务书与附录 B 原文（PDF 提取）② 远端 dev 提交历史与 git tree（GitHub API）③ 本机 Superpowers v7.0.2 `writing-plans/SKILL.md` 原文；教材 6.5 节电子版为扫描件，粒度按指导书转述执行、未逐字引用原表，需课堂对照。**待本人核验（尚未做，故留 ☐）**：逐条复核 36 条验收标准可执行性、§8 U1 降级链口径交架构师裁定、组内评审签字栏仍空；本条为事后补记（产出提交在先），未倒填日期 | ☐ 待确认 |
 
 ---
 
@@ -259,3 +260,13 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 新增杨佳莹本人 1 条（README 开头明示 v1.1 与 22:00 自动推送状态），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代填。
 - 改动只涉及 README 顶部状态块，与 proposal 补记 8 / N8 处置记录第五节口径一致；其余章节与 `specs/` 正文未动。
 - 累计统计在其 59 基础上 +1 → **60（黄 58 → 59）**；表格实际行数与统计口径不一致的旧问题仍不擅自重算。
+
+## 补记（2026-11-17 上午，于悦 v2 tasks.md 起草与提交的 AI 使用日志）
+
+- 新增于悦本人 2026-11-17 记录 1 条，留 `☐ 待确认`；**组内他人记录一字未动**，不代勾、不代签，评审签字栏仍空。
+- **如实说明：本条为事后补记**。`v2/specs/tasks.md` 已于当日先由提交 `1b9ecb3` 推送 dev，日志随后补写，违反 `CLAUDE.md`「与产出同批提交」；按本日志 11-12 09:30 补记先例按补记当天登记，不倒填、不伪装成同批。
+- 工具列按实际会话写 `WorkBuddy`（`docs/ai-usage-log.md` 填写说明允许「Claude Code / Codex CLI / WorkBuddy 等」，且组内 11-16 已有两行 WorkBuddy 先例）；`CLAUDE.md` 模板中的 `Claude Code` 为默认值，未冒充 Claude Code 会话。四色记「黄」（规范起草须审查后用）。
+- 表头仍为「第 2 周：2026-11-09 起」，但组内 11-16 五行已追加在该表末尾；本行沿用同一位置，**未擅自改表头或拆出第 3 周新表**，待配置管理员决定是否分表。
+- `docs/ai-usage-log/` 目录远端目前仅有 `2026-W46.md`（W47 为 404）。按 W46 抬头「维护人：配置管理员」，本轮**未擅自新建 W47 周归档文件、未代填他人行**，待其建立后本人再追加自己那一行。
+- 累计统计：在现有「第 2 周 60（黄 59）」基础上 +1 → **61（黄 60）**；11-16 组内五行未见对应统计更新，本条**不擅自重算全表**，沿用本日志既有「表格实际行数与统计口径不一致不擅自重算」的纪律，待配置管理员统一核对。
+- 本次只改 `docs/ai-usage-log.md` 一个文件；`v2/specs/tasks.md` 正文未动，未触发 `ci.yml`（其触发条件为 dev + `paths: v2/**`）。
