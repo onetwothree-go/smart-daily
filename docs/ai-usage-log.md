@@ -396,3 +396,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 新增于悦本人 2026-11-18 当天 1 条记录（Claude Code 会话将本机 WorkBuddy 整理的当日站会记录新建入 `v2/每日站会记录/2026-11-18.md` 并提交），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
 - 产出：`v2/每日站会记录/2026-11-18.md`（新增 1 文件），提交 `docs: 补 2026-11-18 每日站会记录`（本条随该提交）。
 - 如实说明：文档正文 AI 零改动、逐字复制；文档提及的 28 个提交号、「19 条提交（09:51–21:04）」、两处行数声明均已本地核实；CI 结论为 WorkBuddy 会话 API 声明、本会话未独立背书；累计统计沿用「不擅自重算」纪律未动。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-402 SMTP 邮件通道）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：SMTP 邮件通道 `notifiers/email.py`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task402` 触发红阶段、`/task402g` 绿阶段、`/task402c` 收尾检查），新建 `v2/src/smart_daily_v2/notifiers/email.py` 实现 `EmailNotifier.from_env` / `send` 与 `Notifier` Protocol，并在 `v2/tests/test_email.py` 写 6 个测试函数（parametrize 展开 10 项）。
+- 产出：提交 `feat: [TK-V2-402] 实现 SMTP 邮件通道`（本条随该提交）。红输出为收集阶段 `ModuleNotFoundError: No module named 'smart_daily_v2.notifiers.email'`；绿后单文件 10 passed，全量 `uv run pytest tests/ -q` 52 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `email.py`（缺凭证 `ValueError`、`use_ssl` 取自 `SMTP_SSL`、`send` 异常捕获返回 `False` 不抛、无重试循环、monkeypatch `smtplib.SMTP` 打桩绝不真发邮件），确认与 `v2/specs/tasks.md` 中 402 验收及 design R5/N8 契约一致；G6 自查仓库内真实邮箱 0 处；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：本任务全程未遇 402 断流；测试侧一处属性名笔误（`ssl`→`use_ssl`）由本人本地修正对齐。记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
