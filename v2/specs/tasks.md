@@ -296,14 +296,14 @@ flowchart TD
 #### TK-V2-103 · `WorkSource` 协议与异常类型
 - 交付物：`sources/base.py`、`tests/test_worksource.py`
 - 依赖 102 ｜ 预估 0.25d ｜ 并行组 P1-b ｜ 状态 ⬜
-- Interfaces / Produces：`WorkSource`（`@runtime_checkable` Protocol）：`name: str`、`collect(since: datetime, until: datetime, author: str | None = None) -> list[WorkItem]`；`SourceUnavailableError(source, reason)`；`AllSourcesUnavailableError(errors: list[SourceUnavailableError])`
-- 验收标准：① 给定三个采集器实例 → `isinstance(x, WorkSource)` 全为 True；② 协议文本中 → 不含任何平台专有字段（grep 断言）；③ 给定 `AllSourcesUnavailableError([e1,e2,e3])` → `str(e)` 含全部 3 个源名与原因。
+- Interfaces / Produces：`WorkSource`（`@runtime_checkable` Protocol）：`name: str`、`collect(*, since: datetime, until: datetime, author: str | None = None) -> list[WorkItem]`；`SourceUnavailableError(source, reason)`；`AllSourcesUnavailableError(errors: list[SourceUnavailableError])` **继承 `SourceUnavailableError`**：`class AllSourcesUnavailableError(SourceUnavailableError)`，`errors` 作附加属性；因父类签名 `(source, reason)`，子类须自实现 `__init__(errors)` 并调 `super().__init__("all_sources", "; ".join(原因))`（K8 方案甲，保证按旧类兜底的 501 / 504 / 602 继续生效）
+- 验收标准：① 给定三个采集器实例 → `isinstance(x, WorkSource)` 全为 True；② 协议文本中 → 不含任何平台专有字段（grep 断言）；③ 给定 `AllSourcesUnavailableError([e1,e2,e3])` → `str(e)` 含全部 3 个源名与原因；④ **K8**：`issubclass(AllSourcesUnavailableError, SourceUnavailableError)` 为 True，`except SourceUnavailableError` 能捕获全失败异常（防上层静默穿透）。
 - 红 / 绿 / 提交：`feat: [TK-V2-103] 定义 WorkSource 协议与异常类型`
 
 #### TK-V2-104 · 异常驱动降级链
 - 交付物：`sources/fallback.py`、`tests/test_fallback.py`
 - 依赖 103、105 ｜ 预估 0.5d ｜ 并行组 P1-b ｜ 状态 ⏸（K1 口径已裁定、U1 已闭环；⏸ 按 issue #14 保留，见 §8.2 留痕行）
-- Interfaces / Produces：`collect_with_fallback(sources: Sequence[WorkSource], since, until, author=None) -> tuple[list[WorkItem], list[str]]`（条目 + 降级原因）
+- Interfaces / Produces：`collect_with_fallback(sources: Sequence[WorkSource], *, since, until, author=None) -> tuple[list[WorkItem], list[str]]`（条目 + 降级原因；`*` 强制 since/until 关键字传参，防顺序传反，见 K5）
 - 验收标准：① 给定第一源抛 `SourceUnavailableError`、第二源返回 3 条 → 返回 (3 条, 含第一源原因的列表)，不中断；② 给定第一源返回 `[]`、第二源有数据 → 返回（空列表，第一源名），**不切第二源**（空列表 = 该源当天无数据，属合法结果；与"异常"严格区分）；③ **R2**：给定三源全抛异常 → 抛 `AllSourcesUnavailableError`，错误信息含 3 条原因，**不返回空列表**（v1 坑 1 / C8）；④ `collect_with_fallback()` 内对合并后的 `RawRecord` 统一调用 `normalize()` **一次**（归一化单点，与 102 呼应）；返回的条目已是 `WorkItem`，编排层不得再次调用 `normalize()`（G7）；⑤ **K3**：给定第一源正常返回非空数据、全程未发生降级 → 第二元素（降级原因列表）返回 `[]`，不记任何源名；第一源返回空列表的情形见 ②，不属本条。
 - 红 / 绿 / 提交：`feat: [TK-V2-104] 实现异常驱动降级链`
 
@@ -321,21 +321,21 @@ flowchart TD
 #### TK-V2-201 · GitHub 提交采集
 - 交付物：`sources/github.py`、`tests/test_source_github.py`
 - 依赖 104 ｜ 预估 1d ｜ 并行组 **P2** ｜ 状态 ⬜
-- Interfaces / Produces：`GithubSource.from_env() -> GithubSource`、`collect(since, until, author=None) -> list[WorkItem]`；只读 `main` 分支、按登录名经 101 归人（S1 / I2）
+- Interfaces / Produces：`GithubSource.from_env() -> GithubSource`、`collect(*, since, until, author=None) -> list[WorkItem]`；只读 `main` 分支、按登录名经 101 归人（S1 / I2）
 - 验收标准：① 给定 fixture 中时间窗内 3 条 commit → 返回 3 条 `WorkItem`，`record_id` 与原始 sha 一一对应、无改写；② 给定无效 token（桩 401）→ 抛 `SourceUnavailableError`，**不返回 `[]`**；③ 给定空仓库 409 → 抛异常且信息含"仓库为空"；④ 给定未配 `GITHUB_REPO_OWNER/NAME` → 不发请求直接判不可用（httpx 调用次数 0）。
 - 红 / 绿 / 提交：`feat: [TK-V2-201] 实现 GitHub 提交采集`
 
 #### TK-V2-202 · 飞书任务采集
 - 交付物：`sources/feishu_tasks.py`、`tests/test_source_feishu_tasks.py`
 - 依赖 104、105 ｜ 预估 1d ｜ 并行组 **P2** ｜ 状态 ⬜
-- Interfaces / Produces：`FeishuTaskSource.from_env() -> FeishuTaskSource`、`collect(...) -> list[WorkItem]`
+- Interfaces / Produces：`FeishuTaskSource.from_env() -> FeishuTaskSource`、`collect(*, since, until, author=None) -> list[WorkItem]`
 - 验收标准：① 给定 fixture 中 2 条任务 → 返回 2 条，含 `task_id / summary / created_at / completed` 派生字段；② 给定 `created_at=2026-11-09T22:30+08:00`、`completed_at=2026-11-10T09:00+08:00` → 归属 11-09，且 `--day 11-10` 结果中不出现、两次合计只计 1 次；③ 给定翻页响应（第 1 页满、第 2 页 1 条）→ 全量取回不漏条；④ 给定缺 app 凭证 → 抛 `SourceUnavailableError`、请求次数 0。
 - 红 / 绿 / 提交：`feat: [TK-V2-202] 实现飞书任务采集`
 
 #### TK-V2-203 · 飞书群消息采集（单群限定）
 - 交付物：`sources/feishu_chat.py`、`tests/test_source_feishu_chat.py`
 - 依赖 104、105 ｜ 预估 1d ｜ 并行组 **P2** ｜ 状态 ⬜
-- Interfaces / Produces：`FeishuChatSource.from_env() -> FeishuChatSource`、`collect(...) -> list[WorkItem]`
+- Interfaces / Produces：`FeishuChatSource.from_env() -> FeishuChatSource`、`collect(*, since, until, author=None) -> list[WorkItem]`
 - 验收标准：① 给定 fixture 中含指定群 2 条 + 其他群/私聊 3 条 → 只返回 2 条（S3 / N7 / I12）；② 给定超过单页上限的消息 → 分页取全，条数等于 fixture 总数；③ 给定 `FEISHU_CHAT_ID` 缺失 → 抛不可用，不静默返回 `[]`；④ 消息正文原样保留，不做截断以外的改写（S4 / I8）。
 - 红 / 绿 / 提交：`feat: [TK-V2-203] 实现飞书群消息采集`
 
@@ -404,8 +404,8 @@ flowchart TD
 #### TK-V2-501 · 主编排
 - 交付物：`orchestrator.py`、`tests/test_orchestrator.py`
 - 依赖 104、201–203、304、404 ｜ 预估 1d ｜ 状态 ⬜
-- Interfaces：`run(day: date, *, sources: Sequence[WorkSource], notify: bool = True) -> dict`，返回键至少含 `date / source / members / items / saved_reports / pushed / push_detail / team_report`（沿用 v1 design 3.4 的文字结论，最终以架构师确认的接口契约为准）
-- 验收标准：① 给定夹具 5 条 → 执行顺序为 采集→归属日→分组→团队→逐人个人→落库→推送，日志可逐步核对；② 给定任一通道 `send()` 返回 False → `run()` 不抛异常，查库仍有记录；③ `pushed` 由 `all_delivered()` 得出，不得由 `any()` 得出（R3）；④ 全源失效 → 抛 `AllSourcesUnavailableError`，**不产出 0 条空日报**（R2）。
+- Interfaces：`run(day: date, *, sources: Sequence[WorkSource], notify: bool = True) -> dict`，返回 **9 键**：`date / source / members / items / saved_reports / pushed / push_status / push_detail / team_report`（与 v1 design 3.4 对齐；本契约由架构师 K2 确认定稿，`push_status` 是 504 退出码 `3` 的唯一数据来源）
+- 验收标准：① 给定夹具 5 条 → 执行顺序为 采集→归属日→分组→团队→逐人个人→落库→推送，日志可逐步核对；② 给定任一通道 `send()` 返回 False → `run()` 不抛异常，查库仍有记录；③ `pushed` 由 `all_delivered()` 得出，不得由 `any()` 得出（R3）；④ 全源失效 → 抛 `AllSourcesUnavailableError`，**不产出 0 条空日报**（R2）；⑤ **K2**：`push_status` 五态 `ok / partial / failed / no_channel / skipped`——`notify=True` 且全部通道成功 → `ok`、`pushed=True`；任一失败 → `partial`/`failed`、`pushed=False`；`notify=False` → `skipped`；不变量 `pushed == (push_status == "ok")`，`all([])` 不得判成功（五态沿用 v1 design 3.4 RT-01）。
 - 红 / 绿 / 提交：`feat: [TK-V2-501] 实现主编排流程`
 
 #### TK-V2-502 · SQLite 幂等落库

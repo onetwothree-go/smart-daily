@@ -272,6 +272,7 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 改动只涉及 README 顶部状态块，与 proposal 补记 8 / N8 处置记录第五节口径一致；其余章节与 `specs/` 正文未动。
 - 累计统计在其 59 基础上 +1 → **60（黄 58 → 59）**；表格实际行数与统计口径不一致的旧问题仍不擅自重算。
 
+
 ## 补记（2026-11-17 上午，于悦 v2 tasks.md 起草与提交的 AI 使用日志）
 
 - 新增于悦本人 2026-11-17 记录 1 条，留 `☐ 待确认`；**组内他人记录一字未动**，不代勾、不代签，评审签字栏仍空。
@@ -298,3 +299,27 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 工具列如实记 `WorkBuddy`（本次整理由 WorkBuddy 会话完成，非 Claude Code 会话）；四色记「黄」（结构调整须人工复核后用），已由赵蕊本人口头确认后提交。
 - 本次只改 `v1/docs/ai-usage-log.md` 一个文件，不触发 `ci.yml`；提交 message 沿用 865d64c 先例，不带 TK 编号（属日志维护类提交）。
 - 累计统计不重算：行数与统计口径不一致的旧账维持原状（不擅自重算纪律）。
+
+## 补记（2026-11-17，方赫第 3 周 TK-V2-105 配置与凭证）
+
+- 新增方赫本人 2026-11-17 当天 1 条记录（第 3 周开发工程师首个 TDD 任务：配置与凭证读取模块 `config.py`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代填。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词，红→绿→重构完成 `v2/src/smart_daily_v2/config.py`、`v2/tests/test_config.py`、`v2/.env.example`，并修 `v2/.gitignore` 忽略 `.env`。
+- 产出：提交 `feat: [TK-V2-105] 实现配置与凭证读取`（本条随该提交）；红输出 3 failed（模块不存在）+ 2 passed（文件类验收），绿与重构后 5 passed，全量 `uv run pytest tests/ -q` 14 passed、`ruff check` / `ruff format --check` 全过、`git check-ignore -v .env` 命中。
+- 人工核验方式：本人逐行 review `config.py`（frozen dataclass / load_config 可注入 env / require_credential 缺凭证抛 ValueError 且不发 HTTP），确认无硬编码凭证（G6 扫描 0 命中）、`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）；红阶段真实失败输出已核对为"模块不存在"而非测试自崩。
+- 工具链说明：本次首次使用自定义命令 `/task105`（因 Windows 控制台无法粘贴长文本，改为手打命令触发整段提示词）；期间 OpenRouter 免费层因 `max_tokens=32000` 预留超限报 402，已在本地 shim 压至 16000 解决（属本机工具链配置，非仓库改动，不入库）。
+
+## 补记（2026-11-17，方赫按 issue #14 修订接口契约 K2/K8/K5）
+
+- 新增方赫本人 2026-11-17 当天 1 条记录（架构师杨佳莹 issue #14 分配的 3 条接口契约修订），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：WorkBuddy 依据架构师《接口契约变更审核记录》0.3 版给出的逐字改法，修订 `v2/specs/tasks.md`：K2（TK-V2-501 返回补 9 键含 `push_status` + 五态不变量，解除 504 退出码 3 无数据来源的阻断）、K8（TK-V2-103 声明 `AllSourcesUnavailableError` 继承 `SourceUnavailableError`，子类自实现 `__init__(errors)` 调 `super()`，防上层兜底静默穿透）、K5（103/104/201–203 的 `collect` 恢复 `*` keyword-only，防 since/until 顺序传反）。
+- 产出：`v2/specs/tasks.md` 共 8 处修改（4 增 4 改），提交 `docs: [TK-V2-007] 按 issue #14 修订接口契约 K2/K8/K5`（随本条）。
+- 人工核验方式：逐字对照审核记录 §四 K2/K8 与 §五 K5 的修订文本；改后 grep 复核 8 处关键词全部命中，且 K1/K3/K4/K6（于悦、杨佳莹负责）的既有改动痕迹保留、未覆盖；`git diff --stat` 仅 `v2/specs/tasks.md` 一个文件，未碰任何代码（`v1/src` `v1/tests` 为空）。
+- 边界说明：本次属规范追认，不改代码、不倒填、不改任务状态标记；K2/K8 checkbox 待架构师关单前自查，本人在 issue #14 对应条目下回帖留痕（已改 + 提交号）。
+
+## 补记（2026-11-17，方赫第 3 周 TK-V2-103 采集协议与异常契约）
+
+- 新增方赫本人 2026-11-17 当天 1 条记录（开发工程师第二个 TDD 任务：采集层协议与异常契约），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（经自定义命令 `/task103` 触发），红→绿→重构完成 `v2/src/smart_daily_v2/sources/base.py` 与 `v2/tests/test_worksource.py`。
+- 产出：提交 `feat: [TK-V2-103] 实现采集协议与异常契约`（本条随该提交）。红输出 4 failed（全部 `No module named smart_daily_v2.sources`）；绿与重构后 4 passed，全量 `uv run pytest tests/ -q` 23 passed、`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `base.py`，确认 ① `WorkSource` 为 `@runtime_checkable` Protocol 且 `collect(*, since, until, author=None)` keyword-only（对应 issue #14 K5，本人修订）、② `AllSourcesUnavailableError(SourceUnavailableError)` 继承关系且子类自实现 `__init__` 调 `super()`（对应 K8，本人修订）、③ 协议文本无 github/feishu 等平台专有字段；`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）。
+- 工具链说明：本次 OpenRouter 免费层两次报 402（32000→16000 预留超限、16000→14269 预留超限），均通过本机 shim 压低 `max_tokens`（最终 8000）解决，属本机配置非仓库改动；末次 402 为 `in_flight_budget_exhausted`（并发预算），发生时单元与全量验证已完成，不影响产出。
