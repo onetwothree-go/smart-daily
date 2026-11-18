@@ -411,3 +411,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：提交 `feat: [TK-V2-402] 实现 SMTP 邮件通道`（本条随该提交）。红输出为收集阶段 `ModuleNotFoundError: No module named 'smart_daily_v2.notifiers.email'`；绿后单文件 10 passed，全量 `uv run pytest tests/ -q` 52 passed，`ruff check` / `ruff format --check` 全过。
 - 人工核验方式：本人逐行 review `email.py`（缺凭证 `ValueError`、`use_ssl` 取自 `SMTP_SSL`、`send` 异常捕获返回 `False` 不抛、无重试循环、monkeypatch `smtplib.SMTP` 打桩绝不真发邮件），确认与 `v2/specs/tasks.md` 中 402 验收及 design R5/N8 契约一致；G6 自查仓库内真实邮箱 0 处；`git diff -- v1/src v1/tests` 为空。
 - 工具链说明：本任务全程未遇 402 断流；测试侧一处属性名笔误（`ssl`→`use_ssl`）由本人本地修正对齐。记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-403 群通道与签名）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：飞书群通道与签名 `notifiers/webhook.py`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task403` 触发红阶段、`/task403g` 绿阶段、`/task403c` 收尾检查），新建 `v2/src/smart_daily_v2/notifiers/webhook.py` 实现 `gen_sign` / `FeishuWebhookNotifier`，并在 `v2/tests/test_webhook.py` 写 7 个测试函数（parametrize 展开 9 项）。
+- 产出：提交 `feat: [TK-V2-403] 实现群通道与签名`（本条随该提交）。红输出为收集阶段 `ModuleNotFoundError: No module named 'smart_daily_v2.notifiers.webhook'`；绿后单文件 9 passed，全量 `uv run pytest tests/ -q` 61 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `webhook.py`（`gen_sign` 与飞书官方算法/v1 参考实现一致、`import hmac as _h` 满足验收①全仓 1 行命中、关键词闸门先于 `httpx.post`、secret 非空才签名、异常捕获返回 False 不重试），确认与 `v2/specs/tasks.md` 中 403 验收及 design 3.3/ADR-104 契约一致；G6 自查仅 example.com / test-secret 占位；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：本任务全程未遇 402 断流；红阶段开工提示词的示例 body 字面含「日报」二字被 AI 会话发现并更正为不含关键词文本（拒发用例因此测得真）；收尾检查由 AI 会话执行、本地终端复核一致。记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
