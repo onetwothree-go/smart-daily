@@ -5,6 +5,7 @@ from datetime import date, datetime, timezone
 from smart_daily_v2.models import WorkItem
 from smart_daily_v2.reports.generator import (
     build_personal_report,
+    build_team_report,
     format_item,
     group_by_member,
 )
@@ -180,3 +181,76 @@ def test_personal_report_is_pure(monkeypatch):
     report = build_personal_report("甲", make_personal_report_items(), date(2026, 11, 18))
 
     assert report
+
+
+def make_team_item(record_id: str, member: str, minute: int) -> WorkItem:
+    day = date(2026, 11, 18)
+    return WorkItem(
+        record_id=record_id,
+        source="github",
+        member=member,
+        kind="commit",
+        title=f"工作条目 {record_id}",
+        detail=f"详情 {record_id}",
+        occurred_at=datetime(2026, 11, 18, 9, minute, tzinfo=timezone.utc),
+        local_day=day,
+    )
+
+
+def test_team_report_lists_all_members_without_truncation():
+    day = date(2026, 11, 18)
+    groups = {
+        "甲": [make_team_item(f"甲-{index}", "甲", index) for index in range(20)],
+        "乙": [make_team_item(f"乙-{index}", "乙", index) for index in range(2)],
+        "丙": [make_team_item("丙-0", "丙", 0)],
+        "丁": [],
+    }
+
+    report = build_team_report(groups, day)
+    lines = report.splitlines()
+    section_headers = [line for line in lines if line.startswith("## ")]
+    entry_lines = [line for line in lines if line.startswith("- [")]
+
+    assert lines[0] == "# 团队日报 2026-11-18 · 成员 4 人 · 条目 23 条"
+    assert all(f"## {member}（{len(items)} 条）" in report for member, items in groups.items())
+    assert len(entry_lines) == sum(map(len, groups.values())) == 23
+    assert section_headers == [
+        "## 甲（20 条）",
+        "## 乙（2 条）",
+        "## 丙（1 条）",
+        "## 丁（0 条）",
+    ]
+    assert "条目 23 条" in lines[0]
+
+
+def test_team_report_entry_lines_match_personal():
+    day = date(2026, 11, 18)
+    groups = {
+        "甲": [make_team_item("甲-0", "甲", 0), make_team_item("甲-1", "甲", 1)],
+        "乙": [make_team_item("乙-0", "乙", 2)],
+    }
+
+    report = build_team_report(groups, day)
+    report_lines = report.splitlines()
+    team_entry_lines = {member: [] for member in groups}
+    current_member = None
+    for line in report_lines:
+        if line.startswith("## "):
+            current_member = line[3:].split("（", 1)[0]
+        elif line.startswith("- ["):
+            team_entry_lines[current_member].append(line)
+
+    for member, items in groups.items():
+        personal_report = build_personal_report(member, items, day)
+        personal_entry_lines = [
+            line for line in personal_report.splitlines() if line.startswith("- [")
+        ]
+        assert team_entry_lines[member] == personal_entry_lines
+
+
+def test_team_report_all_empty_day():
+    report = build_team_report({"甲": [], "乙": []}, date(2026, 11, 18))
+
+    assert report
+    assert "今日无工作记录" in report
+    assert not any(line.startswith("- [") for line in report.splitlines())

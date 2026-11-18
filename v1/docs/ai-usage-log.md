@@ -356,3 +356,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：提交 `feat: [TK-V2-303] 实现个人日报生成`（本条随该提交）。红输出为收集阶段 `ImportError: cannot import name 'build_personal_report'`；绿后单文件 10 passed，全量 `uv run pytest tests/ -q` 33 passed，`ruff check` / `ruff format --check` 全过。
 - 人工核验方式：本人逐行 review `build_personal_report`（首行格式、条目行复用 `format_item` 且不重排、空列表 "今日无工作记录" 分支、纯函数无 IO），确认与 `v2/specs/tasks.md` 中 303 验收口径一致；`git diff -- v1/src v1/tests` 为空。
 - 工具链说明：本任务全程未遇 402/断流（302 期间的本机代理断流已恢复），收尾检查由 AI 会话与本地终端各执行一遍，结果一致。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-304 团队日报）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：团队日报 `build_team_report`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task304` 触发红阶段、`/task304g` 绿阶段、`/task304c` 收尾检查），在 `v2/src/smart_daily_v2/reports/generator.py` 追加 `build_team_report` 并在 `v2/tests/test_generator.py` 追加 3 条用例。
+- 产出：提交 `feat: [TK-V2-304] 实现团队日报生成`（本条随该提交）。红输出为收集阶段 `ImportError: cannot import name 'build_team_report'`；绿后单文件 13 passed，全量 `uv run pytest tests/ -q` 36 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `build_team_report`（统计头计数口径、成员按条数降序、条目行复用 `format_item` 与个人日报逐字一致、0 条成员与全组 0 条分支、纯函数无 IO），确认与 `v2/specs/tasks.md` 中 304 验收口径一致；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：本任务全程未遇 402/断流，收尾检查由 AI 会话执行、本地终端复核一致。30x 系列四个任务（301–304）至此全部完成。

@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from datetime import date
 
 from smart_daily_v2.models import LOCAL_TZ, WorkItem
@@ -23,6 +24,18 @@ def build_personal_report(member: str, items: list[WorkItem], day: date) -> str:
         lines.extend(format_item(item) for item in items)
     else:
         lines.append("今日无工作记录")
+    return "\n".join(lines)
+
+
+def build_team_report(groups: Mapping[str, list[WorkItem]], day: date) -> str:
+    total_items = sum(len(items) for items in groups.values())
+    lines = [f"# 团队日报 {day:%Y-%m-%d} · 成员 {len(groups)} 人 · 条目 {total_items} 条"]
+    for member, items in sorted(groups.items(), key=lambda group: -len(group[1])):
+        lines.append(f"## {member}（{len(items)} 条）")
+        if items:
+            lines.extend(format_item(item) for item in items)
+        else:
+            lines.append("今日无工作记录")
     return "\n".join(lines)
 
 
