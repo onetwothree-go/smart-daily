@@ -332,3 +332,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：`docs/于悦-第3周-tasks进度维护记录.md`，提交 `docs: [TK-V2-703] 起第 3 周 tasks.md 进度维护记录（对齐 0.1.1）`（本条随该提交）；文档正文 AI 零改动，`cmp` 逐字节一致。
 - 如实说明：记录文档的撰写发生在本机 WorkBuddy 会话，其 AI 使用情况由于悦本人自行登记；本条只登记本次 Claude Code 会话的复制与提交动作，不代填他人会话日志。
 - 累计统计 +1（黄）；表格实际行数与统计口径不一致的旧问题不擅自重算。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-301 按成员分组）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：按成员分组 `reports/generator.py`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task301` 触发、收尾用 `/task301c`），红→绿→检查完成 `v2/src/smart_daily_v2/reports/generator.py` 与 `v2/tests/test_generator.py`。
+- 产出：提交 `feat: [TK-V2-301] 实现按成员分组`（本条随该提交）。红输出 3 failed（`No module named 'smart_daily_v2.reports'`）；绿后 3 passed，全量 `uv run pytest tests/ -q` 26 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `generator.py`（dict 插入序保留成员首现顺序、组内按 `occurred_at` 倒序），确认与 `v2/specs/tasks.md` 中 301 的验收口径一致；`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）。
+- 工具链说明：期间本机代理（7897）一度中断使 CCR 转发报 500，重发后恢复，属本机网络非仓库改动；收尾发现一处 ruff 格式差异已修复（仅排版不改测试逻辑）。
