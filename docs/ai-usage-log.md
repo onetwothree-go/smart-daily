@@ -419,3 +419,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：提交 `feat: [TK-V2-403] 实现群通道与签名`（本条随该提交）。红输出为收集阶段 `ModuleNotFoundError: No module named 'smart_daily_v2.notifiers.webhook'`；绿后单文件 9 passed，全量 `uv run pytest tests/ -q` 61 passed，`ruff check` / `ruff format --check` 全过。
 - 人工核验方式：本人逐行 review `webhook.py`（`gen_sign` 与飞书官方算法/v1 参考实现一致、`import hmac as _h` 满足验收①全仓 1 行命中、关键词闸门先于 `httpx.post`、secret 非空才签名、异常捕获返回 False 不重试），确认与 `v2/specs/tasks.md` 中 403 验收及 design 3.3/ADR-104 契约一致；G6 自查仅 example.com / test-secret 占位；`git diff -- v1/src v1/tests` 为空。
 - 工具链说明：本任务全程未遇 402 断流；红阶段开工提示词的示例 body 字面含「日报」二字被 AI 会话发现并更正为不含关键词文本（拒发用例因此测得真）；收尾检查由 AI 会话执行、本地终端复核一致。记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-404 分发规则与送达判定）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：分发规则与送达判定 `notifiers/dispatch.py`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task404` 触发红阶段、`/task404g` 绿阶段、`/task404c` 收尾检查），新建 `v2/src/smart_daily_v2/notifiers/dispatch.py` 实现 `dispatch` / `all_delivered` 与三个模块级通道函数，并在 `v2/tests/test_dispatch.py` 写 8 个测试用例（`FakeChannel` + `monkeypatch` 打桩，绝不真发邮件/webhook）。
+- 产出：提交 `feat: [TK-V2-404] 实现分发规则与送达判定`（本条随该提交）。红输出为收集阶段 `ModuleNotFoundError: No module named 'smart_daily_v2.notifiers.dispatch'`；绿后单文件 8 passed，全量 `uv run pytest tests/ -q` 69 passed，`ruff check` / `ruff format --check` 全过（dispatch.py 一行超长由 ruff format 重排，+1/-1 仅排版不改逻辑）。
+- 人工核验方式：本人逐行 review `dispatch.py`（`dispatch` 函数体内不读环境变量、`team_recipients` 纯参数注入；个人/群/外部三路独立 try、异常记 False 不漏回执；`all_delivered` 仅用 `all()`、全文无 `any()`、空 expected 返 False、缺失 scope 判 False；未配外部收件人不产生 `team:report_recipients` 回执、不判失败），确认与 `v2/specs/tasks.md` 中 404 验收及 design 3.3/R3/N8 契约一致；G6 自查示例邮箱均 `example.com` 占位，仓库内真实邮箱 0 处；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明（如实）：本任务收尾阶段 AI 会话遇推理链路 `500 fetch failed`——先查实常驻 CCR 进程崩溃（重启恢复），再定位为代理 7897 对 `openrouter.ai` 偶发抖动；直连试验确认 `gpt-6-luna` 有地区限制（`403 not available in your region`）、7897 为必需路径后已将配置原样回滚。收尾中断后剩余检查由本人本地终端复核完成，结论与 AI 会话中断前一致（69 passed、lint/format 全过、`any(` 0 命中）。记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
