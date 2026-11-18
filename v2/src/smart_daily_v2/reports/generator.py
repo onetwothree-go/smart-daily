@@ -1,3 +1,5 @@
+from datetime import date
+
 from smart_daily_v2.models import LOCAL_TZ, WorkItem
 
 _KIND_LABELS = {"commit": "提交", "task": "任务", "message": "消息"}
@@ -13,6 +15,15 @@ def format_item(item: WorkItem) -> str:
     if item.detail:
         rendered += f" —— {item.detail}"
     return rendered
+
+
+def build_personal_report(member: str, items: list[WorkItem], day: date) -> str:
+    lines = [f"# 个人日报 {day:%Y-%m-%d} · {member}"]
+    if items:
+        lines.extend(format_item(item) for item in items)
+    else:
+        lines.append("今日无工作记录")
+    return "\n".join(lines)
 
 
 def group_by_member(items: list[WorkItem]) -> dict[str, list[WorkItem]]:

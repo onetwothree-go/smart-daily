@@ -3,7 +3,11 @@ import socket
 from datetime import date, datetime, timezone
 
 from smart_daily_v2.models import WorkItem
-from smart_daily_v2.reports.generator import format_item, group_by_member
+from smart_daily_v2.reports.generator import (
+    build_personal_report,
+    format_item,
+    group_by_member,
+)
 
 
 def make_item(record_id: str, member: str, source: str, occurred_at: datetime) -> WorkItem:
@@ -129,3 +133,50 @@ def test_format_item_has_no_io(monkeypatch):
     assert format_item(make_format_item()) == (
         "- [09:30] （提交）fix: 修复登录超时 —— 3 files, +42 -8"
     )
+
+
+def make_personal_report_items() -> list[WorkItem]:
+    day = date(2026, 11, 18)
+    return [
+        WorkItem(
+            record_id=f"record-{index}",
+            source="github" if index < 3 else "feishu_task",
+            member="甲",
+            kind="commit" if index < 3 else "task",
+            title=f"工作条目 {index}",
+            detail=f"详情 {index}",
+            occurred_at=datetime(2026, 11, 18, 9 + index, 30),
+            local_day=day,
+        )
+        for index in range(5)
+    ]
+
+
+def test_personal_report_counts_all_items():
+    items = make_personal_report_items()
+
+    report = build_personal_report("甲", items, date(2026, 11, 18))
+    item_lines = [line for line in report.splitlines() if line.startswith("- [")]
+
+    assert len(item_lines) == 5
+    assert item_lines == [format_item(item) for item in items]
+
+
+def test_personal_report_empty_day():
+    report = build_personal_report("甲", [], date(2026, 11, 18))
+
+    assert report
+    assert "今日无工作记录" in report
+    assert not any(line.startswith("- [") for line in report.splitlines())
+
+
+def test_personal_report_is_pure(monkeypatch):
+    def fail(*args, **kwargs):
+        raise AssertionError("unexpected I/O")
+
+    monkeypatch.setattr(builtins, "open", fail)
+    monkeypatch.setattr(socket, "socket", fail)
+
+    report = build_personal_report("甲", make_personal_report_items(), date(2026, 11, 18))
+
+    assert report
