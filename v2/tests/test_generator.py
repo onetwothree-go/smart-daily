@@ -1,7 +1,9 @@
+import builtins
+import socket
 from datetime import date, datetime, timezone
 
 from smart_daily_v2.models import WorkItem
-from smart_daily_v2.reports.generator import group_by_member
+from smart_daily_v2.reports.generator import format_item, group_by_member
 
 
 def make_item(record_id: str, member: str, source: str, occurred_at: datetime) -> WorkItem:
@@ -64,3 +66,66 @@ def test_group_order_is_stable_across_runs():
     second_order = list(group_by_member(items))
 
     assert first_order == second_order
+
+
+def make_format_item(
+    *,
+    kind: str = "commit",
+    title: str = "fix: 修复登录超时",
+    detail: str = "3 files, +42 -8",
+    occurred_at: datetime | None = None,
+) -> WorkItem:
+    if occurred_at is None:
+        occurred_at = datetime.fromisoformat("2026-11-18T09:30:00+08:00")
+    return WorkItem(
+        record_id="sample-record-302",
+        source="github",
+        member="测试成员",
+        kind=kind,
+        title=title,
+        detail=detail,
+        occurred_at=occurred_at,
+        local_day=date(2026, 11, 18),
+    )
+
+
+def test_format_item_layout():
+    item = make_format_item()
+    expected = "- [09:30] （提交）fix: 修复登录超时 —— 3 files, +42 -8"
+
+    assert format_item(item) == expected
+    assert (
+        format_item(
+            make_format_item(occurred_at=datetime.fromisoformat("2026-11-18T01:30:00+00:00"))
+        )
+        == expected
+    )
+
+
+def test_format_item_keeps_title_verbatim():
+    title = "fix: 保留 中文 标题（包含括号）"
+    item = make_format_item(title=title, detail="example detail")
+
+    rendered = format_item(item)
+
+    assert title in rendered
+    assert rendered.index(title) < rendered.index(" —— example detail")
+    assert rendered.split(" —— ", 1)[1] == "example detail"
+
+
+def test_format_item_is_byte_stable():
+    item = make_format_item()
+
+    assert format_item(item).encode() == format_item(item).encode()
+
+
+def test_format_item_has_no_io(monkeypatch):
+    def fail(*args, **kwargs):
+        raise AssertionError("unexpected I/O")
+
+    monkeypatch.setattr(builtins, "open", fail)
+    monkeypatch.setattr(socket, "socket", fail)
+
+    assert format_item(make_format_item()) == (
+        "- [09:30] （提交）fix: 修复登录超时 —— 3 files, +42 -8"
+    )

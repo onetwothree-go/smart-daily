@@ -340,3 +340,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：提交 `feat: [TK-V2-301] 实现按成员分组`（本条随该提交）。红输出 3 failed（`No module named 'smart_daily_v2.reports'`）；绿后 3 passed，全量 `uv run pytest tests/ -q` 26 passed，`ruff check` / `ruff format --check` 全过。
 - 人工核验方式：本人逐行 review `generator.py`（dict 插入序保留成员首现顺序、组内按 `occurred_at` 倒序），确认与 `v2/specs/tasks.md` 中 301 的验收口径一致；`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）。
 - 工具链说明：期间本机代理（7897）一度中断使 CCR 转发报 500，重发后恢复，属本机网络非仓库改动；收尾发现一处 ruff 格式差异已修复（仅排版不改测试逻辑）。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-302 单条渲染）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：单条渲染 `format_item`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task302` 触发红阶段、`/task302g` 触发绿阶段），在 `v2/src/smart_daily_v2/reports/generator.py` 追加 `format_item` 并在 `v2/tests/test_generator.py` 追加 4 条用例。
+- 产出：提交 `feat: [TK-V2-302] 实现单条渲染`（本条随该提交）。红输出为收集阶段 `ImportError: cannot import name 'format_item'`；绿后单文件 7 passed，全量 `uv run pytest tests/ -q` 30 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `format_item`（东八区 `%H:%M` 换算、kind 中文标签映射、空 detail 省略 ` —— ` 段、纯函数无 IO），确认与 `v2/specs/tasks.md` 中 302 验收口径一致；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：收尾检查阶段本机代理节点两次断流使 CCR 转发 500，ruff/pytest/全量检查改由本地终端人工执行，结果与 AI 会话口径一致；属本机网络非仓库改动。
