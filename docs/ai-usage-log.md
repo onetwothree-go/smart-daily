@@ -140,6 +140,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-17 | Claude Code | 黄 | 【赵蕊】TK-V2-102 前置设计约束：本机 Windows 实测 `zoneinfo.ZoneInfo("Asia/Shanghai")` 抛 `ZoneInfoNotFoundError`（Windows 无自带 IANA 时区库），故在 `v2/pyproject.toml` 运行依赖中补 `tzdata>=2025.2` 并注明缘由；同步把 tasks.md 中 TK-V2-003 验收标准④由「运行依赖只有 httpx」改为「httpx + tzdata」以保持口径一致；并记录约束：`local_date` 必须用 `zoneinfo.ZoneInfo("Asia/Shanghai")`，禁止硬编码 +8 小时偏移（偏移写法在夏令时/历史时区变更下会漂） | `v2/pyproject.toml`、`v2/specs/tasks.md`（TK-V2-003 ④）、`v2/uv.lock`；提交「补 tzdata 依赖修复 Windows 时区库缺失」 | 复现与验证均为本机实跑：修复前 `.venv/Scripts/python.exe -c "from zoneinfo import ZoneInfo; ZoneInfo('Asia/Shanghai')"` → `ZoneInfoNotFoundError: No time zone found with key Asia/Shanghai`，修复后同一命令返回 `Asia/Shanghai`，且 `datetime(2026,11,9,16,0,tzinfo=timezone.utc).astimezone(ZoneInfo('Asia/Shanghai')).date()` = `2026-11-10`（与 R4 用例预期一致）；`uv lock && uv sync --dev` 后 `uv.lock` 新增条目已核；修复后 `pytest` 仍因 `models.py` 未实现而在收集阶段报 `ModuleNotFoundError`，红步状态未变；**如实注明**：本条由 Claude Code 会话（CLI）生成，底层模型为 GLM（glm-5.3，非 Anthropic Claude 模型）；累计统计沿用「不擅自重算」纪律未动 | ☐ 待确认 |
 | 2026-11-17 | Claude Code | 黄 | 【赵蕊】TK-V2-102 数据模型与归一化走 TDD 绿步：新增 `v2/src/smart_daily_v2/models.py`，实现 frozen `WorkItem`（record_id / source / member / kind / title / detail / occurred_at / local_day）、三种源记录 `CommitEntry` / `TaskEntry` / `MessageEntry`、`local_date(ts)`（`ZoneInfo("Asia/Shanghai")`，未用硬编码 +8 偏移；naive 输入视为已本地时间直接取 `.date()`，避免二次换算）、`normalize(entries)`（先整体类型校验→未知类型抛 `TypeError`；全部为 `WorkItem` 时原样返回不重排不改写即 G7 幂等；混合输入按类型映射 source/kind 后按 `occurred_at` 倒序）。提示要点：只按 tasks.md TK-V2-102 四条验收标准实现，不扩接口、不预支《接口契约变更审核记录》留给 102 的 source 取值 / url / metrics 三项待明确项 | `v2/src/smart_daily_v2/models.py`（新建）、提交 `feat: [TK-V2-102] 实现 WorkItem 与单次归一化入口`（dev） | 本机实跑留证：`pytest --cov=smart_daily_v2 --cov-fail-under=80 -q` → 14 passed、TOTAL 93%、models.py 91%（未为凑覆盖率删或改任何测试）；`ruff check .` → All checks passed；`ruff format --check .` → 9 files already formatted（首次检查报 models.py 需重排，已执行 `ruff format` 后复跑）；提交前 `git pull --ff-only` 失败（本地 1 ahead / 远端 1 behind，远端 `7d91e91` 为杨佳莹路径规范与 §8 修订），改用 `git rebase origin/dev` 成功且无冲突，rebase 后重跑上述三项全绿，并复核 TK-V2-003 ④ 的 tzdata 修订在 rebase 后仍保留；`git add` 只加 `models.py` 与日志，未用 `add -A`；**如实注明**：本条由 Claude Code 会话（CLI）生成，底层模型为 GLM（glm-5.3，非 Anthropic Claude 模型）；用例与验收标准①②③④的逐条对应、覆盖率是否达标均未由人工复核，CI 结论待跑完回填 | ☐ 待确认 |
 | 2026-11-17 | WorkBuddy | 黄 | 【于悦】按组内提醒修订 `v2/specs/tasks.md` §8.2 U1：同学指出该行仍逐字引用 `v2/README.md` §2 旧文，而 README 已由配置管理员 `58d4fec` 同步。核对 issue #14 K1（架构师杨佳莹裁定「维持 ADR-103：异常才降级、空列表即停止」，三项 checkbox 全勾）与 `075f692` / `58d4fec` 补丁后，把 U1 改写为「已闭环」留痕行，并同步 TK-V2-006 验收④、TK-V2-104 / 602 状态说明中与 U1 相关的过期表述。提示要点：只改文字，任务编号、⏸ 状态、验收阈值一字未动；104 / 602 的 ⏸ 按架构师 K1 口径保留 | `v2/specs/tasks.md`（§8.2 U1 行 + 006 ④ + 104 / 602 状态说明），与本次修订同批提交 dev | AI 侧可核：issue #14 K1 三项 checkbox 均为 [x]；`git show 58d4fec -- v2/README.md` 与 `git show 075f692 -- v2/specs/tasks.md` 补丁逐字核对；改写后全文搜索 README §2 旧句 0 命中，U1 引用均为闭环留痕。**待本人核验**：组内是否认可「已闭环」措辞、006 验收④ 的名词同步是否需架构师复核、评审签字栏仍空 | ☐ 待确认 |
+| 2026-11-17 | Claude Code | 黄 | 【赵蕊】按 issue #14 K1 第二条（配置管理员）修订 `v2/README.md` §2 降级链语义：删除旧文「collect_with_fallback() 降级语义：采集失败时返回空列表，不中断流程。」，逐字替换为 issue 给出的新表述（源抛 SourceUnavailableError → 切下一源；源返回空列表 → 停止降级并返回空结果；全部源抛异常 → 抛 AllSourcesUnavailableError，不返回空列表）；另于 GitHub issue #14 评论区以本人账号补写留痕（站外操作，此处仅登记） | `v2/README.md`（§2 第 15 行，1 文件 1 行替换），提交 `58d4fec`（dev） | `git show --stat 58d4fec` → 仅 v2/README.md 1 文件 1 行；全仓 grep「采集失败时返回空列表」0 命中（仅 .venv 安装元数据命中，不入库）；属规范追认未碰任何代码；**更正声明**：本表原有的一行「按 issue #14 K1 裁定修订 README 降级链语义」（`dccee32` 引入）误将于悦对 `v2/specs/tasks.md` §8.2 U1 的修订（`075f692` 一系）写进本行并顶掉了于悦原记录，本次提交已原样恢复于悦行（取自 `dccee32^`），并以本行如实登记本人实际改动；本行由 WorkBuddy 会话整理生成 | ☐ 待确认 |
+| 2026-11-18 | Claude Code | 黄 | 【于悦】将外部定稿的《于悦-第3周-tasks进度维护记录》从本机 WorkBuddy 会话工作区逐字复制入仓库 `docs/`，与本次日志行同批提交；提示要点：AI 不改动文档正文（验收核对、勾销、负责人、评审签字栏保持原文留空），复制前先拉取 dev（`fcd1569`→`e25838d`）并核对文档声明基线「tasks.md 0.1.1 @ fcd1569」与仓库现状一致（两提交间 tasks.md 无改动，版本仍 0.1.1） | `docs/于悦-第3周-tasks进度维护记录.md`（TK-V2-703 交付物，新增 1 文件 10800 字节），提交 `docs: [TK-V2-703] 起第 3 周 tasks.md 进度维护记录（对齐 0.1.1）`（本条随该提交） | AI 侧可核：复制后 `cmp` 确认源文件与入库文件逐字节一致；文档内容本身（逐任务勾销结论、验收核对口径）未经 AI 判断，由于悦本人按文档「不代填、不代签」原则复核；同会话此前曾将该克隆一处过期 0.1.0 草稿的本地改动备份至仓库外（`D:\SDD-project\backups\20261118-v2-tasks-md\`，未入库）后丢弃；**如实注明**：本条由 Claude Code 会话（CLI）生成，底层模型为 GLM（glm-5.3-flash，非 Anthropic Claude 模型） | ☐ 待确认 |
+| 2026-11-18 | WorkBuddy | 黄 | 【杨佳莹】第 3 周（阶段二）产出文档归位：把根 `docs/` 的 10 份 + `v1/docs/` 的 1 份共 11 份第 3 周产出 `git mv` 进 `v2/docs/`，与 v1「specs 与 docs 同在版本目录内」结构对称；同步改 6 个文件共 24 处 `docs/` → `v2/docs/` 路径引用（tasks.md 6 处、站会 11-16 1 处、缺陷清单 4 处、角色与准入 9 处、于悦进度记录 4 处），缺陷清单补 v0.4（头部版本 + 顶部说明 + 修订表）以保三处版本号一致。口径由本人口述裁定（v1/v2 文档各自归各自），AI 会话执行文件移动与引用替换，未改任何正文结论、验收判定与历史叙述句 | `v2/docs/` 11 份（于悦进度；方赫方法切换/红绿循环；杨佳莹接口契约审核；赵蕊 CI门禁/合并控制/测试用例集/code-review/缺陷清单/v2初始化/角色准入）；改动引用文件 `v2/specs/tasks.md`、`v2/每日站会记录/2026-11-16.md`；随本次归位提交 | AI 侧可核：全仓逐行扫描 + 每处唯一命中校验（24 处替换各自恰好命中 1 次）、v2/docs 11 份且根 docs 为空、裸 `docs/` 引用 0 命中、两个冲突点（缺陷清单 191 行搜索范围、角色准入 83 行新增文档落点）已消、历史叙述句完好、v1 封存区与 `ci.yml` 与本日志均未在此次改动中被改。**待本人核验**：目录归位口径是否为组内最终共识、24 处路径是否逐一符合原意、缺陷清单 v0.4 三处版本号是否认可；本条由 WorkBuddy 会话执行与登记，工具列如实记 WorkBuddy，状态留 ☐ 待本人确认，不代勾、不代签 | ☐ 待确认 |
+| 2026-11-18 | WorkBuddy | 黄 | 【杨佳莹】AI 使用日志按方案乙归位：本日志（全组两阶段共用资格项，不属 v1/v2）从 `v1/docs/ai-usage-log.md` 迁回根 `docs/ai-usage-log.md`，归档子目录 `v1/docs/ai-usage-log/` 一并迁回，与根 `CLAUDE.md` 第 5 行原路径自动对齐（DEF-09 路径漂移成因消除）。同步改 7 处现行路径引用（方赫红绿循环记录 6 处、`v2/specs/tasks.md` 1 处，`v1/docs/` → 根 `docs/`）；在 `v2/docs/赵蕊-缺陷清单与根因记录.md` 加 v0.5 修订说明、U7 转「已闭环」，DEF-09 状态判定按本文件口径由「已规避」升为「已闭环」（成因消除、非自愈，总览表/合计/详细状态行同步），现象/根因/修复口径与验证方式等历史段保留原文不改。口径由本人拍板（方案乙），AI 会话执行文件迁移与引用替换 | 本文件 `docs/ai-usage-log.md`（迁回根）；改动 `v2/docs/方赫-红绿循环记录-第3周.md`、`v2/specs/tasks.md`、`v2/docs/赵蕊-缺陷清单与根因记录.md`；随本次提交 | AI 侧可核：每处替换唯一命中校验、日志两份文件已在根 `docs/` 且 `v1/docs/` 无残留、全仓 `v1/docs/ai-usage-log` 残留 7 处经逐条核对均为历史叙述句或本说明、缺陷清单三处版本号一致（v0.5）、DEF-09 历史段完好。**待本人核验**：方案乙是否为组内最终共识、7 处路径改动是否符合原意、U7 闭环与 DEF-09 历史段并存的口径是否认可；本条由 WorkBuddy 会话执行与登记，工具列如实记 WorkBuddy，状态留 ☐ 待本人确认，不代勾、不代签 | ☐ 待确认 |
+| 2026-11-18 | WorkBuddy | 黄 | 【杨佳莹】第 3 周架构师另两项产出定稿入库：把桌面两份草稿（今早备料）核校后写入 `v2/docs/杨佳莹-第3周-code-review评审意见.md` 与 `v2/docs/杨佳莹-第3周-设计与specs一致性检查记录.md`。核校修正草稿自身 2 处客观错：① code-review 统计行「2 建议 P2 / 2 提示 P3」与实际正文不符，改为「3 建议 P2 / 1 提示 P3」；② 一致性检查可复跑命令 `import smart_daily\|v1/` 会误命中 v2 自身包名 `smart_daily_v2`（1 命中却写 0 命中），改为 `v1/\|from smart_daily\.` 并实测 0 命中。核过：所评两条他人提交（方赫 `fcd1569`、赵蕊 `c850d86`）的作者/时间/stat 属实，引用的 7 个历史 hash 均存在，三规范版本号（design 0.6 / proposal 0.4.4 / v2 tasks 0.1.1）与 C-01~C-05 现状逐条对得上；两份正文无工具字样、签字栏与待确认状态留空，未代签、未改他人文件。口径由本人授权「对的话现在交上去」，AI 会话执行核校与入库 | `v2/docs/杨佳莹-第3周-code-review评审意见.md`、`v2/docs/杨佳莹-第3周-设计与specs一致性检查记录.md`；随本次提交；本文件 `docs/ai-usage-log.md` 同步加一行 | AI 侧可核：两条提交 `git show --stat` 逐字复跑、7 个 hash 存在性、精确 grep 0 命中、统计行与正文条目数一致、正文无工具字样。**待本人核验**：3 建议/1 提示的统计口径是否认可、两条提交的评价是否属实、签字与待确认状态由本人处理；本条由 WorkBuddy 会话执行与登记，工具列如实记 WorkBuddy，状态留 ☐ 待本人确认，不代勾、不代签 | ☐ 待确认 |
 
 ---
 
@@ -323,3 +328,50 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：提交 `feat: [TK-V2-103] 实现采集协议与异常契约`（本条随该提交）。红输出 4 failed（全部 `No module named smart_daily_v2.sources`）；绿与重构后 4 passed，全量 `uv run pytest tests/ -q` 23 passed、`ruff check` / `ruff format --check` 全过。
 - 人工核验方式：本人逐行 review `base.py`，确认 ① `WorkSource` 为 `@runtime_checkable` Protocol 且 `collect(*, since, until, author=None)` keyword-only（对应 issue #14 K5，本人修订）、② `AllSourcesUnavailableError(SourceUnavailableError)` 继承关系且子类自实现 `__init__` 调 `super()`（对应 K8，本人修订）、③ 协议文本无 github/feishu 等平台专有字段；`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）。
 - 工具链说明：本次 OpenRouter 免费层两次报 402（32000→16000 预留超限、16000→14269 预留超限），均通过本机 shim 压低 `max_tokens`（最终 8000）解决，属本机配置非仓库改动；末次 402 为 `in_flight_budget_exhausted`（并发预算），发生时单元与全量验证已完成，不影响产出。
+
+## 补记（2026-11-18，于悦第 3 周 tasks.md 进度维护记录入库）
+
+- 新增于悦本人 2026-11-18 当天 1 条记录（Claude Code 会话将外部定稿的 TK-V2-703 交付物逐字复制入 `docs/` 并提交），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 产出：`docs/于悦-第3周-tasks进度维护记录.md`，提交 `docs: [TK-V2-703] 起第 3 周 tasks.md 进度维护记录（对齐 0.1.1）`（本条随该提交）；文档正文 AI 零改动，`cmp` 逐字节一致。
+- 如实说明：记录文档的撰写发生在本机 WorkBuddy 会话，其 AI 使用情况由于悦本人自行登记；本条只登记本次 Claude Code 会话的复制与提交动作，不代填他人会话日志。
+- 累计统计 +1（黄）；表格实际行数与统计口径不一致的旧问题不擅自重算。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-301 按成员分组）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：按成员分组 `reports/generator.py`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task301` 触发、收尾用 `/task301c`），红→绿→检查完成 `v2/src/smart_daily_v2/reports/generator.py` 与 `v2/tests/test_generator.py`。
+- 产出：提交 `feat: [TK-V2-301] 实现按成员分组`（本条随该提交）。红输出 3 failed（`No module named 'smart_daily_v2.reports'`）；绿后 3 passed，全量 `uv run pytest tests/ -q` 26 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `generator.py`（dict 插入序保留成员首现顺序、组内按 `occurred_at` 倒序），确认与 `v2/specs/tasks.md` 中 301 的验收口径一致；`git diff -- v1/src v1/tests` 为空（未碰 v1 代码）。
+- 工具链说明：期间本机代理（7897）一度中断使 CCR 转发报 500，重发后恢复，属本机网络非仓库改动；收尾发现一处 ruff 格式差异已修复（仅排版不改测试逻辑）。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-302 单条渲染）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：单条渲染 `format_item`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task302` 触发红阶段、`/task302g` 触发绿阶段），在 `v2/src/smart_daily_v2/reports/generator.py` 追加 `format_item` 并在 `v2/tests/test_generator.py` 追加 4 条用例。
+- 产出：提交 `feat: [TK-V2-302] 实现单条渲染`（本条随该提交）。红输出为收集阶段 `ImportError: cannot import name 'format_item'`；绿后单文件 7 passed，全量 `uv run pytest tests/ -q` 30 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `format_item`（东八区 `%H:%M` 换算、kind 中文标签映射、空 detail 省略 ` —— ` 段、纯函数无 IO），确认与 `v2/specs/tasks.md` 中 302 验收口径一致；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：收尾检查阶段本机代理节点两次断流使 CCR 转发 500，ruff/pytest/全量检查改由本地终端人工执行，结果与 AI 会话口径一致；属本机网络非仓库改动。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-303 个人日报）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：个人日报 `build_personal_report`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task303` 触发红阶段、`/task303g` 绿阶段、`/task303c` 收尾检查），在 `v2/src/smart_daily_v2/reports/generator.py` 追加 `build_personal_report` 并在 `v2/tests/test_generator.py` 追加 3 条用例。
+- 产出：提交 `feat: [TK-V2-303] 实现个人日报生成`（本条随该提交）。红输出为收集阶段 `ImportError: cannot import name 'build_personal_report'`；绿后单文件 10 passed，全量 `uv run pytest tests/ -q` 33 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `build_personal_report`（首行格式、条目行复用 `format_item` 且不重排、空列表 "今日无工作记录" 分支、纯函数无 IO），确认与 `v2/specs/tasks.md` 中 303 验收口径一致；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：本任务全程未遇 402/断流（302 期间的本机代理断流已恢复），收尾检查由 AI 会话与本地终端各执行一遍，结果一致。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-304 团队日报）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：团队日报 `build_team_report`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task304` 触发红阶段、`/task304g` 绿阶段、`/task304c` 收尾检查），在 `v2/src/smart_daily_v2/reports/generator.py` 追加 `build_team_report` 并在 `v2/tests/test_generator.py` 追加 3 条用例。
+- 产出：提交 `feat: [TK-V2-304] 实现团队日报生成`（本条随该提交）。红输出为收集阶段 `ImportError: cannot import name 'build_team_report'`；绿后单文件 13 passed，全量 `uv run pytest tests/ -q` 36 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `build_team_report`（统计头计数口径、成员按条数降序、条目行复用 `format_item` 与个人日报逐字一致、0 条成员与全组 0 条分支、纯函数无 IO），确认与 `v2/specs/tasks.md` 中 304 验收口径一致；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：本任务全程未遇 402/断流，收尾检查由 AI 会话执行、本地终端复核一致。30x 系列四个任务（301–304）至此全部完成。
+
+## 补记（2026-11-18，方赫第 3 周 TK-V2-401 成员邮箱映射）
+
+- 新增方赫本人 2026-11-18 当天 1 条记录（开发工程师 TDD 任务：成员邮箱映射 `notifiers/members.py`），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task401` 触发红阶段、`/task401g` 绿阶段、`/task401c` 收尾检查），新建 `v2/src/smart_daily_v2/notifiers/members.py` 实现 `load_member_emails` / `load_report_recipients`，并在 `v2/tests/test_notifiers.py` 写 6 条用例。
+- 产出：提交 `feat: [TK-V2-401] 实现成员邮箱映射`（本条随该提交）。红输出为收集阶段 `ModuleNotFoundError: No module named 'smart_daily_v2.notifiers'`；绿后单文件 6 passed，全量 `uv run pytest tests/ -q` 42 passed，`ruff check` / `ruff format --check` 全过。
+- 人工核验方式：本人逐行 review `members.py`（env 注入、逗号/分号解析、缺配置返回空容器、两变量物理隔离），确认与 `v2/specs/tasks.md` 中 401 验收及 design 0.6 契约一致；G6 自查仓库内真实邮箱 0 处；`git diff -- v1/src v1/tests` 为空。
+- 工具链说明：本任务全程未遇 402/断流，收尾检查由 AI 会话执行、本地终端复核一致。
