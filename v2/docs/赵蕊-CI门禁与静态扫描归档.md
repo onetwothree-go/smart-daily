@@ -75,6 +75,7 @@ CI 门禁在以下情况触发（`.github/workflows/ci.yml`）：
 | `c917978` docs: [TK-V2-701] 归档零复制与密钥红线自查 | ❌ failure | [run 44534255554](https://github.com/onetwothree-go/smart-daily/actions/runs/44534255554) |
 | `6ac60fd` docs: [方赫] 补 TK-V2-104 红绿循环记录 | ✅ success | [run 44505355884](https://github.com/onetwothree-go/smart-daily/actions/runs/44505355884) |
 | **`f3140b1`** docs: [TK-V2-702] 归档静态扫描与 CI 门禁结果（含 `9e2b97e` ruff 修复） | ✅ **success** | [run 44535812635](https://github.com/onetwothree-go/smart-daily/actions/runs/44535812635) |
+| `cfc4b74` docs: [TK-V2-702] 补记 CI 转绿 run 与 job 级核对 | ✅ success | [run 44536033486](https://github.com/onetwothree-go/smart-daily/actions/runs/44536033486) |
 
 两连红均源于 `6081e82` 引入的 ruff 错误，详见 §5.2。该缺陷已由 `9e2b97e` 修复，**`f3140b1` 的 run 44535812635 起 CI 转绿，两连红状态结束**。
 
@@ -85,7 +86,7 @@ CI 门禁在以下情况触发（`.github/workflows/ci.yml`）：
 | Ruff 静态扫描 | ✅ success | Ruff 规则检查 ✅ / Ruff 格式检查 ✅ |
 | 测试 + 覆盖率 | ✅ success | 安装依赖（含 dev）✅ / 运行测试并采集覆盖率 ✅ / 归档覆盖率报告 ✅ |
 
-两 job 均 `completed`，所有 step 均为 `success`，无 `skipped`。
+两 job 均 `completed`，所有 step 均为 `success`，无 `skipped`。run 与 job 级原始字段归档于 `v2/docs/testing/证据/ci-run-20261119.txt`（含 `f3140b1` / `cfc4b74` 两次 run；日志正文接口 403 无 admin 权限，故归档 API 原始字段，不代写结论）。
 
 ## 3. 负向验证记录
 
@@ -126,9 +127,10 @@ CI 门禁在以下情况触发（`.github/workflows/ci.yml`）：
 > 上表为 **2026-11-19 21:37 修复后复跑**结果，TK-V2-702 验收标准①（两项退出码均为 0）**已满足**。
 > 修复前的红灯原始输出已随证据文件一并保留在下述「首轮证据」中，未做删除。
 
-原始输出见 `v2/docs/testing/证据/`（修复后复跑 4 份 + 修复前 2 份）：
+原始输出见 `v2/docs/testing/证据/`（修复后复跑 4 份 + 修复前 2 份 + CI run 1 份）：
 - 修复后：`pytest-cov-20261119.txt`、`ruff-check-20261119.txt`、`ruff-format-check-20261119.txt`、`env-20261119.txt`
 - 修复前：`ruff-check-20261119-before-fix.txt`（101 行，exit=1）、`ruff-format-check-20261119-before-fix.txt`（87 行，exit=1）——由 `git worktree` 从 `c917978` 原样检出修复前代码复现，保证红灯原始输出可追溯
+- CI run：`ci-run-20261119.txt`（73 行，run 元数据 + job/step 结论，来自 GitHub REST API）
 
 **首轮证据（21:29，红灯状态）**：`ruff check` exit=1（Found 6 errors / 4 fixable）、`ruff format --check` exit=1（2 files would be reformatted）、`pytest` exit=0（126 passed / 97%）。该状态已由 §5.3 的修复消除，数字与明细见 §5.2。
 
