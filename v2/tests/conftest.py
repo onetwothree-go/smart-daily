@@ -145,3 +145,85 @@ def format_harness():
         )
 
     return run
+
+
+@pytest.fixture
+def identity_harness():
+    """S5 真实实现 `identity.lookup_display_name` 属被 104 阻塞的 501 编排层、本期约定待建。
+
+    本周按 601 验收②同款桩隔离验证语义契约，501 落地后由 602/603 端到端复验；未改正式模块。
+    """
+    from datetime import date, datetime
+    from types import SimpleNamespace
+
+    from smart_daily_v2.identity import normalize_key, normalize_members
+    from smart_daily_v2.models import LOCAL_TZ, WorkItem
+    from smart_daily_v2.reports.generator import (
+        build_personal_report,
+        build_team_report,
+        group_by_member,
+    )
+
+    IdentityOutcome = SimpleNamespace
+
+    def run(
+        raw_identities: list[str] | None = None,
+        *,
+        mapping: dict[str, str] | None = None,
+        extra_unmapped: tuple[str, ...] = (),
+    ) -> IdentityOutcome:
+        selected_identities = (
+            ["MemberA", " memberA ", "MEMBERA"] if raw_identities is None else raw_identities
+        )
+        selected_mapping = {"membera": "甲", "memberb": "乙"} if mapping is None else mapping
+        groups = normalize_members(selected_identities)
+        normalized_keys = [normalize_key(raw) for raw in selected_identities]
+        day = date(2026, 11, 18)
+        items = [
+            WorkItem(
+                record_id=f"mock-606-{index:03d}",
+                source="github",
+                member=normalize_key(raw),
+                kind="commit",
+                title=f"示例工作条目 {index}",
+                detail="示例详情",
+                occurred_at=datetime(2026, 11, 18, 9, index, tzinfo=LOCAL_TZ),
+                local_day=day,
+            )
+            for index, raw in enumerate(selected_identities, start=1)
+        ]
+        member_groups = group_by_member(items)
+        personal = {
+            member: build_personal_report(member, member_items, day)
+            for member, member_items in member_groups.items()
+        }
+        team = build_team_report(member_groups, day)
+        warnings: list[str] = []
+
+        def resolve_display_name(login: str) -> str:
+            key = normalize_key(login)
+            if key in selected_mapping:
+                return selected_mapping[key]
+            warnings.append(f"身份未映射: {login}")
+            return login
+
+        all_logins = list(selected_identities) + list(extra_unmapped)
+        resolved = {login: resolve_display_name(login) for login in all_logins}
+
+        return IdentityOutcome(
+            raw_identities=selected_identities,
+            groups=groups,
+            normalized_keys=normalized_keys,
+            items=items,
+            record_ids=tuple(item.record_id for item in items),
+            member_groups=member_groups,
+            personal=personal,
+            team=team,
+            all_logins=all_logins,
+            resolved=resolved,
+            warnings=warnings,
+            day=day,
+            mapping=selected_mapping,
+        )
+
+    return run
