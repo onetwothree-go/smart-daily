@@ -1,0 +1,9 @@
+# 环境与版本基线
+# 采集时间: 2026-11-19 21:38:02
+python: Python 3.14.2
+pytest: pytest 9.2.0
+ruff:   ruff 0.17.5
+pytest-cov: n/a
+git HEAD: c917978（工作区含未提交的 ruff 修复）
+git HEAD msg: docs: [TK-V2-701] 归档零复制与密钥红线自查
+platform: Windows-11-10.0.22631-SP0

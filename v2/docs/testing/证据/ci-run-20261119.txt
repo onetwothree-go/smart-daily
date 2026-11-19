@@ -1,0 +1,72 @@
+# CI run 输出归档（GitHub Actions）
+# 采集时间: 2026-11-19 21:43:12
+# 采集方式: GitHub REST API /actions/runs 与 /actions/runs/{id}/jobs
+# 说明: 日志正文接口返回 403（无 admin 权限），故归档 run 与 job 级结论，job 结论与 step 结论均来自 API 原始字段，未经改写
+
+## run 44535812635
+workflow    : CI 门禁
+head_sha    : f3140b144f2cc93f86dc933ef7998e525235a22f
+head_branch : dev   event: push
+status      : completed   conclusion: success
+created_at  : 2026-11-19T13:40:33Z   updated_at: 2026-11-19T13:40:48Z
+html_url    : https://github.com/onetwothree-go/smart-daily/actions/runs/44535812635
+
+JOB  测试 + 覆盖率 | completed | success
+     - 1. Set up job: success
+     - 2. Run actions/checkout@v4: success
+     - 3. 安装 Python: success
+     - 4. 安装 uv: success
+     - 5. 安装依赖（含 dev）: success
+     - 6. 运行测试并采集覆盖率: success
+     - 7. 归档覆盖率报告: success
+     - 13. Post 安装 Python: success
+     - 14. Post Run actions/checkout@v4: success
+     - 15. Complete job: success
+
+JOB  Ruff 静态扫描 | completed | success
+     - 1. Set up job: success
+     - 2. Run actions/checkout@v4: success
+     - 3. 安装 Python: success
+     - 4. 安装 uv: success
+     - 5. 安装依赖（含 dev）: success
+     - 6. Ruff 规则检查: success
+     - 7. Ruff 格式检查: success
+     - 13. Post 安装 Python: success
+     - 14. Post Run actions/checkout@v4: success
+     - 15. Complete job: success
+
+------------------------------------------------------------------------------
+
+## run 44536033486
+workflow    : CI 门禁
+head_sha    : cfc4b7441fa10a8097bc866203578efa11ffbe3a
+head_branch : dev   event: push
+status      : completed   conclusion: success
+created_at  : 2026-11-19T13:41:54Z   updated_at: 2026-11-19T13:42:09Z
+html_url    : https://github.com/onetwothree-go/smart-daily/actions/runs/44536033486
+
+JOB  Ruff 静态扫描 | completed | success
+     - 1. Set up job: success
+     - 2. Run actions/checkout@v4: success
+     - 3. 安装 Python: success
+     - 4. 安装 uv: success
+     - 5. 安装依赖（含 dev）: success
+     - 6. Ruff 规则检查: success
+     - 7. Ruff 格式检查: success
+     - 13. Post 安装 Python: success
+     - 14. Post Run actions/checkout@v4: success
+     - 15. Complete job: success
+
+JOB  测试 + 覆盖率 | completed | success
+     - 1. Set up job: success
+     - 2. Run actions/checkout@v4: success
+     - 3. 安装 Python: success
+     - 4. 安装 uv: success
+     - 5. 安装依赖（含 dev）: success
+     - 6. 运行测试并采集覆盖率: success
+     - 7. 归档覆盖率报告: success
+     - 13. Post 安装 Python: success
+     - 14. Post Run actions/checkout@v4: success
+     - 15. Complete job: success
+
+------------------------------------------------------------------------------
