@@ -2,7 +2,7 @@
 
 **配置管理员**：赵蕊  
 **撰写日期**：2026-11-17（第 1 轮）｜**2026-11-19 21:29 第 2 轮复跑归档**｜**2026-11-19 21:37 ruff 阻断项修复**  
-**文档状态**：第 2 轮归档（补本机复跑证据 + 覆盖率门槛说明 + ruff 阻断项）＋ 阻断项已修复，三项检查全绿（§5.3）
+**文档状态**：第 2 轮归档（补本机复跑证据 + 覆盖率门槛说明 + ruff 阻断项）＋ 阻断项已修复、已推送，CI run 44535812635 转绿（§5.3、§2.1）
 
 ## 1. 门禁规则摘要
 
@@ -74,8 +74,18 @@ CI 门禁在以下情况触发（`.github/workflows/ci.yml`）：
 | `5a323cf` docs: [TK-V2-607] 补充 AI 使用日志条目 | ❌ failure | [run 44529479604](https://github.com/onetwothree-go/smart-daily/actions/runs/44529479604) |
 | `c917978` docs: [TK-V2-701] 归档零复制与密钥红线自查 | ❌ failure | [run 44534255554](https://github.com/onetwothree-go/smart-daily/actions/runs/44534255554) |
 | `6ac60fd` docs: [方赫] 补 TK-V2-104 红绿循环记录 | ✅ success | [run 44505355884](https://github.com/onetwothree-go/smart-daily/actions/runs/44505355884) |
+| **`f3140b1`** docs: [TK-V2-702] 归档静态扫描与 CI 门禁结果（含 `9e2b97e` ruff 修复） | ✅ **success** | [run 44535812635](https://github.com/onetwothree-go/smart-daily/actions/runs/44535812635) |
 
-两连红均源于 `6081e82` 引入的 ruff 错误，详见 §5.2。
+两连红均源于 `6081e82` 引入的 ruff 错误，详见 §5.2。该缺陷已由 `9e2b97e` 修复，**`f3140b1` 的 run 44535812635 起 CI 转绿，两连红状态结束**。
+
+**转绿 run 的 job 级核对**（2026-11-19 21:40，非跳过、非缓存命中）：
+
+| Job | 状态 | 关键步骤结论 |
+| --- | --- | --- |
+| Ruff 静态扫描 | ✅ success | Ruff 规则检查 ✅ / Ruff 格式检查 ✅ |
+| 测试 + 覆盖率 | ✅ success | 安装依赖（含 dev）✅ / 运行测试并采集覆盖率 ✅ / 归档覆盖率报告 ✅ |
+
+两 job 均 `completed`，所有 step 均为 `success`，无 `skipped`。
 
 ## 3. 负向验证记录
 
@@ -176,7 +186,7 @@ CI 门禁在以下情况触发（`.github/workflows/ci.yml`）：
 
 **证据同步**：`v2/docs/testing/证据/` 内三份文件已按修复后输出重新生成（第二行标注「ruff 修复后复跑」）；修复前的完整红灯输出（101 行 / 87 行，均 exit=1）另存为 `*-before-fix.txt`，用 `git worktree` 从 `c917978` 复现，未被覆盖。
 
-**待办**：本修复尚未提交，预置提交信息 `style: [TK-V2-607] 修正新增测试的 ruff 告警`。提交并推送后需在 §2.1 补一条 GREEN run 链接，届时 CI 两连红状态方可宣告结束。
+**已闭环**：修复已提交并推送 —— `9e2b97e style: [TK-V2-607] 修正新增测试的 ruff 告警`、`f3140b1 docs: [TK-V2-702] 归档静态扫描与 CI 门禁结果`。推送后 CI run [44535812635](https://github.com/onetwothree-go/smart-daily/actions/runs/44535812635) 结论 **success**，两个 job 全绿，CI 两连红结束。
 
 ## 6. 待补事项（原 §4 顺延，编号变更说明：原「§4 待补」因新增覆盖率门槛说明顺延为 §6）
 
@@ -204,4 +214,4 @@ CI 门禁在以下情况触发（`.github/workflows/ci.yml`）：
 - 已补：当前 HEAD 两连红的 run 链接 2 条（§5.2）
 - 历史覆盖率数字：6 条均为 `-`（日志接口 403，无权限取数，不推测）
 - 已闭环：ruff 两项检查原 RED（§5.2），2026-11-19 21:37 修复为 exit 0，证据文件已重新生成（§5.3）
-- 待闭环：修复提交尚未落库；推送后须在 §2.1 补一条 GREEN run，届时 CI 两连红方可宣告结束
+- 已闭环：修复提交 `9e2b97e` + `f3140b1` 已落库推送，CI run 44535812635 结论 success（§2.1）
