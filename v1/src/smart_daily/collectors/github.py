@@ -37,6 +37,24 @@ from .models import CommitEntry, RawRecord
 GITHUB_API = "https://api.github.com"
 API_VERSION = "2022-11-28"
 
+# 默认同时采集 main + dev 两个分支（2026-11-19 变更）。
+# 背景：团队每日工作常提交到 dev，若合并 main 的动作赶在 22:00 推送前未完成，
+# 只读 main 会漏采当天提交（11-19 事故：main 1 条 / dev 26 条）。
+# 可用 GITHUB_BRANCH 覆盖：单值如 "main" 退回旧行为；多值逗号分隔如 "main,dev,release"。
+DEFAULT_BRANCHES = "main,dev"
+
+
+def _branch_list() -> list[str]:
+    """解析待采集分支列表：GITHUB_BRANCH 逗号分隔，去空去重，默认 main+dev。"""
+    raw = os.getenv("GITHUB_BRANCH", DEFAULT_BRANCHES)
+    branches: list[str] = []
+    for part in raw.split(","):
+        name = part.strip()
+        if name and name not in branches:
+            branches.append(name)
+    # 显式设为空串时回落到完整默认值（而非只剩 main），保证空配置不会退化成单分支
+    return branches or [b.strip() for b in DEFAULT_BRANCHES.split(",") if b.strip()]
+
 
 def _display_name(login: str, fallback: str) -> str:
     """把 GitHub 登录名映射为团队显示名（如 yjy120 → 杨佳莹）。
@@ -133,8 +151,9 @@ class GitHubCollector:
         until: datetime | None = None,
         author: str | None = None,
         per_page: int = 100,
+        sha: str | None = None,
     ) -> list[CommitEntry]:
-        """采集指定时间窗口内的提交记录。
+        """采集单个分支在指定时间窗口内的提交记录。
 
         Args:
             repo: 仓库全名 owner/name，缺省用构造时的 owner/repo
@@ -142,6 +161,8 @@ class GitHubCollector:
             until: 截止时间（含），None 表示不限
             author: 只采集某个人的提交（GitHub login），None 表示全部
             per_page: 单页条数，最大 100
+            sha: 分支名。None 表示用 GITHUB_BRANCH 的首个分支（默认 main），
+                 向后兼容旧调用；collect_commits_multi 会显式逐分支传入。
 
         Returns:
             按时间倒序排列的提交条目列表。
@@ -153,10 +174,8 @@ class GitHubCollector:
         if "/" not in target:
             raise SourceUnavailableError(f"仓库标识不合法：{target!r}，应为 owner/name")
         params: dict[str, Any] = {"per_page": min(per_page, 100)}
-        # 分支口径（2026-11-12）：proposal.md S1 采集 main 默认分支、I2 规定
-        # dev/feature 未合并提交不进日报。发布已把 dev 合并进 main，主分支重新
-        # 有数据，回归规范只读 main；GITHUB_BRANCH 仅作应急覆盖。
-        params["sha"] = os.getenv("GITHUB_BRANCH", "main")
+        branch = sha or _branch_list()[0]
+        params["sha"] = branch
         if since:
             params["since"] = since.astimezone(timezone.utc).isoformat()
         if until:
@@ -168,10 +187,73 @@ class GitHubCollector:
         if not raw:
             # 空列表仍是合法结果（C8），但不能再「静默成功」：留一行可查的原因
             print(
-                f"[source] github: {params['sha']} 分支本窗口 0 条提交；"
-                "若提交都推在 dev，请确认是否已合并到 main 或设置 GITHUB_BRANCH"
+                f"[source] github: {branch} 分支本窗口 0 条提交"
+                "（多分支采集由 collect_commits_multi 统一处理）"
             )
         return [self._to_entry(item, target) for item in raw]
+
+    def collect_commits_multi(
+        self,
+        repo: str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        author: str | None = None,
+        per_page: int = 100,
+        branches: list[str] | None = None,
+    ) -> list[CommitEntry]:
+        """采集多个分支的提交，按 sha 去重后按时间倒序返回（2026-11-19 新增）。
+
+        动机：团队工作常散落在 main / dev，合并动作可能晚于 22:00 推送时点，
+        只读 main 会漏采。多分支并采 + 按 sha 去重可覆盖这种时序差：
+          - merge 提交同时出现在两分支 → 去重只留一条；
+          - dev 独有提交 → 即使未并入 main 也能被采到。
+
+        容错：某个分支不存在（404）或无权限时跳过该分支；只要有一个分支成功
+        就返回结果（含空结果的分支）。全部分支都失败才抛 SourceUnavailableError，
+        与降级链「空结果是合法、异常才降级」的语义保持一致。
+
+        Args:
+            branches: 待采集分支列表，None 表示取 _branch_list()（GITHUB_BRANCH）。
+            其余参数同 collect_commits。
+
+        Returns:
+            去重后按 occurred_at 倒序的提交条目列表。
+        """
+        target = repo or f"{self.owner}/{self.repo}"
+        branch_list = list(branches) if branches else _branch_list()
+        merged: dict[str, CommitEntry] = {}
+        errors: list[str] = []
+        any_ok = False
+
+        for branch in branch_list:
+            try:
+                entries = self.collect_commits(
+                    repo=target,
+                    since=since,
+                    until=until,
+                    author=author,
+                    per_page=per_page,
+                    sha=branch,
+                )
+            except SourceUnavailableError as exc:
+                errors.append(f"{branch}: {exc}")
+                print(f"[source] github 分支 {branch} 采集失败，跳过：{exc}")
+                continue
+            any_ok = True
+            for entry in entries:
+                key = entry.sha or f"{branch}:{entry.message}:{entry.timestamp.isoformat()}"
+                merged.setdefault(key, entry)
+
+        if not any_ok:
+            raise SourceUnavailableError(
+                "github 所有分支均采集失败 -> " + " | ".join(errors)
+            )
+
+        print(
+            f"[source] github 多分支采集完成：{','.join(branch_list)} → "
+            f"去重后 {len(merged)} 条"
+        )
+        return sorted(merged.values(), key=lambda e: e.timestamp, reverse=True)
 
     def list_repo_members(self) -> list[dict[str, str]]:
         """列出仓库协作者（用于日报成员名单）。只读接口。"""
@@ -230,9 +312,12 @@ class GitHubCollector:
         until: datetime | None = None,
         author: str | None = None,
     ) -> list[RawRecord]:
-        """WorkSource 协议方法：采集提交记录。
+        """WorkSource 协议方法：采集提交记录（默认 main + dev 双分支去重）。
 
         返回原始记录而非 WorkItem —— 归一化由 collect_with_fallback 统一做，
         这样单个数据源保持「只负责取数」的纯粹性。
+
+        2026-11-19 变更：由单分支改为 collect_commits_multi，覆盖「dev 未及时
+        合并进 main」导致的漏采；GITHUB_BRANCH 可覆盖分支集合。
         """
-        return self.collect_commits(since=since, until=until, author=author)
+        return self.collect_commits_multi(since=since, until=until, author=author)

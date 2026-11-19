@@ -525,3 +525,12 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 如实说明：站会时间 21:10–21:25、4 人沿用本人 11-18 告知口径，本日未另行告知变更，文档内已注明、未硬写「已召开」；11-18 历史记录 L57 / L64 / L67 旧 ⏸ 口径按不倒填纪律未改，改在本日站会记录里写「口径更正」段；issue #14 本人 11-18 09:27 旧评论未编辑；本轮由 WorkBuddy 会话执行与登记，非 Claude Code 会话，工具列如实记 WorkBuddy。
 - 产出：提交 `docs: 补 2026-11-19 每日站会记录`（本条随该提交）。
 - 记录落点按组内 2026-11-18 新口径（本文件位于根 `docs/`，第 3 周课程交付文档位于 `v2/docs/` / `v2/每日站会记录/`）。
+
+## 补记（2026-11-19，WorkBuddy 会话 · GitHub 日报采集器双分支改造）
+
+- 任务性质（如实）：需求方口头授权，由 WorkBuddy 会话排查并修复 11-19 日报"只采到 1 条"事故。根因是采集器只读 main 分支，而当天 26 条团队工作全部在 dev、合并动作晚于 22:00 推送时点。
+- 改动：`v1/src/smart_daily/collectors/github.py` 新增 `DEFAULT_BRANCHES="main,dev"`、`_branch_list()`、`collect_commits_multi()`（逐分支采集 + 按 sha 去重 + 单分支失败跳过 + 全失败抛错），`collect()` 协议方法改走 multi；`collect_commits()` 加可选 `sha` 参数保留单分支语义以兼容 verify 脚本。
+- 测试：新增 `v1/tests/test_github_multibranch.py` 9 条用例；干净环境（不注入 .env）`python -m unittest discover -s tests` 全量 40 passed。曾注入 .env 导致 C7 邮件测试 4 条假失败（真实收件人配置污染 mock 环境），已确认非代码问题、按测试文件约定在干净环境复跑通过。
+- 文档：按"不升版、末尾追加"口径在 `v1/specs/design.md`（0.6 补记）、`v1/specs/proposal.md`（0.4.4 补记）变更记录表末行追加说明，正文编号与验收口径均未改。
+- 人工核验方式：需求方可复核 `git diff` 仅涉及上述 4 个文件（github.py / 测试 / design.md / proposal.md）；`GITHUB_BRANCH`  unset 时默认采 main+dev、单值可覆盖；`python -m py_compile` 通过。
+- 状态：☐ 待组内确认（工具列如实记 WorkBuddy，非 Claude Code 会话；未代他人签字）。
