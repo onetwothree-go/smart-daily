@@ -435,3 +435,10 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：提交 `test: [TK-V2-601] 建立无凭证可复现夹具`（本条随该提交）。红输出为收集阶段 `ModuleNotFoundError: No module named 'smart_daily_v2.sources.mock'`（其余 69 passed 不受影响，经 `--continue-on-collection-errors` 复核）；绿后单文件 8 passed，全量 `uv run pytest tests/ -q` 77 passed，`ruff check` / `ruff format --check` 全过（41 files already formatted）。
 - 人工核验方式：本人逐行 review `mock.py`（纯函数无 IO、不读环境变量、不发请求；`_FIXTURE_ROWS` 与 golden JSON 逐条对账一致——本地 Python 实跑比对 record_id/member/kind/title/detail/occurred_at 全等；`MockSource` 实现 `WorkSource` 协议、collect 时间窗含端点 + author 过滤、永不抛 `SourceUnavailableError`）与 `conftest.py`（顶层惰性导入，保证其余测试文件收集不受影响），确认与 `v2/specs/tasks.md` 中 601 四条验收一致；验收②「mock 不出默认降级链」因 104/501 未实现且 P6-a 禁改正式模块，按开工前约定以测试内桩链（FakeFormalSource + run_chain，ADR-103 语义）隔离验证；静态禁词（collect_with_fallback / from_env / auto_register / default_sources / os.environ / httpx）grep 0 命中；G6 自查占位成员 甲/乙/丙/丁、无真实邮箱/URL/凭证；`git diff` 正式模块与 v1 均为空（P6-a 只新增、零复制）。
 - 工具链说明：红阶段首次运行因 conftest.py 一处缩进笔误 `IndentationError`，AI 会话仅修正夹具语法（未动测试逻辑）后复跑即得标准真红；本任务全程未遇 402/500 断流。记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
+
+## 补记（2026-11-19，于悦第 3 周 TK-V2-703 进度维护记录同步）
+
+- 登记于悦本人 2026-11-19 当天 1 条产出（需求分析师交付物 `v2/docs/于悦-第3周-tasks进度维护记录.md`），工具 Claude Code，留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code 仅执行仓库操作——拉取 dev 至 `29da6dc`、将本机 WorkBuddy 同名文件逐字复制入 `v2/docs/`、提交推送；**文档正文 AI 零改动、逐字复制**（16192 字节前后一致）。
+- 产出：提交 `docs: [TK-V2-703] 同步 11-19 进度维护记录（补齐 301–304/401–404/601 九条证据）`（本条随该提交）。
+- 如实说明：记录内 301–304 / 401–404 / 601 九条均标「🟩 上游自报绿、待核对」，其提交号与红绿证据为 WorkBuddy 会话登记口径，本会话未逐条独立复核；文档维护对象核至 dev `29da6dc`，与本会话拉取后 HEAD 一致；验收核对结论、勾销、评审签字按文档纪律一律留空，不代填。
