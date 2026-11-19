@@ -1,0 +1,87 @@
+# 命令: ./.venv/Scripts/python.exe -m ruff format --check .
+# 执行时间: 2026-11-19 21:29（首轮，HEAD c917978 工作区状态复现）
+# 复现方式: 同上 worktree
+
+unformatted: File would be reformatted
+  --> tests\test_coverage_improvement.py:30:31
+   |
+29 |         occurred_at="2026-11-19T10:00:00Z",
+   -         local_day="2026-11-19"
+30 +         local_day="2026-11-19",
+31 |     )
+--------------------------------------------------------------------------------
+46 |         detail="Test commit message",
+   -         occurred_at=datetime(2026, 11, 19, 10, 0, 0)
+47 +         occurred_at=datetime(2026, 11, 19, 10, 0, 0),
+48 |     )
+--------------------------------------------------------------------------------
+57 |         occurred_at=datetime(2026, 11, 19, 11, 0, 0),
+   -         local_day="2026-11-19"
+58 +         local_day="2026-11-19",
+59 |     )
+--------------------------------------------------------------------------------
+64 |     assert result[0].record_id == "work-123"
+   -     assert result[1].record_id == "commit-123"
+65 +     assert result[1].record_id == "commit-123"
+   |
+
+unformatted: File would be reformatted
+  --> tests\test_dispatch_real_calls.py:14:16
+   |
+13 |
+   -     with patch('smart_daily_v2.notifiers.dispatch.EmailNotifier') as mock_notifier_class:
+14 +     with patch("smart_daily_v2.notifiers.dispatch.EmailNotifier") as mock_notifier_class:
+15 |         mock_notifier_class.from_env.return_value = mock_email
+   -         with patch('smart_daily_v2.notifiers.dispatch.load_member_emails') as mock_load:
+16 +         with patch("smart_daily_v2.notifiers.dispatch.load_member_emails") as mock_load:
+17 |             mock_load.return_value = {"testuser": ["test@example.com"]}
+18 |
+19 |             result = dispatch._send_personal("testuser", "test body")
+20 |             assert result is True
+   -             mock_email.send.assert_called_once_with("testuser日报", "test body", ["test@example.com"])
+21 +             mock_email.send.assert_called_once_with(
+22 +                 "testuser日报", "test body", ["test@example.com"]
+23 +             )
+24 |
+25 |
+26 | def test_send_personal_no_recipients():
+27 |     """测试 _send_personal 函数在无收件人时的情况"""
+   -     with patch('smart_daily_v2.notifiers.dispatch.load_member_emails') as mock_load:
+28 +     with patch("smart_daily_v2.notifiers.dispatch.load_member_emails") as mock_load:
+29 |         mock_load.return_value = {"testuser": []}
+--------------------------------------------------------------------------------
+39 |
+   -     with patch('smart_daily_v2.notifiers.dispatch.EmailNotifier') as mock_notifier_class:
+40 +     with patch("smart_daily_v2.notifiers.dispatch.EmailNotifier") as mock_notifier_class:
+41 |         mock_notifier_class.from_env.return_value = mock_email
+   -         with patch('smart_daily_v2.notifiers.dispatch.load_member_emails') as mock_load:
+42 +         with patch("smart_daily_v2.notifiers.dispatch.load_member_emails") as mock_load:
+43 |             mock_load.return_value = {"testuser": ["test@example.com"]}
+--------------------------------------------------------------------------------
+53 |
+   -     with patch('smart_daily_v2.notifiers.dispatch.FeishuWebhookNotifier') as mock_notifier_class:
+54 +     with patch("smart_daily_v2.notifiers.dispatch.FeishuWebhookNotifier") as mock_notifier_class:
+55 |         mock_notifier_class.from_env.return_value = mock_webhook
+--------------------------------------------------------------------------------
+66 |
+   -     with patch('smart_daily_v2.notifiers.dispatch.FeishuWebhookNotifier') as mock_notifier_class:
+67 +     with patch("smart_daily_v2.notifiers.dispatch.FeishuWebhookNotifier") as mock_notifier_class:
+68 |         mock_notifier_class.from_env.return_value = mock_webhook
+--------------------------------------------------------------------------------
+78 |
+   -     with patch('smart_daily_v2.notifiers.dispatch.EmailNotifier') as mock_notifier_class:
+79 +     with patch("smart_daily_v2.notifiers.dispatch.EmailNotifier") as mock_notifier_class:
+80 |         mock_notifier_class.from_env.return_value = mock_email
+--------------------------------------------------------------------------------
+91 |
+   -     with patch('smart_daily_v2.notifiers.dispatch.EmailNotifier') as mock_notifier_class:
+92 +     with patch("smart_daily_v2.notifiers.dispatch.EmailNotifier") as mock_notifier_class:
+93 |         mock_notifier_class.from_env.return_value = mock_email
+94 |
+95 |         result = dispatch._send_team_external("test body", ["ext@example.com"])
+   -         assert result is False
+96 +         assert result is False
+   |
+
+2 files would be reformatted, 51 files already formatted
+exit=1

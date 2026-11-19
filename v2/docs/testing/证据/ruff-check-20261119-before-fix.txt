@@ -1,0 +1,101 @@
+# 命令: ./.venv/Scripts/python.exe -m ruff check .
+# 执行时间: 2026-11-19 21:29（首轮，HEAD c917978 工作区状态复现）
+# 复现方式: git worktree add --detach /tmp/sd-before c917978（修复前代码原样检出）
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> tests\test_coverage_improvement.py:3:1
+  |
+1 |   """测试用例以改进覆盖率"""
+2 |
+3 | / import os
+4 | | from unittest.mock import patch
+5 | |
+6 | | from smart_daily_v2.config import load_config, require_credential
+7 | | from smart_daily_v2.models import normalize, WorkItem, CommitEntry
+  | |__________________________________________________________________^
+help: Organize imports
+  |
+6 | from smart_daily_v2.config import load_config, require_credential
+  - from smart_daily_v2.models import normalize, WorkItem, CommitEntry
+7 + from smart_daily_v2.models import CommitEntry, WorkItem, normalize
+8 |
+  |
+
+F401 [*] `smart_daily_v2.config.load_config` imported but unused
+ --> tests\test_coverage_improvement.py:6:35
+  |
+4 | from unittest.mock import patch
+5 |
+6 | from smart_daily_v2.config import load_config, require_credential
+  |                                   ^^^^^^^^^^^
+7 | from smart_daily_v2.models import normalize, WorkItem, CommitEntry
+  |
+help: Remove unused import: `smart_daily_v2.config.load_config`
+  |
+5 |
+  - from smart_daily_v2.config import load_config, require_credential
+6 + from smart_daily_v2.config import require_credential
+7 | from smart_daily_v2.models import normalize, WorkItem, CommitEntry
+  |
+
+B011 Do not `assert False` (`python -O` removes these calls), raise `AssertionError()`
+  --> tests\test_coverage_improvement.py:15:20
+   |
+13 |         try:
+14 |             require_credential("GITHUB_TOKEN")
+15 |             assert False, "应该抛出 ValueError"
+   |                    ^^^^^
+16 |         except ValueError as e:
+17 |             assert "Missing required credential" in str(e)
+   |
+help: Replace `assert False`
+   |
+14 |             require_credential("GITHUB_TOKEN")
+   -             assert False, "应该抛出 ValueError"
+15 +             raise AssertionError("应该抛出 ValueError")
+16 |         except ValueError as e:
+   |
+note: This is an unsafe fix and may change runtime behavior
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> tests\test_dispatch_real_calls.py:3:1
+  |
+1 |   """测试实际调用 dispatch 中的私有函数以改进覆盖率"""
+2 |
+3 | / from unittest.mock import patch, MagicMock
+4 | |
+5 | | from smart_daily_v2.notifiers import dispatch
+6 | | from smart_daily_v2.notifiers.members import load_member_emails
+  | |_______________________________________________________________^
+help: Organize imports
+  |
+2 |
+  - from unittest.mock import patch, MagicMock
+3 + from unittest.mock import MagicMock, patch
+4 |
+  |
+
+F401 [*] `smart_daily_v2.notifiers.members.load_member_emails` imported but unused
+ --> tests\test_dispatch_real_calls.py:6:46
+  |
+5 | from smart_daily_v2.notifiers import dispatch
+6 | from smart_daily_v2.notifiers.members import load_member_emails
+  |                                              ^^^^^^^^^^^^^^^^^^
+help: Remove unused import: `smart_daily_v2.notifiers.members.load_member_emails`
+  |
+5 | from smart_daily_v2.notifiers import dispatch
+  - from smart_daily_v2.notifiers.members import load_member_emails
+6 |
+  |
+
+E501 Line too long (102 > 100)
+  --> tests\test_dispatch_real_calls.py:21:99
+   |
+19 |             result = dispatch._send_personal("testuser", "test body")
+20 |             assert result is True
+21 |             mock_email.send.assert_called_once_with("testuser日报", "test body", ["test@example.com"])
+   |                                                                                                     ^^
+
+Found 6 errors.
+[*] 4 fixable with `--fix` (1 unsafe fix available with `--fix --unsafe-fixes`).
+exit=1
