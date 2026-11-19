@@ -100,3 +100,48 @@ def delivery_harness(monkeypatch, fixture_items):
         )
 
     return run
+
+
+@pytest.fixture
+def format_harness():
+    """604 集成胶水，复用 601 夹具 + 304 生成层，不改正式模块。"""
+    from datetime import date
+    from types import SimpleNamespace
+
+    from smart_daily_v2.models import WorkItem
+    from smart_daily_v2.reports.generator import (
+        build_personal_report,
+        build_team_report,
+        group_by_member,
+    )
+    from smart_daily_v2.sources.mock import load_fixture_items
+
+    FormatOutcome = SimpleNamespace
+
+    def run(
+        items: list[WorkItem] | None = None,
+        *,
+        empty_members: tuple[str, ...] = (),
+    ) -> FormatOutcome:
+        selected_items = load_fixture_items() if items is None else items
+        day = selected_items[0].local_day if selected_items else date(2026, 11, 18)
+        groups = group_by_member(selected_items)
+        for member in empty_members:
+            groups.setdefault(member, [])
+        personal = {
+            member: build_personal_report(member, member_items, day)
+            for member, member_items in groups.items()
+        }
+        team = build_team_report(groups, day)
+
+        return FormatOutcome(
+            items=selected_items,
+            groups=groups,
+            personal=personal,
+            team=team,
+            day=day,
+            members=sorted(groups),
+            record_ids=tuple(item.record_id for item in selected_items),
+        )
+
+    return run
