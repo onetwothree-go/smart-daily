@@ -3,18 +3,17 @@
 import os
 from unittest.mock import patch
 
-from smart_daily_v2.config import load_config, require_credential
-from smart_daily_v2.models import normalize, WorkItem, CommitEntry
+import pytest
+
+from smart_daily_v2.config import require_credential
+from smart_daily_v2.models import CommitEntry, WorkItem, normalize
 
 
 def test_require_credential_missing():
     """测试 require_credential 在缺少凭证时抛出异常"""
     with patch.dict(os.environ, {}, clear=True):
-        try:
+        with pytest.raises(ValueError, match="Missing required credential"):
             require_credential("GITHUB_TOKEN")
-            assert False, "应该抛出 ValueError"
-        except ValueError as e:
-            assert "Missing required credential" in str(e)
 
 
 def test_normalize_workitem_passthrough():
@@ -27,7 +26,7 @@ def test_normalize_workitem_passthrough():
         title="Test commit",
         detail="Test detail",
         occurred_at="2026-11-19T10:00:00Z",
-        local_day="2026-11-19"
+        local_day="2026-11-19",
     )
 
     result = normalize([workitem])
@@ -44,7 +43,7 @@ def test_normalize_mixed_input():
         member="testuser",
         title="Test commit",
         detail="Test commit message",
-        occurred_at=datetime(2026, 11, 19, 10, 0, 0)
+        occurred_at=datetime(2026, 11, 19, 10, 0, 0),
     )
 
     workitem = WorkItem(
@@ -55,7 +54,7 @@ def test_normalize_mixed_input():
         title="Test work",
         detail="Test detail",
         occurred_at=datetime(2026, 11, 19, 11, 0, 0),
-        local_day="2026-11-19"
+        local_day="2026-11-19",
     )
 
     # 按时间排序，workitem 应该在前
