@@ -25,3 +25,78 @@ def fixture_items():
 def golden_rows() -> list[dict]:
     fixture_path = Path(__file__).parent / "fixtures" / "mock_work_items.json"
     return json.loads(fixture_path.read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def delivery_harness(monkeypatch, fixture_items):
+    """SQLite 落库与实时提醒通道属被阻塞的编排层，本周按 605 验收③只登记口径。"""
+    from collections.abc import Mapping
+    from types import SimpleNamespace
+
+    import smart_daily_v2.notifiers.dispatch as dispatch_module
+    from smart_daily_v2.notifiers.dispatch import all_delivered, dispatch
+    from smart_daily_v2.reports.generator import (
+        build_personal_report,
+        build_team_report,
+        group_by_member,
+    )
+    from smart_daily_v2.sources.mock import FIXTURE_MEMBERS, load_fixture_items
+
+    def run(
+        outcomes: Mapping[str, bool | BaseException] | None = None,
+        *,
+        no_notify: bool = False,
+        with_external: bool = True,
+    ):
+        items = load_fixture_items()
+        groups = group_by_member(items)
+        day = fixture_items[0].local_day
+        personal = {
+            member: build_personal_report(member, member_items, day)
+            for member, member_items in groups.items()
+        }
+        team = build_team_report(groups, day)
+        selected_outcomes = {} if outcomes is None else outcomes
+        calls = {"personal": [], "team": [], "external": []}
+
+        def result_for(scope: str) -> bool:
+            result = selected_outcomes.get(scope, True)
+            if isinstance(result, BaseException):
+                raise result
+            return result
+
+        def send_personal(member: str, body: str) -> bool:
+            calls["personal"].append((member, body))
+            return result_for(f"personal:{member}")
+
+        def send_team_group(body: str) -> bool:
+            calls["team"].append((body,))
+            return result_for("team")
+
+        def send_team_external(body: str, recipients) -> bool:
+            calls["external"].append((body, tuple(recipients)))
+            return result_for("team:report_recipients")
+
+        monkeypatch.setattr(dispatch_module, "_send_personal", send_personal)
+        monkeypatch.setattr(dispatch_module, "_send_team_group", send_team_group)
+        monkeypatch.setattr(dispatch_module, "_send_team_external", send_team_external)
+
+        results = dispatch(
+            personal,
+            team,
+            no_notify=no_notify,
+            team_recipients=["ext@example.com"] if with_external else (),
+        )
+        expected = set(results)
+        pushed = all_delivered(expected, results)
+
+        return SimpleNamespace(
+            results=results,
+            pushed=pushed,
+            expected=expected,
+            calls=calls,
+            members=set(FIXTURE_MEMBERS),
+            day=day,
+        )
+
+    return run

@@ -449,3 +449,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 工具与用途：Claude Code 仅执行仓库操作——确认 dev HEAD（`5a59e92`，无新提交）、将本机 WorkBuddy 同名新文件逐字复制入 `v2/docs/`、提交推送；**文档正文 AI 零改动、逐字复制**（13425 字节）。
 - 产出：提交 `docs: 补第 3 周 code-review 互评记录（评审 404/601 两条提交）`（本条随该提交）。
 - 如实说明：评审正文为 WorkBuddy 会话起草口径，本会话未复跑文中命令、未独立核对 diff 与行号；意见状态为草稿，结论、对方回应、闭环、签字按文档纪律一律留空；本次 message 未带 `[TK-V2-xxx]` 前缀，属互评记录类文档产出，编号归属如需登记由本人核对后补。
+
+## 补记（2026-11-19，方赫第 3 周 TK-V2-605 送达判定用例 C7/R3）
+
+- 新增方赫本人 2026-11-19 当天 1 条记录（开发工程师 TDD 任务：送达判定集成用例 `tests/test_integration_delivery.py` + `tests/conftest.py` 追加 `delivery_harness` fixture），留 `☐ 待确认`；**组内他人记录未动**，不代勾、不代签。
+- 工具与用途：Claude Code（经本地 CCR 转换层 + OpenRouter `gpt-6-luna`）按 P0 角色设定 + P2 任务提示词（自定义命令 `/task605` 触发红阶段、`/task605g` 绿阶段、`/task605c` 收尾检查），新增 `v2/tests/test_integration_delivery.py` 8 个测试用例（parametrize 展开至 13 项），并在 601 已建的 `v2/tests/conftest.py` **仅追加** `delivery_harness` fixture（端到端集成胶水：601 夹具 → 304 日报 → 404 dispatch 打桩 → `all_delivered` → `pushed`），原有三条 fixture 一字未动。
+- 产出：提交 `test: [TK-V2-605] 补齐送达判定用例`（本条随该提交）。红输出为 13 项 `fixture 'delivery_harness' not found`（纯测试任务标准真红，其余 77 passed 不受影响）；绿后单文件 13 passed，全量 `uv run pytest tests/ -q` 90 passed，`ruff check` / `ruff format --check` 全过（42 files already formatted）。
+- 人工核验方式：本人逐行 review `delivery_harness`（三通道 `_send_personal/_send_team_group/_send_team_external` 全部 monkeypatch 打桩绝不真发；异常注入经 `BaseException` 抛出覆盖用例 7；`with_external=False` 触发 U6 退回 5 条路径；fixture 函数体惰性导入、顶层无 `smart_daily_v2` 导入不拖累其他测试收集）与测试用例（6 scope 逐一 False / 3 真 3 假 / no_notify 空集判 False 防 `all([])` 真空真 / expected 恰 6 无 realtime/push scope / `pushed` 由 `all_delivered()` 得出 + dispatch 源码 `any(` 0 命中），确认与 `v2/specs/tasks.md` 中 605 验收及 design C7/R3/U6 契约一致。**口径说明（如实）**：验收③提及的 SQLite 落库与 S9 实时提醒属被 104 阻塞的 501/502 编排层，本周按 tasks.md 原文「不重做则只作口径登记」处理——未建库、未 import sqlite3、未产生实时提醒 scope、未新建 orchestrator/落库代码；`pushed` 按 409 验收③以 `all_delivered()` 结果承载。P6-b 自查：`git diff` 正式模块（src/）与 v1 均为空，conftest.py diff 仅追加、原有 fixture 未改。G6 自查：示例收件人 `ext@example.com` 占位，无真实凭证。
+- 工具链说明（如实）：开工当日 Claude Code 会话先因本地 CCR(3456)/models-shim(3457) 双双掉线报 `Connection refused`，重启两服务并端到端实测（返回 OK）后恢复；`/task605c` 收尾尾部再遇一次 `API error`（7897 瞬时抖动），收尾结论（90 passed、lint/format 全过、append-only diff、禁用模式扫描 0 命中）已由 AI 会话在报错前完整输出，并经本人本地终端复核一致。记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
