@@ -27,6 +27,7 @@ from smart_daily_v2.config import load_config
 from smart_daily_v2.identity import display_name
 from smart_daily_v2.models import LOCAL_TZ, WorkItem, local_date
 from smart_daily_v2.notifiers.dispatch import all_delivered, dispatch
+from smart_daily_v2.notifiers.members import load_report_recipients
 from smart_daily_v2.reports.generator import (
     build_personal_report,
     build_team_report,
@@ -77,7 +78,16 @@ def run(day: date, *, sources: Sequence[WorkSource], notify: bool = True) -> dic
         _persist_report(member, text, len(member_items), day, reasons)
         saved += 1
 
-    results = dispatch(personal, team_text, no_notify=False) if notify else {}
+    results = (
+        dispatch(
+            personal,
+            team_text,
+            no_notify=False,
+            team_recipients=load_report_recipients(),
+        )
+        if notify
+        else {}
+    )
     expected = set(results)
     delivered = all_delivered(expected, results)
     if not notify:
