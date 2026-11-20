@@ -757,3 +757,16 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 接口名更正（如实）：草稿初版误写 `identity.canonical_key()`（本地旧副本），经远端 main 核对后改为实际存在的 `display_name()` / `normalize_key()`。
 - 未做（如实）：未改任何代码 / workflow / 规范文件；未代签、未代勾、未裁定；本次提交仅新增方案文档 + 本条日志；未读取或输出 .env 与凭证。
 - 状态：☐ 待本人确认（工具列如实记 WorkBuddy，非 Claude Code 会话）。
+
+## 补记（2026-11-21，杨佳莹 · 实时提醒纳入 v2 本轮实现）
+
+- 任务性质（如实）：用户裁定把 S9/C10 实时提醒从「第四周」提前到**本轮立即完成**；由架构师本人（杨佳莹）决定、WorkBuddy 会话执行实现。范围外新增，状态 ☐ 待确认，不代签代勾。
+- TDD 红/绿（如实）：先写 `v2/tests/test_notify_push.py`（C10，9 用例）→ 红 9 failed（全 `ModuleNotFoundError`，无断言失败混入）；再新增 `v2/src/smart_daily_v2/notify_push.py` → 绿 9 passed。
+- 实现（零复制）：脚本从零写，复用 v2 现有 `identity.display_name()` / `normalize_key()` 与 `notifiers/webhook.py::gen_sign()`，不 import / 复制 v1；读 GITHUB_EVENT_PATH、不调 GitHub API、只 main/dev、一次 push 恰 1 条含「日报」、列全 commit 原文、中文名、未映射回落、失败 exit 1 亮红灯、不写 SQLite/不进 G1。
+- workflow：根 `.github/workflows/notify.yml` 的 `run` 由 `python v1/scripts/notify_push.py` 改为 `python -m smart_daily_v2.notify_push`，`pip install ./v2`；根目录仍只一份、不新增第二份（避免一次 push 两条）。
+- 验证：新增用例 9 passed；全量 **258 passed**（249 基线 + 9）；`ruff check` All checks passed、`ruff format --check` 81 files already formatted。ruff 初报 2×F401（实现里 `Path`、测试里 `pytest` 未用），已删无用 import 后复跑双清。
+- 时点同步：方案文档前提改为「本轮完成」+落地段；tasks.md U2 以**补记**追加（不改写 U2 原文、不代勾、不代改验收矩阵 C10）；issue #17 标题/正文去「第四周」、加落地完成段与评论。
+- 未做（如实）：未改任何其它源码/测试/规范文件；未碰 v1、未碰 .env、未读取或输出凭证；未代签代勾；本次仅上述 5 文件改动 + 本条日志，推 dev 不推 main。
+- 状态：☐ 待本人/组内确认（工具列如实记 WorkBuddy，非 Claude Code 会话，未走红/绿/收尾三命令链）。
+
+- 推送受阻（如实）：本次 `git push origin dev` 首次含 `.github/workflows/notify.yml` 被拒——本机 PAT 无 `workflow` scope，GitHub 不允许其改动 workflow 文件。已把提交拆分：`notify_push.py` + 测试 + 方案 + tasks.md 补记 + 本日志先推 dev；**`notify.yml` 改动暂留本地工作区未推**，需有 `workflow` scope 的凭证或由仓库所有者手动应用该改动后，v2 提醒才真正在 Actions 生效。未重连认证（属权限范围问题，非登录失效）。
