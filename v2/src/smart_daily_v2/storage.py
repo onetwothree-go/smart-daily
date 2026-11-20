@@ -10,11 +10,18 @@ Scope registrations (☐ 待确认):
 - Acceptance item ④ spans connection setup and output in orchestration/CLI. ☐ 待组内确认
 - save_report creates the schema; report columns follow report_date/member/content/
   item_count/source_name/created_at. ☐ 待组内确认
+- ReportMeta fields and their definition in this module supply 元数据 without content. ☐ 待组内确认
+- list_reports filters by report_date and orders by report_date DESC, then member. ☐ 待组内确认
+- No matching history returns []; C8's source-failure behavior remains outside storage. ☐ 待组内确认
+- I7 query relies on the schema created by save_report; list_reports does not create it.
+  ☐ 待组内确认
+- list_reports is read-only and uses parameterized SQL. ☐ 待组内确认
 """
 
 from __future__ import annotations
 
 import sqlite3
+from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
 
@@ -78,3 +85,37 @@ def save_report(
             datetime.now(timezone.utc).isoformat(),
         ),
     )
+
+
+@dataclass(frozen=True)
+class ReportMeta:
+    report_date: str
+    member: str
+    item_count: int
+    source_name: str | None
+    created_at: str
+
+
+def list_reports(
+    conn: sqlite3.Connection,
+    day: date | None = None,
+) -> list[ReportMeta]:
+    if day is None:
+        rows = conn.execute(
+            """
+            SELECT report_date, member, item_count, source_name, created_at
+            FROM daily_reports
+            ORDER BY report_date DESC, member
+            """
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT report_date, member, item_count, source_name, created_at
+            FROM daily_reports
+            WHERE report_date = ?
+            ORDER BY report_date DESC, member
+            """,
+            (day.isoformat(),),
+        ).fetchall()
+    return [ReportMeta(*row) for row in rows]
