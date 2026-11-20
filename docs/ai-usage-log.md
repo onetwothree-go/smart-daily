@@ -705,3 +705,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 绿：仅改 `v2/src/smart_daily_v2/reports/generator.py`（新增 conventional 类型徽标、format_item 改表格行、团队日报加贡献一览表、个人日报加表头），个人/团队共用 format_item 守住 C4/G4 逐字一致 → 240 passed。
 - 收尾：全量 240 passed、`ruff check` All checks passed、`ruff format --check` 77 files；改动仅 1 源 + 3 测试（+前序周报草稿未提交）；保护文件 diff 全空、未碰 v1、无真实凭证。
 - 待确认：条目行字面变更牵涉 `v2/specs/tasks.md` TK-302/304、`v2/tests/acceptance_matrix.md` C4 行（他人维护），本次未改，是否同步由需求方/测试方确认。未真推送。
+
+## 2026-11-20（续 3）每日 22:00 自动日报定时（范围外运维自动化，状态 ☐ 待确认）
+- 用途：用户确认「晚上 10 点、现在就做」，设计并落地每天 22:00 自动推送日报（本机计划任务 SmartDaily-2200 → v2/scripts/run_daily.ps1 → uv --env-file .env → v2 CLI → 采集/生成/落库 → 4 成员邮件 + 飞书群）。
+- 工具与边界：Claude 转发链路已由用户关闭，本次全程由本人（方赫，经 WorkBuddy Agent 模式）直接执行；范围外运维自动化，状态 ☐ 待确认，不代改 specs、不代签代勾 tasks.md、不碰已封版 v1、不用 Actions（ADR-104 裁定其只做实时通知）。
+- 真实 bug 修复：v2/.env 补三个进程凭证（不进仓库）；GITHUB_BRANCH 由 main 改 dev（11-20 提交只在 dev、main 为 0，首跑静默空转）；脚本加运行摘要日志（dispatch 零 print 导致 Tee 不建文件）与 dry-run 开关；老师收件人置空双保险。
+- 验证：fetch 0/0 无撞车；注册计划任务 NextRun=11-20 22:00、已设唤醒；改 branch 后真推退出码 0（4 成员+飞书群全送达）；最终脚本 dry-run 退出码 0、日志落文件干净。
+- 如实登记：11-20 当天真实推送两次（21:11、21:13），成员邮箱与飞书群各收到两条；22:00 再自动推一次。不掩盖。
+- 改动仅新增 v2/scripts/run_daily.ps1 + 两份记录；.env（凭证/branch）、reports.db、日志均 gitignore 不进仓库；未改源码/测试、未碰 v1、未碰 main。
