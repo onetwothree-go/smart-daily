@@ -730,3 +730,13 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 收尾：Claude 8 条自查全过（保护文件/既有测试 diff 空、无 v1 import/真实凭证、`.env` 仍 `GITHUB_BRANCH=main`、未改任何文件未提交），`246 passed in 0.65s`、ruff 双清；Claude 守住收尾只读边界、**未自行补 ai-usage-log**，两份记录改由 WorkBuddy 按恢复后的口径补。WorkBuddy 最终独立复跑：246 passed、ruff 双清、保护文件与 `git diff -- v2/tests/` 全空、HEAD `3de8afd`、与 origin/dev 0/0。
 - 生产启用（WorkBuddy）：`v2/.env` 的 `GITHUB_BRANCH` 由 `main` 改为 `main,dev`（被 gitignore、不进仓库）；只读采集 11-20 → 分支解析 `['main','dev']`、**23 条、`reasons=[]`、record_id 全唯一**，成员（采集层原始账号名）fh0709 19 / yuyue117 4。因当日 dev 提交已随 `92b8919` 合并进 main，条数与单分支相同；双分支价值在今后 dev 有新提交而 main 未合并时不再漏采。**未真推送**；老师邮箱 `1730173019@qq.com` 保留。
 - 待确认：多分支并采属范围外，状态 `☐ 待确认`；本次未改 `tasks.md` / README / specs 字面、不代裁定、不代签代勾。提交仅源码 + 新测试 + 两份记录，推 dev，main 未碰。
+
+## 2026-11-20（续 5）团队日报 / 个人日报二次美化（范围外展示层微调，状态 ☐ 待确认）
+- 用途：用户确认双分支已可抓后提出「团队日报、发到邮箱的个人日报还是有点乱」，按 11-19 已认可的美化版口径补齐上一轮（`5505978`）只做了表格、没做版式的部分。
+- 工具与边界（如实）：本人（方赫，经 WorkBuddy Agent 模式）直接执行，**未走 Claude Code、未用 `/task*` 命令、无 Claude 截图**；与 `5505978` 同属范围外展示层改动，不属第 3 周 TDD 任务的红/绿/收尾链路。状态 `☐ 待确认`，不代裁定规范、不代签代勾 tasks.md、不碰已封版 v1、不碰 main。
+- 根因（真实只读渲染确认，非推测）：`GithubSource` 令 `detail = message`、单行提交时 `detail == title`，而旧 `format_item` 又拼 `title —— detail`，真实日报每行变成 `feat: xxx —— feat: xxx`；类型列已有 `feat`，内容列仍带 `feat:` 前缀；多行 commit body 与正文竖线会把换行/列分隔符带进表格单元格撑破 Markdown 表格；团队日报缺引用概览、分隔线、页脚，成员章节 `##` 与「今日贡献一览」同级层级不清；个人日报只有标题 + 表格。
+- 改动（仅 `v2/src/smart_daily_v2/reports/generator.py`）：新增 `_clean`（压成单行 + `|` 转义）、`_headline`（去掉内容列中与类型列重复的 conventional 前缀）、`_supplement`（detail 与 title 相同则不追加、以 title 开头则只取新增正文）；`format_item` 类型列改反引号徽标；团队日报改为 `# 团队日报 · YYYY-MM-DD` + 引用概览 `**N 位成员** ｜ **M 条工作记录**`、成员章节降为 `### 成员 · N 条`、补 `---` 分隔与数据来源页脚；个人日报补引用概览与页脚。个人/团队仍共用 `format_item`，C4/G4 逐字一致与「format_item 单一来源」检查均未破坏。
+- 同步 4 个测试文件（`test_generator.py` / `test_integration_format.py` / `test_mock.py` / `test_orchestrator.py`）中受版式影响的字面断言；新增 3 用例：`detail==title` 不重复打印、多行详情压平且竖线转义、无 conventional 前缀时回落 kind 中文标签。
+- 验证：全量 **249 passed**（246 基线 + 3 新增）、`ruff check` All checks passed、`ruff format --check` 78 files already formatted；改动仅 1 源 + 4 测试 + 本记录；保护文件 diff 全空、无真实凭证、未真推送。
+- 真实数据只读预览（11-20，`main,dev` 双分支）：main 23 / dev 23、交集 22、去重后 24 条，中文名 方赫 20 / 于悦 4；渲染结果内容列无重复、无撑破，预览文件写在工作区（不入仓库）。
+- 待确认：标题 / 概览 / 章节层级字面变更牵涉 `v2/specs/tasks.md` TK-302/304 与 `v2/tests/acceptance_matrix.md` C4 行（他人维护），本次未改，是否同步由需求方/测试方确认。22:00 定时任务下一次 11-21 22:00 自动采用新版式。

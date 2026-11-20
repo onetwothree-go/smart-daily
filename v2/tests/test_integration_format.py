@@ -42,9 +42,9 @@ def entry_lines(report: str) -> list[str]:
 def team_lines_for(team: str, member: str) -> list[str]:
     lines = []
     in_member_section = False
-    section_prefix = f"## {member}（"
+    section_prefix = f"### {member} · "
     for line in team.splitlines():
-        if line.startswith("## ") and "今日贡献" not in line:
+        if line.startswith("### "):
             if in_member_section:
                 break
             in_member_section = line.startswith(section_prefix)
@@ -70,7 +70,7 @@ def test_three_commits_two_tasks_count_is_five(format_harness):
 
     assert len(entry_lines(outcome.team)) == 5
     assert len(entry_lines(outcome.personal["甲"])) == 5
-    assert "条目 5 条" in outcome.team.splitlines()[0]
+    assert "**5 条工作记录**" in outcome.team
 
 
 def test_no_hand_written_entries_counter_matches(format_harness):
@@ -154,9 +154,9 @@ def test_twenty_entry_member_fully_listed(format_harness):
 
     outcome = format_harness(items)
 
-    assert "## 甲（20 条）" in outcome.team
+    assert "### 甲 · 20 条" in outcome.team
     assert len(team_lines_for(outcome.team, "甲")) == 20
-    assert "条目 20 条" in outcome.team.splitlines()[0]
+    assert "**20 条工作记录**" in outcome.team
     assert len(entry_lines(outcome.personal["甲"])) == 20
 
 
@@ -165,13 +165,13 @@ def test_zero_entry_member_still_listed(format_harness):
 
     outcome = format_harness(items, empty_members=("丁",))
 
-    assert "## 甲（2 条）" in outcome.team
-    assert "## 丁（0 条）" in outcome.team
-    zero_member_section = outcome.team.split("## 丁（0 条）", 1)[1].split("\n## ", 1)[0]
+    assert "### 甲 · 2 条" in outcome.team
+    assert "### 丁 · 0 条" in outcome.team
+    zero_member_section = outcome.team.split("### 丁 · 0 条", 1)[1].split("\n### ", 1)[0]
     assert "今日无工作记录" in zero_member_section
     assert outcome.members == ["丁", "甲"]
     assert "今日无工作记录" in outcome.personal["丁"]
-    assert outcome.team.index("## 甲（2 条）") < outcome.team.index("## 丁（0 条）")
+    assert outcome.team.index("### 甲 · 2 条") < outcome.team.index("### 丁 · 0 条")
 
 
 def test_fixture_reconciliation_and_record_ids_stable(format_harness, monkeypatch):
@@ -179,7 +179,8 @@ def test_fixture_reconciliation_and_record_ids_stable(format_harness, monkeypatc
     second = format_harness()
 
     assert first.record_ids == second.record_ids
-    assert f"成员 {len(first.groups)} 人 · 条目 {len(first.items)} 条" in first.team.splitlines()[0]
+    assert f"**{len(first.groups)} 位成员**" in first.team
+    assert f"**{len(first.items)} 条工作记录**" in first.team
     assert Counter(entry_lines(first.team)) == Counter(expected_lines(first.items))
 
     def fail(*args, **kwargs):

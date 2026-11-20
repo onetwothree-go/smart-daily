@@ -24,10 +24,10 @@ def test_fixture_produces_full_team_report(fixture_items: list[WorkItem]) -> Non
     groups = group_by_member(fixture_items)
     report = build_team_report(groups, fixture_items[0].local_day)
 
-    assert "成员 4 人" in report.splitlines()[0]
-    assert f"条目 {len(fixture_items)} 条" in report.splitlines()[0]
+    assert "**4 位成员**" in report
+    assert f"**{len(fixture_items)} 条工作记录**" in report
     for member in FIXTURE_MEMBERS:
-        assert f"## {member}" in report
+        assert f"### {member} · " in report
     assert "今日无工作记录" not in report
 
 
