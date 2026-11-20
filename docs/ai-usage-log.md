@@ -770,3 +770,5 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 状态：☐ 待本人/组内确认（工具列如实记 WorkBuddy，非 Claude Code 会话，未走红/绿/收尾三命令链）。
 
 - 推送受阻（如实）：本次 `git push origin dev` 首次含 `.github/workflows/notify.yml` 被拒——本机 PAT 无 `workflow` scope，GitHub 不允许其改动 workflow 文件。已把提交拆分：`notify_push.py` + 测试 + 方案 + tasks.md 补记 + 本日志先推 dev；**`notify.yml` 改动暂留本地工作区未推**，需有 `workflow` scope 的凭证或由仓库所有者手动应用该改动后，v2 提醒才真正在 Actions 生效。未重连认证（属权限范围问题，非登录失效）。
+
+- API 补试（如实）：改用 GitHub contents API（PUT，带 workflow scope 检查）更新 `notify.yml` 同样 403（"refusing to allow a PAT to create or update workflow ... without workflow scope"）；按纪律未重连认证、未反复重试。**结论：本会话无 workflow scope，无法应用该文件改动**；v2 提醒的 Actions 生效需由有权限者（owner 或有 workflow scope 的 PAT）应用本地/下述 diff。
