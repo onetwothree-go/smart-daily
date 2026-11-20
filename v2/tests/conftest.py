@@ -227,3 +227,37 @@ def identity_harness():
         )
 
     return run
+
+
+@pytest.fixture
+def fallback_harness(monkeypatch):
+    """602 集成胶水，复用 104/201/501，不改正式模块。"""
+    from datetime import date
+    from types import SimpleNamespace
+
+    import smart_daily_v2.orchestrator as orchestrator_module
+
+    http_calls: list[tuple] = []
+
+    def fake_get(*args, **kwargs):
+        http_calls.append((args, kwargs))
+        return SimpleNamespace(
+            is_success=False,
+            status_code=401,
+            json=lambda: [],
+        )
+
+    monkeypatch.setattr("smart_daily_v2.sources.github.httpx.get", fake_get)
+
+    def factory(
+        sources: list,
+        *,
+        day: date = date(2026, 11, 18),
+        notify: bool = False,
+    ) -> SimpleNamespace:
+        result = orchestrator_module.run(day, sources=sources, notify=notify)
+        return SimpleNamespace(result=result, http_calls=http_calls)
+
+    factory.run = factory
+    factory.http_calls = http_calls
+    return factory

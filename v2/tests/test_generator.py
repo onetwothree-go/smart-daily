@@ -1,4 +1,5 @@
 import builtins
+import re
 import socket
 from datetime import date, datetime, timezone
 
@@ -9,6 +10,11 @@ from smart_daily_v2.reports.generator import (
     format_item,
     group_by_member,
 )
+
+
+def is_entry_line(line: str) -> bool:
+    """识别表格数据行（排除表头与分隔行，如 | 09:30 | 提交 | ... |）。"""
+    return bool(re.match(r"^\| \d{2}:\d{2} \|", line))
 
 
 def make_item(record_id: str, member: str, source: str, occurred_at: datetime) -> WorkItem:
@@ -96,7 +102,7 @@ def make_format_item(
 
 def test_format_item_layout():
     item = make_format_item()
-    expected = "- [09:30] （提交）fix: 修复登录超时 —— 3 files, +42 -8"
+    expected = "| 09:30 | fix | fix: 修复登录超时 —— 3 files, +42 -8 |"
 
     assert format_item(item) == expected
     assert (
@@ -115,7 +121,7 @@ def test_format_item_keeps_title_verbatim():
 
     assert title in rendered
     assert rendered.index(title) < rendered.index(" —— example detail")
-    assert rendered.split(" —— ", 1)[1] == "example detail"
+    assert rendered.split(" —— ", 1)[1].strip(" |") == "example detail"
 
 
 def test_format_item_is_byte_stable():
@@ -132,7 +138,7 @@ def test_format_item_has_no_io(monkeypatch):
     monkeypatch.setattr(socket, "socket", fail)
 
     assert format_item(make_format_item()) == (
-        "- [09:30] （提交）fix: 修复登录超时 —— 3 files, +42 -8"
+        "| 09:30 | fix | fix: 修复登录超时 —— 3 files, +42 -8 |"
     )
 
 
@@ -157,7 +163,7 @@ def test_personal_report_counts_all_items():
     items = make_personal_report_items()
 
     report = build_personal_report("甲", items, date(2026, 11, 18))
-    item_lines = [line for line in report.splitlines() if line.startswith("- [")]
+    item_lines = [line for line in report.splitlines() if is_entry_line(line)]
 
     assert len(item_lines) == 5
     assert item_lines == [format_item(item) for item in items]
@@ -168,7 +174,7 @@ def test_personal_report_empty_day():
 
     assert report
     assert "今日无工作记录" in report
-    assert not any(line.startswith("- [") for line in report.splitlines())
+    assert not any(is_entry_line(line) for line in report.splitlines())
 
 
 def test_personal_report_is_pure(monkeypatch):
@@ -208,8 +214,8 @@ def test_team_report_lists_all_members_without_truncation():
 
     report = build_team_report(groups, day)
     lines = report.splitlines()
-    section_headers = [line for line in lines if line.startswith("## ")]
-    entry_lines = [line for line in lines if line.startswith("- [")]
+    section_headers = [line for line in lines if line.startswith("## ") and "今日贡献" not in line]
+    entry_lines = [line for line in lines if is_entry_line(line)]
 
     assert lines[0] == "# 团队日报 2026-11-18 · 成员 4 人 · 条目 23 条"
     assert all(f"## {member}（{len(items)} 条）" in report for member, items in groups.items())
@@ -235,15 +241,15 @@ def test_team_report_entry_lines_match_personal():
     team_entry_lines = {member: [] for member in groups}
     current_member = None
     for line in report_lines:
-        if line.startswith("## "):
+        if line.startswith("## ") and "今日贡献" not in line:
             current_member = line[3:].split("（", 1)[0]
-        elif line.startswith("- ["):
+        elif is_entry_line(line):
             team_entry_lines[current_member].append(line)
 
     for member, items in groups.items():
         personal_report = build_personal_report(member, items, day)
         personal_entry_lines = [
-            line for line in personal_report.splitlines() if line.startswith("- [")
+            line for line in personal_report.splitlines() if is_entry_line(line)
         ]
         assert team_entry_lines[member] == personal_entry_lines
 
@@ -253,4 +259,4 @@ def test_team_report_all_empty_day():
 
     assert report
     assert "今日无工作记录" in report
-    assert not any(line.startswith("- [") for line in report.splitlines())
+    assert not any(is_entry_line(line) for line in report.splitlines())

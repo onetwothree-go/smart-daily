@@ -1,5 +1,6 @@
 import builtins
 import inspect
+import re
 import socket
 from collections import Counter
 from datetime import date, datetime
@@ -35,7 +36,7 @@ def make_item(
 
 
 def entry_lines(report: str) -> list[str]:
-    return [line for line in report.splitlines() if line.startswith("- [")]
+    return [line for line in report.splitlines() if re.match(r"^\| \d{2}:\d{2} \|", line)]
 
 
 def team_lines_for(team: str, member: str) -> list[str]:
@@ -43,11 +44,11 @@ def team_lines_for(team: str, member: str) -> list[str]:
     in_member_section = False
     section_prefix = f"## {member}（"
     for line in team.splitlines():
-        if line.startswith("## "):
+        if line.startswith("## ") and "今日贡献" not in line:
             if in_member_section:
                 break
             in_member_section = line.startswith(section_prefix)
-        elif in_member_section and line.startswith("- ["):
+        elif in_member_section and re.match(r"^\| \d{2}:\d{2} \|", line):
             lines.append(line)
     return lines
 
