@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,9 @@ def test_case_whitespace_variants_merge_to_one_group(identity_harness):
 
 def test_record_ids_disjoint_and_no_merge_loss(identity_harness):
     outcome = identity_harness()
-    team_entry_lines = [line for line in outcome.team.splitlines() if line.startswith("- [")]
+    team_entry_lines = [
+        line for line in outcome.team.splitlines() if re.match(r"^\| \d{2}:\d{2} \|", line)
+    ]
 
     assert len(outcome.record_ids) == 3
     assert len(set(outcome.record_ids)) == 3
