@@ -131,7 +131,7 @@ class FeishuTaskSource(WorkSource):
                 )
 
             data = payload["data"]
-            tasks.extend(data["items"])
+            tasks.extend(data.get("items", []))
             if not data["has_more"]:
                 break
             params["page_token"] = data["page_token"]

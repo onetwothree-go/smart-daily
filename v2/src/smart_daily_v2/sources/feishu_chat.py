@@ -145,7 +145,7 @@ class FeishuChatSource(WorkSource):
                 )
 
             data = payload["data"]
-            messages.extend(data["items"])
+            messages.extend(data.get("items", []))
             if not data["has_more"]:
                 break
             params["page_token"] = data["page_token"]

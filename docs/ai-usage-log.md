@@ -658,3 +658,13 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 人工核验方式：本人（经 WorkBuddy）只读复核——`git status` 4 项修改（2 源文件 + 2 既有测试）+ 2 项未跟踪（test_feishu_auth.py、周报草稿，后者为前序产物、本次未触碰且**不提交**）；`git diff` 仅两个源文件各 +30 行、两个测试文件 +9/+18（共 87 insertions / 0 deletions）；保护文件（config/base/models/identity/fallback/mock/conftest/cli/orchestrator/storage/tasks.md/README/v1/）diff 全空；本地复跑 222 passed、ruff check All checks passed（rc=0）/ format 72 files already formatted；HEAD = 837ff99、fetch 0/0 无撞车。状态 `☐ 待确认`。
 - 记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
 
+### 2026-11-20 飞书空数据响应缺 items 键崩溃修复（真实跑发现，接鉴权修复之后）
+
+- 任务：鉴权修复（e3907ed）后本人**真实外联**跑 `--source feishu_task --no-notify`，鉴权链路 code 0 已通，但实测崩 `KeyError: 'items'`（退出码 1、日报不落库）。只读探针查真实响应：应用无任务时飞书返回 `{"code":0,"data":{"has_more":false,"page_token":""}}`——`data` **无 items 键**；而两源硬取 `data["items"]`。这是之前登记的"真实字段结构盲区"落地，mock/单测桩都带 items 键故 222 测试全绿也没抓到。修复仅把两处改为 `data.get("items", [])`，属课程外 bug 修复、不新建 tasks.md 条目、不改状态列。
+- AI 参与度：测试 `tests/test_feishu_empty_response.py` 4 用例、两处修复、收尾自查均由 Claude Code（经 CCR + OpenRouter gpt-6-luna）生成，命令 `/taskFeishuEmpty`、`/taskFeishuEmptyg`、`/taskFeishuEmptyc` 触发；本人（经 WorkBuddy）全程只读核验截图、本地复跑、真实外联复验、逐项 review 改动范围 / 保护文件 / ruff 后接受；提交推送由本人完成，未改源码 / 测试 / lint、未代跑 Claude 收尾命令、未代签未代勾。
+- 红证据：新增 4 用例（2 空数据崩溃复现 + 1 scope + 1 回归保护），单文件 3 failed / 1 passed、全量 226 collected 含 3 failed；三个红分别是 tasks / chat 空数据真复现 KeyError、scope 断言源码含 `.get("items", [])` 未满足；回归保护用例（有 items 时解析 1 条）红阶段就过、证明未写死淘汰路径。既有 222 不受影响。
+- 绿证据：两个源文件各仅一行 `data["items"]` → `data.get("items", [])`，`data["has_more"]`/`page_token` 与其余逻辑全不动；既有测试文件的桩本就带 items 键、行为不变、无需改、断言一字未改。4 passed / 226 passed。
+- **真实外联复验（关键）**：本人修复后在 `FEISHU_API=https://open.feishu.cn/open-apis DB_PATH=/tmp/v2real2.db` 下跑 `--source feishu_task --no-notify --day 2026-11-20` → **退出码 0**（修复前为 1 崩溃），`--list` → 0；空数据现正常产出"0 条"日报而非 KeyError，bug 真修好。不声称端到端拉数已验（应用仍无任务数据）。
+- 收尾证据（`/taskFeishuEmptyc` 8 条自查全过）：根因修复 / 改动范围仅 2 文件各一行 / 既有 226 passed 无 skip/xfail / 无放水 / 自指字面量拼接规避 / 零复制 / docstring 保留「待确认」无「已裁定」/ lint 双清；`ruff check` All checks passed、`ruff format --check` 73 files、全量 226 passed。中途一次 `API Error: The response stopped arriving` 后 Claude 恢复并完成自查（如实）。
+- 人工核验方式：本人（经 WorkBuddy）只读复核——`git status` 仅 2 源文件 M + 新测试文件 ??（周报草稿为前序产物、本次未触碰且**不提交**）；`git diff` 两个源各 1 行替换（+1/−1）；保护文件（config/base/models/identity/fallback/mock/conftest/cli/orchestrator/storage/tasks.md/README/v1/、两个既有测试、test_feishu_auth.py）diff 全空；本地复跑 226 passed、ruff check 全过 / format 73 files；真实外联复验 rc 0；fetch 0/0、HEAD = e3907ed。状态 `☐ 待确认`。
+
