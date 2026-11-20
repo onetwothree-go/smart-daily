@@ -32,6 +32,32 @@ from smart_daily_v2.models import WorkItem, local_date
 from smart_daily_v2.sources.base import SourceUnavailableError, WorkSource
 
 
+def _fetch_tenant_access_token(app_id: str, app_secret: str, api_base: str) -> str:
+    url = f"{api_base.rstrip('/')}/auth/v3/tenant_access_token/internal"
+    try:
+        response = httpx.post(
+            url,
+            json={"app_id": app_id, "app_secret": app_secret},
+            timeout=15,
+        )
+    except httpx.HTTPError as exc:
+        raise SourceUnavailableError("feishu_task", f"token 请求失败：{exc}") from exc
+    if not response.is_success:
+        raise SourceUnavailableError(
+            "feishu_task", f"token 请求失败（HTTP {response.status_code}）"
+        )
+    payload = response.json()
+    if payload.get("code") != 0:
+        raise SourceUnavailableError(
+            "feishu_task",
+            f"token 接口错误 code={payload.get('code')}：{payload.get('msg', '')}",
+        )
+    token = payload.get("tenant_access_token", "")
+    if not token:
+        raise SourceUnavailableError("feishu_task", "token 响应缺少 tenant_access_token")
+    return token
+
+
 @dataclass(frozen=True)
 class FeishuTaskSource(WorkSource):
     feishu_app_id: str
@@ -67,10 +93,14 @@ class FeishuTaskSource(WorkSource):
         if missing:
             raise SourceUnavailableError("feishu_task", f"凭证未配置：{', '.join(missing)}")
 
+        token = _fetch_tenant_access_token(
+            self.feishu_app_id, self.feishu_app_secret, self.feishu_api
+        )
         url = f"{self.feishu_api.rstrip('/')}/task/v1/tasks"
         headers = {
             "X-Application-Id": self.feishu_app_id,
             "X-Application-Secret": self.feishu_app_secret,
+            "Authorization": f"Bearer {token}",
         }
         params = {
             "page_size": 100,

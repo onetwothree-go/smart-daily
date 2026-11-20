@@ -648,3 +648,13 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 插曲如实：两处测试自检自指（与 602 同款，第二次为源头字面量未拆）+ 收尾两次 `Exit code 127`（cwd 路径问题重跑成功）+ 备料 7/3 算术笔误，均已澄清修正，非实现 bug、非放水、未删用例未放宽断言。
 - ☐ 待确认口径：落库接线落点（CLI 边界注入、不动 orchestrator）、`db_path` 默认值、`source_name` 拼接规则、K6 送达 6 条、退出码表外部文档落点、orchestrator 中 K2/S5/S4 等既有口径——已在 cli.py docstring 登记，不代裁定、不代勾、不代签。
 
+### 2026-11-20 TK-V2-202/203 飞书数据源鉴权修复（真实任务源接入）
+
+- 任务：用户要求接真实飞书任务源；本人只读探针实测现码用 `X-Application-Id/Secret` header 打飞书 API → code 99991661（缺 access token），改用 `POST {api}/auth/v3/tenant_access_token/internal`（body app_id/app_secret）换 token + `Authorization: Bearer <token>` 调业务接口 → code 0，保留旧 header + Bearer 也 code 0；飞书应用权限用户已开通发布。属对已落地 202（feishu_tasks）/203（feishu_chat）的**鉴权修复**，不新建 tasks.md 条目、不改 tasks.md 状态列。
+- AI 参与度：测试 `tests/test_feishu_auth.py` 6 用例、两个源文件的 token 换取函数与 Bearer 注入、两个既有测试文件的 httpx.post 桩、收尾自查均由 Claude Code（经 CCR + OpenRouter gpt-6-luna）生成，自定义命令 `/taskFeishuAuth`、`/taskFeishuAuthg`、`/taskFeishuAuthc` 触发；本人（经 WorkBuddy）全程只读核验截图、本地复跑、逐项 review 改动范围 / 鉴权链路 / 既有断言未改 / 保护文件 / ruff 结果后接受；提交与推送由本人（经 WorkBuddy）完成，未改任何源码 / 测试 / lint、未代跑 Claude Code 收尾命令、未代签未代勾。
+- 红证据：新增 `tests/test_feishu_auth.py` 6 用例（`test_feishu_auth_` 前缀）全部因 `_fetch_tenant_access_token` 未实现而失败（无真实触网），既有 202/203 共 20 passed 不受影响、新文件 ruff 双清。
+- 绿证据：两个源文件各新增 `_fetch_tenant_access_token(app_id, app_secret, api_base) -> str`（POST `/auth/v3/tenant_access_token/internal`，body `{app_id, app_secret}`，HTTP 异常 / 非成功状态码 / code≠0 / 缺 tenant_access_token 四类失败均抛 `SourceUnavailableError`），`collect()` 换取 token 后注入 `Authorization: Bearer <token>` 且**保留**原 `X-Application-Id/Secret` header；两个既有测试文件的 `_fake_get` / `_fake_get_by_day` 辅助函数各补 httpx.post 假 token 桩（chat 1 处、tasks 2 处，共 3 处，断言一字未改、非放水）。6 passed / 222 passed（备料写 226 系本人笔误：216 旧 + 6 新 = 222，Claude 算对并停上报）。
+- 收尾证据（`/taskFeishuAuthc` 8 条自查全过）：鉴权链路 / 测试桩范围 / 测试自检（14 处 assert、0 skip/xfail）/ 保护文件 diff 全空 / G6 与零复制（凭证扫描 0 命中）/ docstring 保留「待确认」未写「已裁定」/ 无真实数据证据（应用近 30 天无任务数据，真实响应字段结构与端到端未验、不声称真实抓取已验证）/ 未提交；`ruff check` All checks passed、`ruff format --check` 72 files、全量 222 passed。
+- 人工核验方式：本人（经 WorkBuddy）只读复核——`git status` 4 项修改（2 源文件 + 2 既有测试）+ 2 项未跟踪（test_feishu_auth.py、周报草稿，后者为前序产物、本次未触碰且**不提交**）；`git diff` 仅两个源文件各 +30 行、两个测试文件 +9/+18（共 87 insertions / 0 deletions）；保护文件（config/base/models/identity/fallback/mock/conftest/cli/orchestrator/storage/tasks.md/README/v1/）diff 全空；本地复跑 222 passed、ruff check All checks passed（rc=0）/ format 72 files already formatted；HEAD = 837ff99、fetch 0/0 无撞车。状态 `☐ 待确认`。
+- 记录落点按组内 2026-11-18 新口径（本文件位于 `docs/`，红绿记录位于 `v2/docs/`）。
+

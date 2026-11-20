@@ -80,6 +80,15 @@ def _fake_get(
         return pages[len(calls) - 1]
 
     monkeypatch.setattr(httpx, "get", fake_get)
+    monkeypatch.setattr(
+        httpx,
+        "post",
+        lambda *a, **k: httpx.Response(
+            200,
+            json={"code": 0, "tenant_access_token": "fake-token", "expire": 7200},
+            request=httpx.Request("POST", "https://example.com"),
+        ),
+    )
     return calls
 
 
