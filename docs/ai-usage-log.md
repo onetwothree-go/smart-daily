@@ -721,3 +721,12 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 验证：fetch 0/0 无撞车；注册计划任务 NextRun=11-20 22:00、已设唤醒；改 branch 后真推退出码 0（4 成员+飞书群全送达）；最终脚本 dry-run 退出码 0、日志落文件干净。
 - 如实登记：11-20 当天真实推送两次（21:11、21:13），成员邮箱与飞书群各收到两条；22:00 再自动推一次。不掩盖。
 - 改动仅新增 v2/scripts/run_daily.ps1 + 两份记录；.env（凭证/branch）、reports.db、日志均 gitignore 不进仓库；未改源码/测试、未碰 v1、未碰 main。
+
+## 补记（2026-11-20，杨佳莹 · 实时提醒纳入 v2 方案草稿）
+
+- 任务性质（如实）：组内已同意第四周把 S9/C10 实时提醒纳入 v2；由架构师本人（杨佳莹）出方案，WorkBuddy 会话协助起草。产物为**方案草稿**，署名杨佳莹，待本人最终确认签署。
+- 工具与用途：WorkBuddy 会话只读核对 `tasks.md` §8.2 U2、`acceptance_matrix.md` C10、根 `.github/workflows/notify.yml`、`v1/scripts/notify_push.py` 与远端 main 最新 `identity.py` / `notifiers/webhook.py::gen_sign` 后，起草 `v2/docs/实时提醒纳入v2-方案草稿.md`。
+- 方案要点：接口契约（Actions 注入、只 main/dev、一次 push 恰 1 条含「日报」、身份复用 `identity.display_name()` / `normalize_key()`、签名复用 `gen_sign()`、不写 SQLite/不进 G1、失败 exit 1 亮红灯）；workflow 隔离推荐"根目录只留一份 `notify.yml`、内容由 v1 换成 v2、v1 通道停用"；补 `TK-V2-8xx` 独立任务组（801 契约/ADR、802 脚本、803 workflow 切换、804 C10 验收），不进现有依赖图。
+- 接口名更正（如实）：草稿初版误写 `identity.canonical_key()`（本地旧副本），经远端 main 核对后改为实际存在的 `display_name()` / `normalize_key()`。
+- 未做（如实）：未改任何代码 / workflow / 规范文件；未代签、未代勾、未裁定；本次提交仅新增方案文档 + 本条日志；未读取或输出 .env 与凭证。
+- 状态：☐ 待本人确认（工具列如实记 WorkBuddy，非 Claude Code 会话）。
