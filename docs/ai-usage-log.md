@@ -740,3 +740,10 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 验证：全量 **249 passed**（246 基线 + 3 新增）、`ruff check` All checks passed、`ruff format --check` 78 files already formatted；改动仅 1 源 + 4 测试 + 本记录；保护文件 diff 全空、无真实凭证、未真推送。
 - 真实数据只读预览（11-20，`main,dev` 双分支）：main 23 / dev 23、交集 22、去重后 24 条，中文名 方赫 20 / 于悦 4；渲染结果内容列无重复、无撑破，预览文件写在工作区（不入仓库）。
 - 待确认：标题 / 概览 / 章节层级字面变更牵涉 `v2/specs/tasks.md` TK-302/304 与 `v2/tests/acceptance_matrix.md` C4 行（他人维护），本次未改，是否同步由需求方/测试方确认。22:00 定时任务下一次 11-21 22:00 自动采用新版式。
+
+## 2026-11-20（续 6）V1 入口 / U2 实时提醒口径核验（只读，状态 ☐ 待确认）
+- 用途：组内连续两轮追问「V2 是否走 V1 入口、Push 提醒归属」。用户裁定「不复用 V1 任何代码，V1 入口不可走，Push 提醒由本人做」，并选「先不动，整理口径」。本轮**未改任何代码 / 工作流 / 配置 / 计划任务**。
+- 只读核验：v2 下 `*.py` 的 `import smart_daily` 0 命中、v2/src 无 `subprocess` / `Popen` / `os.system` / `notify_push` 调用；本机 `SmartDaily-2200` 唯一 Action 指向 `v2/scripts/run_daily.ps1`（22:00 Result=0、NextRun 11-21 22:00）；v1 转发链两个旧路径 `Test-Path` 均 False；`.github/workflows/` 无 `schedule:`；22:00 落库日报正文为 v2 生成器表格格式。G2 / TK-V2-701 零复制口径成立。
+- 三层「入口」区分：任务名 `SmartDaily-2200` 与根 `scripts/run_daily.ps1` 属 v1 时代遗留且注释过期（误判根源），运行时已不经过；Python 模块入口 v1=`smart_daily.cli` / v2=`smart_daily_v2.cli` 完全不同；CI 的 `notify.yml` 跑 `v1/scripts/notify_push.py` 属 v1 实时通知（ADR-104），不生成日报、v2 未调用。
+- 裁定边界：`v2/specs/tasks.md` L540 已把「S9 / C10 实时提醒是否本周重做」登记为 **U2**，处置为「组内会定范围 → 架构师出接口契约与 workflow 隔离方案 → 补 `TK-V2-8xx` 任务」。故本次不改 `notify.yml`、不新增 v2 通知脚本、不动 `v1/`、不改 tasks.md / acceptance_matrix、不代裁定不代勾；五项一律 `☐ 待确认`。
+- 产出：`v2/docs/方赫-V1入口与U2实时提醒-口径说明-2026-11-20.md`（证据分层 / G2 实测 / U2 待确认清单 / 可转发组内简版），状态 `☐ 待确认`。
