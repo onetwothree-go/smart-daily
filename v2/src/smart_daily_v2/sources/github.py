@@ -75,10 +75,11 @@ class GithubSource(WorkSource):
             "sha": self.github_branch or "main",
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "author": author,
             "per_page": 100,
             "page": 1,
         }
+        if author is not None:
+            params["author"] = author
         headers = {
             "Authorization": f"Bearer {self.github_token}",
             "X-GitHub-Api-Version": "2022-11-28",
@@ -109,7 +110,11 @@ class GithubSource(WorkSource):
                 WorkItem(
                     record_id=commit["sha"],
                     source="github",
-                    member=normalize_key(commit["author"]["login"]),
+                    member=normalize_key(
+                        commit["author"]["login"]
+                        if commit["author"]
+                        else commit["commit"]["author"]["name"]
+                    ),
                     kind="commit",
                     title=message.splitlines()[0] if message else "",
                     detail=message,

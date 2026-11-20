@@ -108,8 +108,9 @@ class FeishuTaskSource(WorkSource):
             "completed": None,
             "created_at_from": since.isoformat(),
             "created_at_to": until.isoformat(),
-            "author": author,
         }
+        if author is not None:
+            params["author"] = author
 
         tasks: list[dict[str, object]] = []
         while True:

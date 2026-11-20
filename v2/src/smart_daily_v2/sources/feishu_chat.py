@@ -124,8 +124,9 @@ class FeishuChatSource(WorkSource):
             "end_time": int(until.timestamp()),
             "page_size": 100,
             "page_token": "",
-            "author": author,
         }
+        if author is not None:
+            params["author"] = author
 
         messages: list[dict[str, object]] = []
         while True:
