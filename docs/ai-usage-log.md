@@ -749,3 +749,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 产出：`v2/docs/方赫-V1入口与U2实时提醒-口径说明-2026-11-20.md`（证据分层 / G2 实测 / U2 待确认清单 / 可转发组内简版），状态 `☐ 待确认`。
 - 补推（23:3x）：`c78419e`（2 files / +67）首次推送因代理 `CONNECT tunnel failed 502` 失败；改用 `http.proxy=127.0.0.1:7897` + `HTTP/1.1` 后成功 `57db203..c78419e dev -> dev`，本地与 `origin/dev` 0/0。未强推、未碰 main。
 - Issue（23:4x）：按用户「把这个到 Issue 里，然后我们去解决」创建 **[#16](https://github.com/onetwothree-go/smart-daily/issues/16)**「[第3周][待裁定] 澄清 V1/V2 入口争议与 U2 实时提醒归属（含 G2 零复制核验）」，labels `question` / `documentation`，正文＝口径说明全文 + 背景时点说明 + 建议解决路径 + 相关材料，五项 `☐ 待确认` 原样保留。`.env` 内 token 无 Issues 写权限（403），改用本机 git credential 中 `repo` scope 的 PAT 创建，凭证未写入仓库。状态仍 `☐ 待确认`：组内会定范围 → 架构师出契约 → 补 `TK-V2-8xx` 后才进入实现；本轮未改 `notify.yml` / `v1/` / 本机任务 / tasks.md。
+## 补记（2026-11-20，杨佳莹 · 实时提醒纳入 v2 方案草稿）
+
+- 任务性质（如实）：组内已同意第四周把 S9/C10 实时提醒纳入 v2；由架构师本人（杨佳莹）出方案，WorkBuddy 会话协助起草。产物为**方案草稿**，署名杨佳莹，待本人最终确认签署。
+- 工具与用途：WorkBuddy 会话只读核对 `tasks.md` §8.2 U2、`acceptance_matrix.md` C10、根 `.github/workflows/notify.yml`、`v1/scripts/notify_push.py` 与远端 main 最新 `identity.py` / `notifiers/webhook.py::gen_sign` 后，起草 `v2/docs/实时提醒纳入v2-方案草稿.md`。
+- 方案要点：接口契约（Actions 注入、只 main/dev、一次 push 恰 1 条含「日报」、身份复用 `identity.display_name()` / `normalize_key()`、签名复用 `gen_sign()`、不写 SQLite/不进 G1、失败 exit 1 亮红灯）；workflow 隔离推荐"根目录只留一份 `notify.yml`、内容由 v1 换成 v2、v1 通道停用"；补 `TK-V2-8xx` 独立任务组（801 契约/ADR、802 脚本、803 workflow 切换、804 C10 验收），不进现有依赖图。
+- 接口名更正（如实）：草稿初版误写 `identity.canonical_key()`（本地旧副本），经远端 main 核对后改为实际存在的 `display_name()` / `normalize_key()`。
+- 未做（如实）：未改任何代码 / workflow / 规范文件；未代签、未代勾、未裁定；本次提交仅新增方案文档 + 本条日志；未读取或输出 .env 与凭证。
+- 状态：☐ 待本人确认（工具列如实记 WorkBuddy，非 Claude Code 会话）。
