@@ -637,3 +637,14 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 工具与用途：负责人列正文、分工核定与文件改动由本人在 WorkBuddy 会话完成；Claude Code 会话原拟补本日志并同批提交，但断线（`API Error: Connection lost mid-response`）未 commit 也未 push，仅留下主表 1 行；本次由本人经 WorkBuddy 补上文末这段并直接提交推送（本人临时授权）。工具列如实记 WorkBuddy，状态留 ☐ 待确认，不代勾、不代签。
 - 改动核验：`v2/specs/tasks.md` +44/−42；36 行每行 9 列、负责人合计 2+20+14=36；`git diff --check` 通过；逐行比对 HEAD 与改后状态列完全一致（36 条编号/标题/依赖/预估/并行组/状态一字未动，只新增负责人列与版本头、口径说明、合计行三处）。
 - 口径边界：分工依据为指导书第 3 周产出物类型（架构师交三份审核文档、不交编码任务），与用户口述组会「架构做架构相关」的字面理解可能不同；若组内另有决议让架构师认领 102/103/501 代码，按组内决议调整。本条为当天补登记、非倒填；🟩 不等于勾销。
+
+### 2026-11-20 CLI 可用性补齐（不在 tasks.md 清单内）
+
+- 任务：用户实测发现 v2 三缺口（无 `__main__` 入口致 `python -m ... --help` 无输出、README 无运行说明、落库未接线致 `--list` 查不到），要求「都做，让 Claude 做」。属课程外可用性补齐，**不新建 tasks.md 条目、不改 tasks.md 状态列**。
+- AI 参与度：测试 `tests/test_cli_usability.py` 10 用例、`cli.py` 入口与 CLI 边界落库转发、`README.md` §5 运行说明、两处自指修正与收尾自查，均由 Claude Code（经 CCR + OpenRouter gpt-6-luna）生成，自定义命令 `/taskUsability`、`/taskUsabilityg`、`/taskUsabilityc`、`/fixUsabilityWeak`、`/fixUsabilityScope` 触发；本人（经 WorkBuddy）全程只读核验截图、本地复跑、逐项 review 改动范围 / 保护断言 / 落库闭环 / ruff 结果后接受；提交与推送由本人（经 WorkBuddy）完成。
+- 改动文件：`v2/src/smart_daily_v2/cli.py`（+43/−6，加 `__main__` guard + CLI 边界 `_persist_report` 临时转发 `storage.save_report`、`try/finally` 恢复+关 conn、`except sqlite3.Error → 码 1`）、`v2/README.md`（+33，§5 运行方式 / 退出码表 / 凭证变量名）、新增 `v2/tests/test_cli_usability.py`（10 用例）、本日志与红绿记录各补一条。**orchestrator.py / storage.py / models.py / config.py / conftest.py / test_cli.py / tasks.md / v1/ diff 全空**（501 保护断言、504 十用例均未破）。
+- 红绿证据：红阶段 `/taskUsability` 新增 10 用例 → 8 failed / 2 passed；发现 `test_usability_list_reads_persisted_rows` 假绿（占位 print 污染 stdout 满足子串断言），经授权 `/fixUsabilityWeak` 修强（清空占位输出 + tab 逐列精确断言 4 行）→ 真红 `assert 0 == 4`、全文件 9 failed / 1 passed（备料 `7/3` 预期为算术笔误，已更正为 9/1）。绿阶段 `/taskUsabilityg` → 9 passed / 1 failed，唯一失败 `test_usability_no_v1_copy_and_registration` 又遇自指（第 107–109 行写死字面量被自检循环扫自身源码），经授权 `/fixUsabilityScope` 只拆三处源头字面量为拼接 + 测试文件 ruff format → 10 passed / 216 passed。收尾 `/taskUsabilityc` 修掉两处 ruff error（`F401` 未用 `import pytest`、`B905` zip 无 `strict=`）→ ruff check rc=0 / format 71 files。
+- 人工核验方式：本人（经 WorkBuddy）只读复核——本地复跑 `test_cli_usability.py` 10 passed / 全量 216 passed / ruff check All checks passed（rc=0）/ ruff format --check 71 files；保护文件 `git diff` 全空；`git diff --stat` 仅 README +33 与 cli.py +43/−6；**落库闭环真实文件 DB smoke**：`--mock --no-notify --day 2026-11-18` rc=0 → `--list` 打印 2026-11-18 甲 3 / 乙 3 / 丙 2 / 丁 2 四行、rc=0、DB 真实生成 20 KB；rebase `origin/dev` 至于悦 `06f73b0`（autostash、0 冲突、0/0）后补本条。红绿与收尾证据取自会话内截图并在本地复跑确认。
+- 插曲如实：两处测试自检自指（与 602 同款，第二次为源头字面量未拆）+ 收尾两次 `Exit code 127`（cwd 路径问题重跑成功）+ 备料 7/3 算术笔误，均已澄清修正，非实现 bug、非放水、未删用例未放宽断言。
+- ☐ 待确认口径：落库接线落点（CLI 边界注入、不动 orchestrator）、`db_path` 默认值、`source_name` 拼接规则、K6 送达 6 条、退出码表外部文档落点、orchestrator 中 K2/S5/S4 等既有口径——已在 cli.py docstring 登记，不代裁定、不代勾、不代签。
+

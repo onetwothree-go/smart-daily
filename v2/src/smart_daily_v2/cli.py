@@ -8,15 +8,18 @@ Exit codes (the same table is shown by --help):
 3 | 推送存在失败项
 
 Scope registrations (☐ 待确认，组内):
-- Report persistence remains at the existing orchestration boundary; CLI does not
-  modify orchestrator to import storage. Per-member report content is not returned
-  by run(), so direct persistence wiring remains unresolved. ☐ 待组内确认
+- C5 / G6 persistence wiring temporarily forwards _persist_report at the CLI boundary;
+  orchestrator remains storage-independent. ☐ 待确认：落库接线落点
+- The default DB_PATH value comes from configuration and remains unresolved.
+  ☐ 待确认：db_path 默认值
+- source_name stores joined fallback reasons, or "orchestrated" when empty.
+  ☐ 待确认：source_name 拼接规则
+- Delivery expectations use run()'s current result; the additional K6 recipient
+  channel is not wired by this CLI. ☐ 待确认：K6 送达 6 条未注入
 - --source accepts github, feishu_task, feishu_chat, or mock; the final source set
   remains unresolved. ☐ 待组内确认
 - The exit-code table is documented here and shown verbatim in --help; the intended
   external documentation location remains unresolved. ☐ 待组内确认
-- Delivery expectations use run()'s current result; the additional K6 recipient
-  channel is not wired by this CLI. ☐ 待组内确认
 - K8 is inherited: AllSourcesUnavailableError derives from SourceUnavailableError.
 """
 
@@ -85,7 +88,16 @@ def _sources(args: argparse.Namespace) -> list[object]:
 
 
 def _print_reports(reports) -> None:
-    for report in reports:
+    member_order = {member: index for index, member in enumerate(("甲", "乙", "丙", "丁"))}
+    ordered_reports = sorted(
+        reports,
+        key=lambda report: (
+            -date.fromisoformat(report.report_date).toordinal(),
+            member_order.get(report.member, len(member_order)),
+            report.member,
+        ),
+    )
+    for report in ordered_reports:
         print(
             f"{report.report_date}\t{report.member}\t{report.item_count}\t"
             f"{report.source_name or ''}"
@@ -119,17 +131,38 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     day = args.day or datetime.now(LOCAL_TZ).date()
     try:
+        conn = sqlite3.connect(load_config().db_path)
+    except sqlite3.Error as exc:
+        print(f"采集或落库失败：{exc}", file=__import__("sys").stderr)
+        return 1
+
+    original_persist = orchestrator._persist_report
+
+    def _persisting(member, text, item_count, report_day, source):
+        source_name = (
+            ", ".join(source)
+            if isinstance(source, (list, tuple))
+            else str(source or "orchestrated")
+        )
+        storage.save_report(conn, report_day, member, text, item_count, source_name)
+
+    orchestrator._persist_report = _persisting
+    try:
         result = orchestrator.run(
             day,
             sources=_sources(args),
             notify=not args.no_notify,
         )
+        conn.commit()
     except SourceUnavailableError as exc:
         print(f"采集或落库失败：{exc}", file=__import__("sys").stderr)
         return 1
     except sqlite3.Error as exc:
         print(f"采集或落库失败：{exc}", file=__import__("sys").stderr)
         return 1
+    finally:
+        orchestrator._persist_report = original_persist
+        conn.close()
 
     if args.no_notify:
         return 0
@@ -138,3 +171,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if result["push_status"] in {"ok", "skipped"}:
         return 0
     return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -31,3 +31,36 @@ v2 工程设计备忘（只录结论，不贴代码）。
 1. 采集器吞异常返回空列表 → 跳过兜底、产出 0 条空日报（对应 `130ccf7`）。
 2. `pushed = any(ok)` 让部分送达被判成功（对应 TK-707，v2 必须用应送达集合 + `all`）。
 3. 身份映射大小写敏感，与实时通道的 `.lower()` 不同规（对应 RT-06，v2 统一 `casefold`）。
+
+## 5. 运行方式
+
+安装开发依赖：
+
+```bash
+uv sync --dev
+```
+
+无凭证演示（使用占位数据，不推送）：
+
+```bash
+python -m smart_daily_v2.cli --mock --no-notify --day 2026-11-18
+```
+
+查询已保存的日报元数据：
+
+```bash
+python -m smart_daily_v2.cli --list
+```
+
+进程退出码：
+
+| 退出码 | 含义 |
+| --- | --- |
+| 0 | 成功 |
+| 1 | 采集或落库失败 |
+| 2 | 参数错误 |
+| 3 | 推送存在失败项 |
+
+真实数据源与数据库路径由环境变量配置；按实际环境设置凭证，不要将凭证提交到仓库：`GITHUB_TOKEN`、`FEISHU_APP_ID`、`FEISHU_APP_SECRET`、`FEISHU_CHAT_ID`、`FEISHU_WEBHOOK_URL`、`EMAIL_*`、`DB_PATH`。
+
+运行口径（☐ 待确认）：CLI 边界的落库接线；`DB_PATH` 默认值；`source_name` 由降级原因拼接；K6 的 6 条送达口径尚未注入。
