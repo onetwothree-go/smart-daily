@@ -713,3 +713,20 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 验证：fetch 0/0 无撞车；注册计划任务 NextRun=11-20 22:00、已设唤醒；改 branch 后真推退出码 0（4 成员+飞书群全送达）；最终脚本 dry-run 退出码 0、日志落文件干净。
 - 如实登记：11-20 当天真实推送两次（21:11、21:13），成员邮箱与飞书群各收到两条；22:00 再自动推一次。不掩盖。
 - 改动仅新增 v2/scripts/run_daily.ps1 + 两份记录；.env（凭证/branch）、reports.db、日志均 gitignore 不进仓库；未改源码/测试、未碰 v1、未碰 main。
+
+## 补记（2026-11-20 23:10，事后补记；当时赶代码临时免写文档，23:00 用户恢复写文档口径，状态 ☐ 待确认）
+- 说明：补齐 22:00 前后因「不用弄文档，只改代码」而漏记的产出。如实登记、不倒填证据、不代签代勾 tasks.md；状态一律 `☐ 待确认`。
+- `3de8afd` 接通老师邮箱团队日报通道：现码 `REPORT_RECIPIENTS` 原是死路（`load_report_recipients()` 仅定义未调用、`dispatch` 未传 `team_recipients`）；改 `orchestrator.py` 导入并传参，删 `run_daily.ps1` 里置空老师收件人的那行，`.env` 老师邮箱设为用户提供的 `1730173019@qq.com`（gitignore，不进仓库）。真跑逐路明细 `personal:方赫` / `personal:于悦` / `team`（飞书群）/ `team:report_recipients`（老师）全 True、`push_status=ok`；当天仅方赫、于悦有提交故只有两份个人日报，非故障。基线 240 passed、ruff 双清；提交推 dev（`3de3251..3de8afd`），main 未碰。
+- `92b8919` dev→main 一次性合并：用户新指令要求「把 dev 全推到 main、采集配置改回 main」，与 11-09「只推 dev、main 只接 PR」冲突，按一次性收尾合并处理。main/dev 已分叉（main 独有 6 条含 `e86fc8b`、dev 独有 26 条）不能快进；用临时 worktree 基于 `origin/main` 合并，唯一冲突 `docs/ai-usage-log.md`（两边各自尾部追加）按双方都保留解、零丢失；合并提交推 `origin/main`（`e86fc8b..92b8919`），临时 worktree/分支已清理。改回 `GITHUB_BRANCH=main` 后只读采集 11-20 得 23 条、`reasons=[]`（合并让 main 当日从 0 条变 23 条）。隐患：团队平时只推 dev 则次日 main 当日 0 提交又会发空日报，由此引出下面的双分支需求；push main 会触发 `notify.yml` 一条群通知。
+- 22:00 首次自动触发实证：`LastRunTime=22:00:00`、`LastTaskResult=0`、`NextRun=11-21 22:00`、日志 `[22:00:16] mode=REAL exit_code=0`、落库 2 行（方赫19/于悦4=23 条）。此前所有成功推送均为手动触发，这是定时器第一次自己跑通。
+- S4U 与运维：用户曾要求把计划任务登录类型改 S4U，当前会话非管理员（`DESKTOP-NE28A0D\DELL`），`Set-ScheduledTask` 与 `Register-ScheduledTask -Force` 均报 `0x80070005`，未擅自 UAC 提权；后用户明确「那1不做」，取消该方案，任务保持 `Interactive / Ready / NextRun 11-21 22:00`，动作与唤醒设置完好。
+- Claude 转发链路：用户授权后由 WorkBuddy 拉起 CCR(3456)+shim(3457)，真实调用 shim→CCR→7897→OpenRouter 返回 OK；CCR 两次因上游 `terminated: other side closed` 触发自身 `server.logger.error` undefined 缺陷崩溃(exit 7)，新增 `C:/Users/DELL/.claude-code-router/ccr-guard.py` 守护（崩后自动拉起、日志 `ccr-guard.log`，**不在项目仓库**），第三次验证 3456 HTTP 200 且真实调用 OK。
+
+## 2026-11-20（续 4）GitHub 采集器 main+dev 双分支并采与 SHA 去重（范围外新增，状态 ☐ 待确认）
+- 用途：消除「团队只推 dev、main 当日 0 提交 → 22:00 发空日报」隐患。`tasks.md` 201 验收只写单分支，属范围外新增，状态 `☐ 待确认`。
+- 工具与边界（如实）：用户明确「让claude做」，红/绿/收尾三阶段均由 Claude Code 执行（`/taskGithubMulti` → `g` → `c`），守 11-19 纪律；WorkBuddy 只备三件套命令与一条龙提示词、核验截图、补两份记录、改 `.env`、提交推 dev，**不碰源码/测试/lint/format**。红阶段窗口曾 `100% context used`，按纪律未由 WorkBuddy 接管，由用户 `/clear` 后新会话继续。
+- 红：新增 `v2/tests/test_github_multibranch.py` 6 用例（双分支两次请求 + SHA 去重保序 / 单分支回归 / 空值回落 / 失败分支跳过 / 全失败仍请求两分支并抛错 / scope 拼接防自指），实现未动 → `4 failed, 242 passed`（240 基线 + 2 通过），ruff 双清。WorkBuddy 独立复跑确认、逐条读用例确认真红非自指。
+- 绿：仅改 `v2/src/smart_daily_v2/sources/github.py`（57+/36-）——`_branch_list()` 逗号拆分/strip/去空/去重保序、空值回落 `main,dev`；`collect()` 逐分支走顶层 `httpx.get`、按 `sha` 去重保序、分支失败跳过、全失败才 `SourceUnavailableError`、允许某分支空列表。既有 `author=None` 不加参数、`author=null` 降级、401/403/404/409/429 reasons、WorkItem 映射一字未动；docstring 追加 `☐ 待确认` 登记、无「已裁定」。→ 新测试 6 passed、全量 **246 passed**，ruff 双清 78 files。
+- 收尾：Claude 8 条自查全过（保护文件/既有测试 diff 空、无 v1 import/真实凭证、`.env` 仍 `GITHUB_BRANCH=main`、未改任何文件未提交），`246 passed in 0.65s`、ruff 双清；Claude 守住收尾只读边界、**未自行补 ai-usage-log**，两份记录改由 WorkBuddy 按恢复后的口径补。WorkBuddy 最终独立复跑：246 passed、ruff 双清、保护文件与 `git diff -- v2/tests/` 全空、HEAD `3de8afd`、与 origin/dev 0/0。
+- 生产启用（WorkBuddy）：`v2/.env` 的 `GITHUB_BRANCH` 由 `main` 改为 `main,dev`（被 gitignore、不进仓库）；只读采集 11-20 → 分支解析 `['main','dev']`、**23 条、`reasons=[]`、record_id 全唯一**，成员（采集层原始账号名）fh0709 19 / yuyue117 4。因当日 dev 提交已随 `92b8919` 合并进 main，条数与单分支相同；双分支价值在今后 dev 有新提交而 main 未合并时不再漏采。**未真推送**；老师邮箱 `1730173019@qq.com` 保留。
+- 待确认：多分支并采属范围外，状态 `☐ 待确认`；本次未改 `tasks.md` / README / specs 字面、不代裁定、不代签代勾。提交仅源码 + 新测试 + 两份记录，推 dev，main 未碰。
