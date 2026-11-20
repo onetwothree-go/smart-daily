@@ -20,8 +20,11 @@ Scope notes (☐ 待组内确认):
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import date, datetime, time, timedelta
 
+from smart_daily_v2.config import load_config
+from smart_daily_v2.identity import display_name
 from smart_daily_v2.models import LOCAL_TZ, WorkItem, local_date
 from smart_daily_v2.notifiers.dispatch import all_delivered, dispatch
 from smart_daily_v2.reports.generator import (
@@ -50,6 +53,19 @@ def run(day: date, *, sources: Sequence[WorkSource], notify: bool = True) -> dic
     items: list[WorkItem] = [
         item for item in collected_items if local_date(item.occurred_at) == day
     ]
+    # 范围外新增（☐ 待确认）：编排层一处把账号名映射为中文显示名，
+    # 采集后、group_by_member 之前替换，下游分组/日报/落库/推送/查询自动生效。
+    mapping_raw = load_config().member_display_names
+    mapped: list[WorkItem] = []
+    for raw_item in items:
+        shown = display_name(raw_item.member, mapping_raw=mapping_raw)
+        if shown == raw_item.member:
+            # 未命中回落：显式告警，不静默丢弃、不抛异常（状态 ☐ 待确认）
+            print(f"[显示名] 未映射，回落原账号名: {raw_item.member}")
+            mapped.append(raw_item)
+        else:
+            mapped.append(replace(raw_item, member=shown))
+    items = mapped
     groups = group_by_member(items)
     team_text = build_team_report(groups, day)
 
