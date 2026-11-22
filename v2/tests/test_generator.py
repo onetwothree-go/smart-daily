@@ -102,7 +102,7 @@ def make_format_item(
 
 def test_format_item_layout():
     item = make_format_item()
-    expected = "| 09:30 | fix | fix: 修复登录超时 —— 3 files, +42 -8 |"
+    expected = "| 09:30 | `fix` | 修复登录超时 —— 3 files, +42 -8 |"
 
     assert format_item(item) == expected
     assert (
@@ -113,15 +113,41 @@ def test_format_item_layout():
     )
 
 
-def test_format_item_keeps_title_verbatim():
+def test_format_item_keeps_title_body_verbatim():
     title = "fix: 保留 中文 标题（包含括号）"
+    body = "保留 中文 标题（包含括号）"
     item = make_format_item(title=title, detail="example detail")
 
     rendered = format_item(item)
 
-    assert title in rendered
-    assert rendered.index(title) < rendered.index(" —— example detail")
+    assert body in rendered
+    assert rendered.index(body) < rendered.index(" —— example detail")
     assert rendered.split(" —— ", 1)[1].strip(" |") == "example detail"
+
+
+def test_format_item_does_not_repeat_identical_detail():
+    item = make_format_item(title="feat: 双分支去重", detail="feat: 双分支去重")
+
+    assert format_item(item) == "| 09:30 | `feat` | 双分支去重 |"
+
+
+def test_format_item_flattens_multiline_detail_and_escapes_pipe():
+    item = make_format_item(
+        title="docs: 补记录",
+        detail="docs: 补记录\n\n含 | 竖线\n第二行正文",
+    )
+
+    rendered = format_item(item)
+
+    assert "\n" not in rendered
+    assert "\\|" in rendered
+    assert rendered == "| 09:30 | `docs` | 补记录 —— 含 \\| 竖线 第二行正文 |"
+
+
+def test_format_item_falls_back_to_kind_label():
+    item = make_format_item(title="Merge dev into main: 纳入全部工作", detail="")
+
+    assert format_item(item) == "| 09:30 | `提交` | Merge dev into main: 纳入全部工作 |"
 
 
 def test_format_item_is_byte_stable():
@@ -138,7 +164,7 @@ def test_format_item_has_no_io(monkeypatch):
     monkeypatch.setattr(socket, "socket", fail)
 
     assert format_item(make_format_item()) == (
-        "| 09:30 | fix | fix: 修复登录超时 —— 3 files, +42 -8 |"
+        "| 09:30 | `fix` | 修复登录超时 —— 3 files, +42 -8 |"
     )
 
 
@@ -214,19 +240,20 @@ def test_team_report_lists_all_members_without_truncation():
 
     report = build_team_report(groups, day)
     lines = report.splitlines()
-    section_headers = [line for line in lines if line.startswith("## ") and "今日贡献" not in line]
+    section_headers = [line for line in lines if line.startswith("### ")]
     entry_lines = [line for line in lines if is_entry_line(line)]
 
-    assert lines[0] == "# 团队日报 2026-11-18 · 成员 4 人 · 条目 23 条"
-    assert all(f"## {member}（{len(items)} 条）" in report for member, items in groups.items())
+    assert lines[0] == "# 团队日报 · 2026-11-18"
+    assert "**4 位成员**" in report
+    assert all(f"### {member} · {len(items)} 条" in report for member, items in groups.items())
     assert len(entry_lines) == sum(map(len, groups.values())) == 23
     assert section_headers == [
-        "## 甲（20 条）",
-        "## 乙（2 条）",
-        "## 丙（1 条）",
-        "## 丁（0 条）",
+        "### 甲 · 20 条",
+        "### 乙 · 2 条",
+        "### 丙 · 1 条",
+        "### 丁 · 0 条",
     ]
-    assert "条目 23 条" in lines[0]
+    assert "**23 条工作记录**" in report
 
 
 def test_team_report_entry_lines_match_personal():
@@ -241,8 +268,8 @@ def test_team_report_entry_lines_match_personal():
     team_entry_lines = {member: [] for member in groups}
     current_member = None
     for line in report_lines:
-        if line.startswith("## ") and "今日贡献" not in line:
-            current_member = line[3:].split("（", 1)[0]
+        if line.startswith("### "):
+            current_member = line[4:].split(" · ", 1)[0]
         elif is_entry_line(line):
             team_entry_lines[current_member].append(line)
 

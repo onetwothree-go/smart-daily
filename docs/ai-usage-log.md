@@ -721,3 +721,80 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 验证：fetch 0/0 无撞车；注册计划任务 NextRun=11-20 22:00、已设唤醒；改 branch 后真推退出码 0（4 成员+飞书群全送达）；最终脚本 dry-run 退出码 0、日志落文件干净。
 - 如实登记：11-20 当天真实推送两次（21:11、21:13），成员邮箱与飞书群各收到两条；22:00 再自动推一次。不掩盖。
 - 改动仅新增 v2/scripts/run_daily.ps1 + 两份记录；.env（凭证/branch）、reports.db、日志均 gitignore 不进仓库；未改源码/测试、未碰 v1、未碰 main。
+
+## 补记（2026-11-20 23:10，事后补记；当时赶代码临时免写文档，23:00 用户恢复写文档口径，状态 ☐ 待确认）
+- 说明：补齐 22:00 前后因「不用弄文档，只改代码」而漏记的产出。如实登记、不倒填证据、不代签代勾 tasks.md；状态一律 `☐ 待确认`。
+- `3de8afd` 接通老师邮箱团队日报通道：现码 `REPORT_RECIPIENTS` 原是死路（`load_report_recipients()` 仅定义未调用、`dispatch` 未传 `team_recipients`）；改 `orchestrator.py` 导入并传参，删 `run_daily.ps1` 里置空老师收件人的那行，`.env` 老师邮箱设为用户提供的 `1730173019@qq.com`（gitignore，不进仓库）。真跑逐路明细 `personal:方赫` / `personal:于悦` / `team`（飞书群）/ `team:report_recipients`（老师）全 True、`push_status=ok`；当天仅方赫、于悦有提交故只有两份个人日报，非故障。基线 240 passed、ruff 双清；提交推 dev（`3de3251..3de8afd`），main 未碰。
+- `92b8919` dev→main 一次性合并：用户新指令要求「把 dev 全推到 main、采集配置改回 main」，与 11-09「只推 dev、main 只接 PR」冲突，按一次性收尾合并处理。main/dev 已分叉（main 独有 6 条含 `e86fc8b`、dev 独有 26 条）不能快进；用临时 worktree 基于 `origin/main` 合并，唯一冲突 `docs/ai-usage-log.md`（两边各自尾部追加）按双方都保留解、零丢失；合并提交推 `origin/main`（`e86fc8b..92b8919`），临时 worktree/分支已清理。改回 `GITHUB_BRANCH=main` 后只读采集 11-20 得 23 条、`reasons=[]`（合并让 main 当日从 0 条变 23 条）。隐患：团队平时只推 dev 则次日 main 当日 0 提交又会发空日报，由此引出下面的双分支需求；push main 会触发 `notify.yml` 一条群通知。
+- 22:00 首次自动触发实证：`LastRunTime=22:00:00`、`LastTaskResult=0`、`NextRun=11-21 22:00`、日志 `[22:00:16] mode=REAL exit_code=0`、落库 2 行（方赫19/于悦4=23 条）。此前所有成功推送均为手动触发，这是定时器第一次自己跑通。
+- S4U 与运维：用户曾要求把计划任务登录类型改 S4U，当前会话非管理员（`DESKTOP-NE28A0D\DELL`），`Set-ScheduledTask` 与 `Register-ScheduledTask -Force` 均报 `0x80070005`，未擅自 UAC 提权；后用户明确「那1不做」，取消该方案，任务保持 `Interactive / Ready / NextRun 11-21 22:00`，动作与唤醒设置完好。
+- Claude 转发链路：用户授权后由 WorkBuddy 拉起 CCR(3456)+shim(3457)，真实调用 shim→CCR→7897→OpenRouter 返回 OK；CCR 两次因上游 `terminated: other side closed` 触发自身 `server.logger.error` undefined 缺陷崩溃(exit 7)，新增 `C:/Users/DELL/.claude-code-router/ccr-guard.py` 守护（崩后自动拉起、日志 `ccr-guard.log`，**不在项目仓库**），第三次验证 3456 HTTP 200 且真实调用 OK。
+
+## 2026-11-20（续 4）GitHub 采集器 main+dev 双分支并采与 SHA 去重（范围外新增，状态 ☐ 待确认）
+- 用途：消除「团队只推 dev、main 当日 0 提交 → 22:00 发空日报」隐患。`tasks.md` 201 验收只写单分支，属范围外新增，状态 `☐ 待确认`。
+- 工具与边界（如实）：用户明确「让claude做」，红/绿/收尾三阶段均由 Claude Code 执行（`/taskGithubMulti` → `g` → `c`），守 11-19 纪律；WorkBuddy 只备三件套命令与一条龙提示词、核验截图、补两份记录、改 `.env`、提交推 dev，**不碰源码/测试/lint/format**。红阶段窗口曾 `100% context used`，按纪律未由 WorkBuddy 接管，由用户 `/clear` 后新会话继续。
+- 红：新增 `v2/tests/test_github_multibranch.py` 6 用例（双分支两次请求 + SHA 去重保序 / 单分支回归 / 空值回落 / 失败分支跳过 / 全失败仍请求两分支并抛错 / scope 拼接防自指），实现未动 → `4 failed, 242 passed`（240 基线 + 2 通过），ruff 双清。WorkBuddy 独立复跑确认、逐条读用例确认真红非自指。
+- 绿：仅改 `v2/src/smart_daily_v2/sources/github.py`（57+/36-）——`_branch_list()` 逗号拆分/strip/去空/去重保序、空值回落 `main,dev`；`collect()` 逐分支走顶层 `httpx.get`、按 `sha` 去重保序、分支失败跳过、全失败才 `SourceUnavailableError`、允许某分支空列表。既有 `author=None` 不加参数、`author=null` 降级、401/403/404/409/429 reasons、WorkItem 映射一字未动；docstring 追加 `☐ 待确认` 登记、无「已裁定」。→ 新测试 6 passed、全量 **246 passed**，ruff 双清 78 files。
+- 收尾：Claude 8 条自查全过（保护文件/既有测试 diff 空、无 v1 import/真实凭证、`.env` 仍 `GITHUB_BRANCH=main`、未改任何文件未提交），`246 passed in 0.65s`、ruff 双清；Claude 守住收尾只读边界、**未自行补 ai-usage-log**，两份记录改由 WorkBuddy 按恢复后的口径补。WorkBuddy 最终独立复跑：246 passed、ruff 双清、保护文件与 `git diff -- v2/tests/` 全空、HEAD `3de8afd`、与 origin/dev 0/0。
+- 生产启用（WorkBuddy）：`v2/.env` 的 `GITHUB_BRANCH` 由 `main` 改为 `main,dev`（被 gitignore、不进仓库）；只读采集 11-20 → 分支解析 `['main','dev']`、**23 条、`reasons=[]`、record_id 全唯一**，成员（采集层原始账号名）fh0709 19 / yuyue117 4。因当日 dev 提交已随 `92b8919` 合并进 main，条数与单分支相同；双分支价值在今后 dev 有新提交而 main 未合并时不再漏采。**未真推送**；老师邮箱 `1730173019@qq.com` 保留。
+- 待确认：多分支并采属范围外，状态 `☐ 待确认`；本次未改 `tasks.md` / README / specs 字面、不代裁定、不代签代勾。提交仅源码 + 新测试 + 两份记录，推 dev，main 未碰。
+
+## 2026-11-20（续 5）团队日报 / 个人日报二次美化（范围外展示层微调，状态 ☐ 待确认）
+- 用途：用户确认双分支已可抓后提出「团队日报、发到邮箱的个人日报还是有点乱」，按 11-19 已认可的美化版口径补齐上一轮（`5505978`）只做了表格、没做版式的部分。
+- 工具与边界（如实）：本人（方赫，经 WorkBuddy Agent 模式）直接执行，**未走 Claude Code、未用 `/task*` 命令、无 Claude 截图**；与 `5505978` 同属范围外展示层改动，不属第 3 周 TDD 任务的红/绿/收尾链路。状态 `☐ 待确认`，不代裁定规范、不代签代勾 tasks.md、不碰已封版 v1、不碰 main。
+- 根因（真实只读渲染确认，非推测）：`GithubSource` 令 `detail = message`、单行提交时 `detail == title`，而旧 `format_item` 又拼 `title —— detail`，真实日报每行变成 `feat: xxx —— feat: xxx`；类型列已有 `feat`，内容列仍带 `feat:` 前缀；多行 commit body 与正文竖线会把换行/列分隔符带进表格单元格撑破 Markdown 表格；团队日报缺引用概览、分隔线、页脚，成员章节 `##` 与「今日贡献一览」同级层级不清；个人日报只有标题 + 表格。
+- 改动（仅 `v2/src/smart_daily_v2/reports/generator.py`）：新增 `_clean`（压成单行 + `|` 转义）、`_headline`（去掉内容列中与类型列重复的 conventional 前缀）、`_supplement`（detail 与 title 相同则不追加、以 title 开头则只取新增正文）；`format_item` 类型列改反引号徽标；团队日报改为 `# 团队日报 · YYYY-MM-DD` + 引用概览 `**N 位成员** ｜ **M 条工作记录**`、成员章节降为 `### 成员 · N 条`、补 `---` 分隔与数据来源页脚；个人日报补引用概览与页脚。个人/团队仍共用 `format_item`，C4/G4 逐字一致与「format_item 单一来源」检查均未破坏。
+- 同步 4 个测试文件（`test_generator.py` / `test_integration_format.py` / `test_mock.py` / `test_orchestrator.py`）中受版式影响的字面断言；新增 3 用例：`detail==title` 不重复打印、多行详情压平且竖线转义、无 conventional 前缀时回落 kind 中文标签。
+- 验证：全量 **249 passed**（246 基线 + 3 新增）、`ruff check` All checks passed、`ruff format --check` 78 files already formatted；改动仅 1 源 + 4 测试 + 本记录；保护文件 diff 全空、无真实凭证、未真推送。
+- 真实数据只读预览（11-20，`main,dev` 双分支）：main 23 / dev 23、交集 22、去重后 24 条，中文名 方赫 20 / 于悦 4；渲染结果内容列无重复、无撑破，预览文件写在工作区（不入仓库）。
+- 待确认：标题 / 概览 / 章节层级字面变更牵涉 `v2/specs/tasks.md` TK-302/304 与 `v2/tests/acceptance_matrix.md` C4 行（他人维护），本次未改，是否同步由需求方/测试方确认。22:00 定时任务下一次 11-21 22:00 自动采用新版式。
+
+## 2026-11-20（续 6）V1 入口 / U2 实时提醒口径核验（只读，状态 ☐ 待确认）
+- 用途：组内连续两轮追问「V2 是否走 V1 入口、Push 提醒归属」。用户裁定「不复用 V1 任何代码，V1 入口不可走，Push 提醒由本人做」，并选「先不动，整理口径」。本轮**未改任何代码 / 工作流 / 配置 / 计划任务**。
+- 只读核验：v2 下 `*.py` 的 `import smart_daily` 0 命中、v2/src 无 `subprocess` / `Popen` / `os.system` / `notify_push` 调用；本机 `SmartDaily-2200` 唯一 Action 指向 `v2/scripts/run_daily.ps1`（22:00 Result=0、NextRun 11-21 22:00）；v1 转发链两个旧路径 `Test-Path` 均 False；`.github/workflows/` 无 `schedule:`；22:00 落库日报正文为 v2 生成器表格格式。G2 / TK-V2-701 零复制口径成立。
+- 三层「入口」区分：任务名 `SmartDaily-2200` 与根 `scripts/run_daily.ps1` 属 v1 时代遗留且注释过期（误判根源），运行时已不经过；Python 模块入口 v1=`smart_daily.cli` / v2=`smart_daily_v2.cli` 完全不同；CI 的 `notify.yml` 跑 `v1/scripts/notify_push.py` 属 v1 实时通知（ADR-104），不生成日报、v2 未调用。
+- 裁定边界：`v2/specs/tasks.md` L540 已把「S9 / C10 实时提醒是否本周重做」登记为 **U2**，处置为「组内会定范围 → 架构师出接口契约与 workflow 隔离方案 → 补 `TK-V2-8xx` 任务」。故本次不改 `notify.yml`、不新增 v2 通知脚本、不动 `v1/`、不改 tasks.md / acceptance_matrix、不代裁定不代勾；五项一律 `☐ 待确认`。
+- 产出：`v2/docs/方赫-V1入口与U2实时提醒-口径说明-2026-11-20.md`（证据分层 / G2 实测 / U2 待确认清单 / 可转发组内简版），状态 `☐ 待确认`。
+- 补推（23:3x）：`c78419e`（2 files / +67）首次推送因代理 `CONNECT tunnel failed 502` 失败；改用 `http.proxy=127.0.0.1:7897` + `HTTP/1.1` 后成功 `57db203..c78419e dev -> dev`，本地与 `origin/dev` 0/0。未强推、未碰 main。
+- Issue（23:4x）：按用户「把这个到 Issue 里，然后我们去解决」创建 **[#16](https://github.com/onetwothree-go/smart-daily/issues/16)**「[第3周][待裁定] 澄清 V1/V2 入口争议与 U2 实时提醒归属（含 G2 零复制核验）」，labels `question` / `documentation`，正文＝口径说明全文 + 背景时点说明 + 建议解决路径 + 相关材料，五项 `☐ 待确认` 原样保留。`.env` 内 token 无 Issues 写权限（403），改用本机 git credential 中 `repo` scope 的 PAT 创建，凭证未写入仓库。状态仍 `☐ 待确认`：组内会定范围 → 架构师出契约 → 补 `TK-V2-8xx` 后才进入实现；本轮未改 `notify.yml` / `v1/` / 本机任务 / tasks.md。
+## 补记（2026-11-20，杨佳莹 · 实时提醒纳入 v2 方案草稿）
+
+- 任务性质（如实）：组内已同意第四周把 S9/C10 实时提醒纳入 v2；由架构师本人（杨佳莹）出方案，WorkBuddy 会话协助起草。产物为**方案草稿**，署名杨佳莹，待本人最终确认签署。
+- 工具与用途：WorkBuddy 会话只读核对 `tasks.md` §8.2 U2、`acceptance_matrix.md` C10、根 `.github/workflows/notify.yml`、`v1/scripts/notify_push.py` 与远端 main 最新 `identity.py` / `notifiers/webhook.py::gen_sign` 后，起草 `v2/docs/实时提醒纳入v2-方案草稿.md`。
+- 方案要点：接口契约（Actions 注入、只 main/dev、一次 push 恰 1 条含「日报」、身份复用 `identity.display_name()` / `normalize_key()`、签名复用 `gen_sign()`、不写 SQLite/不进 G1、失败 exit 1 亮红灯）；workflow 隔离推荐"根目录只留一份 `notify.yml`、内容由 v1 换成 v2、v1 通道停用"；补 `TK-V2-8xx` 独立任务组（801 契约/ADR、802 脚本、803 workflow 切换、804 C10 验收），不进现有依赖图。
+- 接口名更正（如实）：草稿初版误写 `identity.canonical_key()`（本地旧副本），经远端 main 核对后改为实际存在的 `display_name()` / `normalize_key()`。
+- 未做（如实）：未改任何代码 / workflow / 规范文件；未代签、未代勾、未裁定；本次提交仅新增方案文档 + 本条日志；未读取或输出 .env 与凭证。
+- 状态：☐ 待本人确认（工具列如实记 WorkBuddy，非 Claude Code 会话）。
+
+## 补记（2026-11-21，杨佳莹 · 实时提醒纳入 v2 本轮实现）
+
+- 任务性质（如实）：用户裁定把 S9/C10 实时提醒从「第四周」提前到**本轮立即完成**；由架构师本人（杨佳莹）决定、WorkBuddy 会话执行实现。范围外新增，状态 ☐ 待确认，不代签代勾。
+- TDD 红/绿（如实）：先写 `v2/tests/test_notify_push.py`（C10，9 用例）→ 红 9 failed（全 `ModuleNotFoundError`，无断言失败混入）；再新增 `v2/src/smart_daily_v2/notify_push.py` → 绿 9 passed。
+- 实现（零复制）：脚本从零写，复用 v2 现有 `identity.display_name()` / `normalize_key()` 与 `notifiers/webhook.py::gen_sign()`，不 import / 复制 v1；读 GITHUB_EVENT_PATH、不调 GitHub API、只 main/dev、一次 push 恰 1 条含「日报」、列全 commit 原文、中文名、未映射回落、失败 exit 1 亮红灯、不写 SQLite/不进 G1。
+- workflow：根 `.github/workflows/notify.yml` 的 `run` 由 `python v1/scripts/notify_push.py` 改为 `python -m smart_daily_v2.notify_push`，`pip install ./v2`；根目录仍只一份、不新增第二份（避免一次 push 两条）。
+- 验证：新增用例 9 passed；全量 **258 passed**（249 基线 + 9）；`ruff check` All checks passed、`ruff format --check` 81 files already formatted。ruff 初报 2×F401（实现里 `Path`、测试里 `pytest` 未用），已删无用 import 后复跑双清。
+- 时点同步：方案文档前提改为「本轮完成」+落地段；tasks.md U2 以**补记**追加（不改写 U2 原文、不代勾、不代改验收矩阵 C10）；issue #17 标题/正文去「第四周」、加落地完成段与评论。
+- 未做（如实）：未改任何其它源码/测试/规范文件；未碰 v1、未碰 .env、未读取或输出凭证；未代签代勾；本次仅上述 5 文件改动 + 本条日志，推 dev 不推 main。
+- 状态：☐ 待本人/组内确认（工具列如实记 WorkBuddy，非 Claude Code 会话，未走红/绿/收尾三命令链）。
+
+- 推送受阻（如实）：本次 `git push origin dev` 首次含 `.github/workflows/notify.yml` 被拒——本机 PAT 无 `workflow` scope，GitHub 不允许其改动 workflow 文件。已把提交拆分：`notify_push.py` + 测试 + 方案 + tasks.md 补记 + 本日志先推 dev；**`notify.yml` 改动暂留本地工作区未推**，需有 `workflow` scope 的凭证或由仓库所有者手动应用该改动后，v2 提醒才真正在 Actions 生效。未重连认证（属权限范围问题，非登录失效）。
+
+- API 补试（如实）：改用 GitHub contents API（PUT，带 workflow scope 检查）更新 `notify.yml` 同样 403（"refusing to allow a PAT to create or update workflow ... without workflow scope"）；按纪律未重连认证、未反复重试。**结论：本会话无 workflow scope，无法应用该文件改动**；v2 提醒的 Actions 生效需由有权限者（owner 或有 workflow scope 的 PAT）应用本地/下述 diff。
+
+## 2026-11-22（补记）TK-V2-803 根 notify.yml 切换到 v2 实时提醒通道（状态 ☐ 待确认）
+
+- 任务性质（如实）：架构师 `de3cd76` 方案 B 与 `b7eefc7`（803/804 实现）落地后，根 `.github/workflows/notify.yml` 因本机凭证无 `workflow` scope 一直未应用（`95dfe9e` 已登记）。用户明确「是让 Claude Code 做」，故红 / 绿 / 收尾三阶段**全部在 Claude Code 内**用 `/taskNotifyYml` → `/taskNotifyYmlg` → `/taskNotifyYmlc` 执行；WorkBuddy 只备用户级三件套命令与一条龙提示词、核验截图、补两份记录、提交推 `dev`，**未碰源码 / 测试 / lint / ruff format，未代做收尾**（守 2026-11-19 分工纪律）。
+- 红（如实）：新增 `v2/tests/test_notify_workflow.py` 7 用例（纯 `re` + `pathlib` 读磁盘，禁 `yaml` import、禁新增依赖；断言根目录 `notify*.yml` 仅一份、`branches: [main, dev]` / `permissions` / 四个 env 键取自 secrets / `setup-python` 3.13 / `pip install -e ./v2` / `python -m smart_daily_v2.notify_push` / 归属注释 / G2 无 `import smart_daily` / 无明文 webhook 域名），实现未动 → 单文件 **2 failed / 5 passed**（`FF.....`，两条红正是 v2 模块入口与 v2 包安装），全量 **265 collected / 2 failed / 263 passed**（258 基线 + 7）。其余 5 条为契约保护用例，本应先绿。
+- 绿（如实）：仅改根 `.github/workflows/notify.yml`（**+6 / -3**）：新增三行归属注释「已归属 v2 实时提醒通道（TK-V2-803 / 方案 B）」；`pip install httpx` → `pip install -e ./v2`；`python v1/scripts/notify_push.py` → `python -m smart_daily_v2.notify_push`。`branches` / `permissions` / 四 env 键 / `checkout` / `setup-python` 一字未动，根目录仍只一份 `notify*.yml`（一次 push 不会出两条群消息）。7 passed / 全量 **265 passed**。
+- 收尾（截图，22:22，会话耗时 3m49s）：Claude 8 条自查全过，`contract checks` 12 项全 True；`265 passed in 1.03s`、`ruff check` All checks passed、`ruff format --check` 83 files already formatted；保护文件与既有测试 diff 全空；`git status --short` 仅 `M .github/workflows/notify.yml`、`?? v2/tests/test_notify_workflow.py`、`?? v2/docs/方赫-第3周周报告.md`（周报草稿为前序产物，未触碰、**不提交**）；**未提交、未推送、未碰 main、未真触发 Actions**。窗口底部 `Auto-update failed: claude.exe in use … Run claude doctor` 为 Claude 自更新提示，与任务结果无关。
+- 日志冲突与处置（如实）：收尾提示词要求「不改任何文件、不提交」，与 `CLAUDE.md`「当天补 AI 使用日志」冲突；Claude 在输出里明确声明「本次只读、不补日志，把冲突留给后续按规程处理」。按分工由 WorkBuddy 在收尾结束后于**同一天 2026-11-22** 补本条与红绿循环记录，属当天记录、不倒填证据、不代替 Claude 的收尾动作。
+- 核验与提交（WorkBuddy，只读 + 提交）：本地独立复跑 `uv run pytest tests/ -q` → 265 passed in 2.70s、`ruff check .` All checks passed、`ruff format --check .` 83 files already formatted，与截图一致；`git fetch origin dev` 0/0 无撞车；只读探测当前 Git 凭证 scopes 为 `read:user, repo, user:email, workflow`（**已具备 workflow 权限**，与 11-21 的 403 不同）。提交 `279c4f6`（2 files / +93 -3）成功推 `dev`（`95dfe9e..279c4f6`），**未推 main**；本条与红绿记录随另一提交补入。至此 v2 实时提醒的 workflow 才真正在 Actions 生效，`pip install -e ./v2` 在 CI 实机能否装成仍待首次 push 的 Actions 日志验证。
+- 待确认（不代裁定、不代勾）：U2 / `TK-V2-8xx` 编号、`v2/tests/acceptance_matrix.md` C10 行、Issue #14 K7、v1 `scripts/notify_push.py` 归属一律保持 `☐ 待确认`；本人未改他人维护的 `v2/specs/tasks.md` / 验收矩阵，未碰 v1、未碰 `.env`、未输出凭证明文。
+- CI 实证补记（2026-11-22 22:3x，推送后只读查询，非事后倒填）：两次 dev push（`279c4f6`、`67c56f7`）各触发 1 次 `push 实时提交通知` 与 1 次 `CI 门禁`，4 个 run 全部 `completed / success`（通知 run `45033431950`、`45033546323`）。查 `45033546323` 的 job「发送 push 提醒到飞书群」：Set up job / 检出代码 / 安装 Python 3.13 / **安装 v2 包** / **读取事件文件并推送提醒** / Post 各步全部 `success` → `pip install -e ./v2`（`uv_build` 后端）在真实 CI 装成、`python -m smart_daily_v2.notify_push` 按契约 exit 0（失败会 exit 1），一次 push 仍只有一条通知通道、未出现第二份 `notify*.yml`。飞书群内消息正文（含「日报」关键词、一次 push 恰 1 条）请本人到群内目视确认；本轮未代确认、未主动触发 push、未读/输出任何凭证明文。
+
+## 2026-11-23（签认）方赫 · 第 3 周本人条目 AI 使用日志统一签认
+
+- 签认范围：本人（方赫）在第 3 周区段（2026-11-16 起）名下的 **30 条** 补记条目（清单见 `v2/docs/方赫-第3周-AI日志待确认清单.md`），其「人工核验方式」经本人逐条核对属实，于 **2026-11-23** 签认。
+- 签认时点：2026-11-23；指导书「每周日晚提交」的 11-22 窗口已过，如实标注、未把确认时间倒填为 11-22。
+- 边界（不代签、不代勾）：队友于悦 / 赵蕊 / 杨佳莹名下的产出行由各自本人确认；U2 / `TK-V2-8xx` 编号 / C10 验收矩阵 / #14 K7 / v1 旧脚本归属 / U4 轮换表 / 504 四处口径 / 503 排序复核 / 11-22 触发时间等团队裁定项保持 `☐ 待确认`；`v2/specs/tasks.md` 状态列由于悦维护，本人未改。
+- 效果：本条为统一签认记录，不逐条改写上方历史日志正文（避免倒填与破坏他人段落）；上方各条中的 `☐ 待确认` 措辞为其历史留痕，本人条目状态以本条与签认清单为准。

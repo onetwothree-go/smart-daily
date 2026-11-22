@@ -155,7 +155,7 @@ def test_run_returns_nine_keys_and_step_order(monkeypatch) -> None:
     assert result["members"] == 2
     assert result["items"] == 5
     assert result["saved_reports"] == 2
-    assert "条目 5 条" in result["team_report"]
+    assert "**5 条工作记录**" in result["team_report"]
     assert len(dispatch_calls) == 1
     assert len(persist_calls) == 2
     assert order[0] == "collect"

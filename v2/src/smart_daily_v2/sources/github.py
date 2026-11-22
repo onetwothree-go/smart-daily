@@ -10,6 +10,8 @@ Scope notes (☐ 待确认，组内):
   隔离验证，和 606 口径一致。
 - 翻页：v1 design L274 提及手动翻页，但 201 验收未列，202③ / 203② 才明确
   翻页。本模块依 G3 只请求单页；如需扩展，待组内确认后处理。
+- 多分支并采与按 SHA 去重（☐ 待确认）：为覆盖 main、dev 等分支上的提交并避免重复计入，
+  逐分支请求并保留首次出现的 SHA；单分支失败跳过，全部失败才降级。
 - G7：归一化单点由 104 fallback.py 持有。本模块返回 WorkItem，不调用
   normalize()；fallback 对全 WorkItem 幂等放行，下游不得再次归一化。
 """
@@ -36,6 +38,14 @@ class GithubSource(WorkSource):
     github_branch: str
 
     name = "github"
+
+    def _branch_list(self) -> list[str]:
+        branches = list(
+            dict.fromkeys(
+                branch.strip() for branch in self.github_branch.split(",") if branch.strip()
+            )
+        )
+        return branches or ["main", "dev"]
 
     @classmethod
     def from_env(cls) -> GithubSource:
@@ -72,7 +82,6 @@ class GithubSource(WorkSource):
             f"{self.github_repo_owner}/{self.github_repo_name}/commits"
         )
         params = {
-            "sha": self.github_branch or "main",
             "since": since.isoformat(),
             "until": until.isoformat(),
             "per_page": 100,
@@ -84,42 +93,54 @@ class GithubSource(WorkSource):
             "Authorization": f"Bearer {self.github_token}",
             "X-GitHub-Api-Version": "2022-11-28",
         }
-
-        try:
-            response = httpx.get(url, params=params, headers=headers, timeout=15)
-        except httpx.HTTPError as exc:
-            raise SourceUnavailableError("github", f"请求失败：{exc}") from exc
-
-        if not response.is_success:
-            reasons = {
-                401: "token 凭证无效或权限不足",
-                403: "凭证无效或权限不足",
-                404: "仓库不存在",
-                409: "仓库为空",
-                429: "请求限频",
-            }
-            reason = reasons.get(response.status_code, "未预期状态码")
-            raise SourceUnavailableError("github", f"{reason}（HTTP {response.status_code}）")
-
-        commits = response.json()
+        reasons = {
+            401: "token 凭证无效或权限不足",
+            403: "凭证无效或权限不足",
+            404: "仓库不存在",
+            409: "仓库为空",
+            429: "请求限频",
+        }
+        errors: list[str] = []
         items: list[WorkItem] = []
-        for commit in commits:
-            message = commit["commit"]["message"]
-            occurred_at = datetime.fromisoformat(commit["commit"]["author"]["date"])
-            items.append(
-                WorkItem(
-                    record_id=commit["sha"],
-                    source="github",
-                    member=normalize_key(
-                        commit["author"]["login"]
-                        if commit["author"]
-                        else commit["commit"]["author"]["name"]
-                    ),
-                    kind="commit",
-                    title=message.splitlines()[0] if message else "",
-                    detail=message,
-                    occurred_at=occurred_at,
-                    local_day=local_date(occurred_at),
+        seen_shas: set[str] = set()
+        successful = False
+        for branch in self._branch_list():
+            branch_params = {**params, "sha": branch}
+            try:
+                response = httpx.get(url, params=branch_params, headers=headers, timeout=15)
+            except httpx.HTTPError as exc:
+                errors.append(f"{branch}: 请求失败：{exc}")
+                continue
+
+            if not response.is_success:
+                reason = reasons.get(response.status_code, "未预期状态码")
+                errors.append(f"{branch}: {reason}（HTTP {response.status_code}）")
+                continue
+
+            successful = True
+            for commit in response.json():
+                sha = commit["sha"]
+                if sha in seen_shas:
+                    continue
+                seen_shas.add(sha)
+                message = commit["commit"]["message"]
+                occurred_at = datetime.fromisoformat(commit["commit"]["author"]["date"])
+                items.append(
+                    WorkItem(
+                        record_id=sha,
+                        source="github",
+                        member=normalize_key(
+                            commit["author"]["login"]
+                            if commit["author"]
+                            else commit["commit"]["author"]["name"]
+                        ),
+                        kind="commit",
+                        title=message.splitlines()[0] if message else "",
+                        detail=message,
+                        occurred_at=occurred_at,
+                        local_day=local_date(occurred_at),
+                    )
                 )
-            )
+        if not successful:
+            raise SourceUnavailableError("github", "; ".join(errors))
         return items
