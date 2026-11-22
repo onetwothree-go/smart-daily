@@ -783,3 +783,10 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 - 核验与提交（WorkBuddy，只读 + 提交）：本地独立复跑 `uv run pytest tests/ -q` → 265 passed in 2.70s、`ruff check .` All checks passed、`ruff format --check .` 83 files already formatted，与截图一致；`git fetch origin dev` 0/0 无撞车；只读探测当前 Git 凭证 scopes 为 `read:user, repo, user:email, workflow`（**已具备 workflow 权限**，与 11-21 的 403 不同）。提交 `279c4f6`（2 files / +93 -3）成功推 `dev`（`95dfe9e..279c4f6`），**未推 main**；本条与红绿记录随另一提交补入。至此 v2 实时提醒的 workflow 才真正在 Actions 生效，`pip install -e ./v2` 在 CI 实机能否装成仍待首次 push 的 Actions 日志验证。
 - 待确认（不代裁定、不代勾）：U2 / `TK-V2-8xx` 编号、`v2/tests/acceptance_matrix.md` C10 行、Issue #14 K7、v1 `scripts/notify_push.py` 归属一律保持 `☐ 待确认`；本人未改他人维护的 `v2/specs/tasks.md` / 验收矩阵，未碰 v1、未碰 `.env`、未输出凭证明文。
 - CI 实证补记（2026-11-22 22:3x，推送后只读查询，非事后倒填）：两次 dev push（`279c4f6`、`67c56f7`）各触发 1 次 `push 实时提交通知` 与 1 次 `CI 门禁`，4 个 run 全部 `completed / success`（通知 run `45033431950`、`45033546323`）。查 `45033546323` 的 job「发送 push 提醒到飞书群」：Set up job / 检出代码 / 安装 Python 3.13 / **安装 v2 包** / **读取事件文件并推送提醒** / Post 各步全部 `success` → `pip install -e ./v2`（`uv_build` 后端）在真实 CI 装成、`python -m smart_daily_v2.notify_push` 按契约 exit 0（失败会 exit 1），一次 push 仍只有一条通知通道、未出现第二份 `notify*.yml`。飞书群内消息正文（含「日报」关键词、一次 push 恰 1 条）请本人到群内目视确认；本轮未代确认、未主动触发 push、未读/输出任何凭证明文。
+
+## 2026-11-23（签认）方赫 · 第 3 周本人条目 AI 使用日志统一签认
+
+- 签认范围：本人（方赫）在第 3 周区段（2026-11-16 起）名下的 **30 条** 补记条目（清单见 `v2/docs/方赫-第3周-AI日志待确认清单.md`），其「人工核验方式」经本人逐条核对属实，于 **2026-11-23** 签认。
+- 签认方式：**经本人 2026-11-23 明确授权，由 WorkBuddy 代勾、代签**（非本人手写，授权痕迹如实保留、不倒填）。确认时点为 2026-11-23；指导书「每周日晚提交」的 11-22 窗口已过，如实标注、未把确认时间倒填为 11-22。
+- 边界（不代签、不代勾）：队友于悦 / 赵蕊 / 杨佳莹名下的产出行由各自本人确认；U2 / `TK-V2-8xx` 编号 / C10 验收矩阵 / #14 K7 / v1 旧脚本归属 / U4 轮换表 / 504 四处口径 / 503 排序复核 / 11-22 触发时间等团队裁定项保持 `☐ 待确认`；`v2/specs/tasks.md` 状态列由于悦维护，本人未改。
+- 效果：本条为统一签认记录，不逐条改写上方历史日志正文（避免倒填与破坏他人段落）；上方各条中的 `☐ 待确认` 措辞为其历史留痕，本人条目状态以本条与签认清单为准。
