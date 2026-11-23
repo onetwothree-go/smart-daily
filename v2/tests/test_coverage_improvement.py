@@ -16,6 +16,12 @@ def test_require_credential_missing():
             require_credential("GITHUB_TOKEN")
 
 
+def test_require_credential_present_returns_value():
+    """覆盖率补缺口（第 4 周 / #20）：config.py 有值分支须原样返回凭证值。"""
+    with patch.dict(os.environ, {"GITHUB_TOKEN": "test-token-value"}, clear=True):
+        assert require_credential("GITHUB_TOKEN") == "test-token-value"
+
+
 def test_normalize_workitem_passthrough():
     """测试 normalize 函数对 WorkItem 输入的原样放行（G7 幂等）"""
     workitem = WorkItem(
