@@ -1,4 +1,4 @@
-<img width="2346" height="1023" alt="image" src="https://github.com/user-attachments/assets/6f23e27a-5edd-416a-af06-03421c2bf355" /># 第 3 周 tasks.md 进度维护记录 · 于悦（需求分析师）
+# 第 3 周 tasks.md 进度维护记录 · 于悦（需求分析师）
 
 > 角色：需求分析师（第 3 周轮换）｜仓库：`onetwothree-go/smart-daily`｜分支：`dev`｜周次：第 3 周【阶段二 · Superpowers 工作流驱动】
 > 依据：指导书第七部分第 3 周角色产出表「tasks.md 进度维护记录（逐任务勾销与验收标准核对）」、自查清单第 1 条、附录 B；`v2/specs/tasks.md` §6 TK-V2-703 验收标准、§9 第 4 条
