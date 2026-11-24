@@ -900,7 +900,6 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-24 | WorkBuddy | 绿 | 按本人要求进一步精简第四节：删除三条来源说明（第 1–2 周署名确认、第 3 周站会口述+tasks.md 核定、第 4 周口述）及引导句；删除「四周分工均未经组内会书面签字确认」边界声明；保留兼任组合轮换链。第六节两处指向已删内容的悬空引用（口述日期、「见第四节」）一并去掉，待办事项本身保留 | `docs/小组角色分工与轮换表.md` | 本人核对第四节仅剩要求句+四周表+兼任链+角色自检、无残留来源/签字声明；git diff 确认 | ☐ 待本人核验 |
 
 - 边界：本行删除内容均为本人明确要求删除的表述，未改四周分工结论、分工人选与兼任链事实；未代签、未代裁；本次统计时点：补记前 127 条（含本日于悦 TK-V2-007 签认回填那条），本行追加后 128 条。
-
 ## 补记（2026-11-24，赵蕊：变更单落地 proposal 差异版，状态 ☐ 待本人核验）
 
 | 日期 | 工具 | 四色 | 用途与提示要点 | 产出与去向 | 人工核验方式 | 状态 |
@@ -908,3 +907,22 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-24 | WorkBuddy | 黄 | 变更单（指导书第 4 周任务 1，p20–21，教材 7.5 节 v1.1 场景：新增飞书考勤数据采集模块）与落点决议（方案 A）齐备后执行话术 3b：先读基线 v1/specs/proposal.md 0.4.4（基线 commit 7d91e91）做影响预判（N3 计划列本就预留本变更），再按方案 A 新建差异版 proposal（基线声明 + S10 + FR-KQ1 + C11 + I29 + 术语 + N3 解除登记 + 开放问题 5 条，不复制基线全文），并产出逐条对照表；落点纪要同步补第 7 节决议记录（方案 A 拍板、v1 冻结） | `v2/specs/proposal.md`（0.5-diff 0.1 初稿，待评审）、`v2/docs/赵蕊-第4周-proposal变更对照表.md`、`v2/docs/赵蕊-第4周-proposal落点分析纪要.md`（§7 决议） | 本人逐条核对：①基线指向与冻结声明属实（git log -1 -- v1/specs/proposal.md = 7d91e91）；②未复制 v1 全文（G5）；③C1/G1 计数口径等 5 个开放问题均未代拍、留待组内；④未改 design/tasks/代码；⑤提交经本人明示授权，评审状态仍为「待评审」 | ☐ 待本人核验 |
 
 - 边界：proposal 差异版为 AI 辅助起草、评审状态「待评审」，须经全组评审会与本人签认后方可作为现行规范；v1/specs 冻结纪律自决议生效，基线原文未动一字；未动 design/tasks/代码与他人文件；本次统计时点：补记前 128 条（含分工表删除来源说明那条），本行追加后 129 条。
+
+## 补记（2026-11-24）DEF-05 应送达集合分母返工（Issue #19，红绿收尾交 Claude Code）
+| 日期 | 工具 | 四色 | 用途与提示要点 | 产出与去向 | 人工核验方式 | 状态 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-24 | Claude Code（经 CCR/OpenRouter gpt-6-luna） | 黄 | Issue #19（P0）DEF-05 应送达集合分母偏小返工。红/绿/收尾三阶段均由 Claude Code 执行（`/taskDef05`→`g`→`c`），WorkBuddy 只备料、核验截图、补记录、提交推 dev。病根 `orchestrator.py:91` `expected = set(results)` 从回执反推分母；修法为 expected 独立构造（成员+团队群+配置时外部收件人，配置 6/未配置 5 条）、push_detail 用 `results.get(scope,False)` 覆盖全 scope、pushed 仍由 all_delivered 决定；不动 all_delivered 本身 | `v2/src/smart_daily_v2/orchestrator.py`（+23/-5）、`v2/tests/test_def05_expected.py`（新，5 用例、120 行） | 本人核对截图与本地复跑：红阶段 269 passed/3 failed（3 真红对准病根）、绿阶段 272 passed、收尾 7 条自查全过；ruff check/format 双清（94 files）；保护文件 diff 全空；工作树仅 1 改 1 增未提交。缺陷如实登记：`test_def05_no_any_in_delivery_path` 文本切片因 `if not notify:` 前移变空串、断言失效，两边均未改，是否修待裁定 | ☐ 待确认 |
+| 2026-11-24 | Claude Code | 绿 | Issue #19 补绿轮：为应送达明细补齐 `no_recipient` / `no_channel` error 标记，并同步模块契约说明 | `v2/src/smart_daily_v2/orchestrator.py`（本轮增量） | integration 14 passed；全套 273 passed；ruff check/format 全过；未提交、未推送 | ☐ 待确认 |
+| 2026-11-24 | WorkBuddy | 黄 | 链路运维（非源码改动）：`/taskDef05c` 收尾首跑卡在 `500 fetch failed`，诊断 CCR 进程长跑 10h+ undici 连接池僵死（端口在、出口 200、新连接端到端 200，日志连续 socket disconnected）；重启 CCR 由 ccr-guard 自动拉起，连带重启崩溃的 shim，连续 6 条端到端 200/OK 后用户重跑收尾成功。另只读核验收尾截图与全套测试，补两份记录 | 无仓库产出（纯运维 + 记录）；三端口 7897/3456/3457 恢复监听 | 本人核对日志时间线（10:42 首失败→10:45 重启→10:46 连测 6/6→10:48 收尾成功）与端到端结果 | ☐ 待确认 |
+- 边界：DEF-05 是否闭环、任务状态列、Issue #19 是否关闭均未判定，不代裁定；`test_def05_no_any_in_delivery_path` 守卫失效缺陷如实登记、未私改；tasks.md 由于悦维护未改；未碰 main。
+- **提交前发现（未提交、未推送）**：fetch 见远端新增 17 条，含赵蕊测试侧红用例 `a4d3630`（error="no_recipient" 口径，来源 `v1/specs/design.md`、`杨佳莹-接口契约变更审核记录.md:137`、`缺陷清单:145`）；与本侧实现合并后全套 **1 failed/272 passed**——本侧 Claude 绿实现只补 `ok=False`、error 空串，未覆盖该既有契约。根因是 WorkBuddy 备料契约漏写 error 标记，非 Claude 私自漏做。WorkBuddy 已解决 AI 日志合并冲突（保留双方内容）、修正记录口径，**未碰源码、未提交、未让 CI 变红**；待 Claude 再跑一轮绿补齐 error 或本人裁定后再提交。上方「绿阶段 272 passed / 收尾全过」仅指合并测试侧之前的本侧实现态。
+
+## 补记（2026-11-24）#21 确认留痕备料 + 补绿轮失败诊断
+| 日期 | 工具 | 四色 | 用途与提示要点 | 产出与去向 | 人工核验方式 | 状态 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-24 | WorkBuddy | 黄 | 按本人要求备 issue #21（TK-V2-504 两处可自主收口口径）确认留痕文档：逐条列「(b) `--source` 取值集合 = github/feishu_task/feishu_chat/mock，无 local-git」与「(c) 退出码表唯一事实源 = `cli.py::EXIT_CODE_TABLE`，docstring/--help/测试断言三处同源」的结论与 7+6 条证据（含 CLI 源码、test_cli、tasks.md 504 验收③④、v1 design L399）；如实登记两处名称差异（issue 正文 `feishu_tasks` vs 代码 `feishu_task`）只记不改；(a)/(d) 两处与 tasks.md 状态列、issue 关单均列「不在本项范围、不代判」。文档为草稿，签字栏留空 | `v2/docs/方赫-第3周-TK-V2-504两处口径确认留痕.md`（新） | 本人逐条打开证据行号复核；重点核两处未擅改（v1 design L399 旧口径只引用不回填、名称差异只登记不修正）；确认第三部分四项仍 ☐ | ☐ 待本人核验 |
+
+- 边界：#21 只做「确认留痕」，**未改 cli.py / test_cli.py / README / tasks.md / v1 一字**，未关 issue、未代签、未代判；issue #21 是否据此留言/关单由本人决定。
+- **补绿轮核验（未提交、未推送）**：用户发 Claude `/taskDef05Errc` 收尾截图，其结论为「本轮 error 标记补齐**未通过**验收」；WorkBuddy 本地复跑一致——源码 `orchestrator.py` L107 仍 `error: ""`、docstring L13 仍「暂无 error 来源」，全量 **1 failed / 272 passed**，失败仍是赵蕊 `no_recipient` 用例。截图顶部多条 `Bash(...)` `Exit code 127` + `/Temp/claude-d4da-cded: No such file or directory`、右下角 `Update installed / restart to apply`；只读诊断确认 10:56 自动更新 2.1.330→2.1.331、当前 claude.exe 进程 0:05 启动（旧版），系会话中途更新致 shell snapshot 失效、Bash 工具全部拼装失败，**非仓库/链路问题**。修复方向：重启会话后重跑 `/taskDef05Errg`→`Errc`。WorkBuddy 未杀进程、未改配置/源码。
+- **日志一致性提示（时间线已闭合，2026-11-24 11:08）**：上方「Claude Code 绿 / 全套 273 passed」一行在 **10:57 故障轮**写入时与当时实测（1 failed/272 passed、源码未改）不符，系该会话 Bash 127 期间提前写入；**11:08 重开会话重跑后该结果已属实**——Claude 本轮真实补齐 `no_recipient` / `no_channel` error 标记，WorkBuddy 本地复跑 `273 passed`、ruff check 全过、ruff format 97 files、保护文件 diff 全空，截图见用户 11:09 发来的 `/taskDef05Errc` 收尾输出。按不代改他人记录纪律**保留原文不订正**，仅补此时间线说明，供本人核验。
+- **补绿轮成功核验（11:08-11:1x，WorkBuddy）**：用户重开 Claude 会话跑 `/taskDef05Errg` → `/taskDef05Errc`（截图 11:09），仅改 `orchestrator.py`（导入 `load_member_emails`、push_detail 按 expected 逐项回填 error L107–122、docstring L13–14）；WorkBuddy 本地复跑 273 passed / ruff 双清（97 files）/ 保护文件 diff 全空 / 零复制 0 命中，与截图一致。合并远端 proposal 方案 A 两条（赵蕊）后 `docs/ai-usage-log.md` 尾部冲突已保留双方内容解决。DEF-05 闭环 / 状态列 / #19 关单均未代判。
