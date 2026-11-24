@@ -1,0 +1,31 @@
+# 命令: ./.venv/Scripts/python.exe -m pytest -q --tb=line
+# 执行时间: 2026-11-24 10:38:15 | HEAD: b4964db（工作区含未提交的 DEF-05 红用例）
+# 用途: issue #19 / DEF-05 TDD 红步证据（测试侧：赵蕊）
+# 预期: 新用例 test_member_without_email_still_records_false_receipt_and_fails_delivery RED（error 缺 no_recipient 标记），其余全 GREEN
+
+........................................................................ [ 26%]
+..............................................F......................... [ 53%]
+........................................................................ [ 80%]
+....................................................                     [100%]
+================================== FAILURES ===================================
+E   AssertionError: 无邮箱成员回执缺 no_recipient 标记，实际 error=''
+    assert '' == 'no_recipient'
+      
+      - no_recipient
+---------------------------- Captured stdout call -----------------------------
+[显示名] 未映射，回落原账号名: 甲
+[显示名] 未映射，回落原账号名: 乙
+[显示名] 未映射，回落原账号名: 丙
+[显示名] 未映射，回落原账号名: 丁
+[显示名] 未映射，回落原账号名: 甲
+[显示名] 未映射，回落原账号名: 乙
+[显示名] 未映射，回落原账号名: 丙
+[显示名] 未映射，回落原账号名: 丁
+[显示名] 未映射，回落原账号名: 甲
+[显示名] 未映射，回落原账号名: 乙
+D:\smart-daily\v2\tests\test_integration_delivery.py:141: AssertionError: 无邮箱成员回执缺 no_recipient 标记，实际 error=''
+=========================== short test summary info ===========================
+FAILED tests/test_integration_delivery.py::test_member_without_email_still_records_false_receipt_and_fails_delivery
+1 failed, 267 passed in 2.63s
+
+exit=1
