@@ -66,8 +66,9 @@ class FeishuAttendanceSource:
     @classmethod
     def from_env(cls) -> "FeishuAttendanceSource": ...
 
-    def collect(self, *, since: datetime, until: datetime,
-                author: str | None = None) -> list[WorkItem]: ...
+    def collect(
+        self, *, since: datetime, until: datetime, author: str | None = None
+    ) -> list[WorkItem]: ...
 ```
 
 | 契约 | 定稿内容 | 状态 |
