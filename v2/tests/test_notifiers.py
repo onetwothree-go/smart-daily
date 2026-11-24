@@ -20,6 +20,12 @@ def test_load_member_emails_unset_returns_empty():
     assert load_member_emails({}) == {}
 
 
+def test_load_member_emails_skips_blank_member_name():
+    """覆盖率补缺口（第 4 周 / #20）：members.py 空成员名分段须跳过（含全空格名）。"""
+    env = {"MEMBER_EMAILS": ":orphan@example.com,   :also-orphan@example.com,乙:c@example.com"}
+    assert load_member_emails(env) == {"乙": ["c@example.com"]}
+
+
 def test_load_report_recipients_strips_whitespace():
     env = {"REPORT_RECIPIENTS": "a@x.com, b@x.com"}
 
