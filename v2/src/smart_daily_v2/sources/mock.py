@@ -102,6 +102,49 @@ _FIXTURE_ROWS: tuple[dict[str, str], ...] = (
     },
 )
 
+# TK-V2-902 验收④：--mock 样例含考勤条目。
+# 默认不进 load_fixture_items()（既有 test_mock 的 kind 集合/record_id 断言不动），
+# 仅 MockSource(include_attendance=True) 时追加，保持 v2 既有夹具语义不变。
+_ATTENDANCE_FIXTURE_ROWS: tuple[dict[str, str], ...] = (
+    {
+        "record_id": "mock-att-001",
+        "member": "甲",
+        "kind": "attendance",
+        "title": "考勤：正常",
+        "detail": "出勤状态：正常\nrecord_id: mock-att-001",
+        "occurred_at": "2026-11-18T08:55:00+08:00",
+        "source": "feishu_attendance",
+    },
+    {
+        "record_id": "mock-att-002",
+        "member": "丙",
+        "kind": "attendance",
+        "title": "考勤：正常",
+        "detail": "出勤状态：正常\nrecord_id: mock-att-002",
+        "occurred_at": "2026-11-18T09:02:00+08:00",
+        "source": "feishu_attendance",
+    },
+)
+
+
+def _attendance_fixture_items() -> list[WorkItem]:
+    items: list[WorkItem] = []
+    for row in _ATTENDANCE_FIXTURE_ROWS:
+        occurred_at = datetime.fromisoformat(row["occurred_at"])
+        items.append(
+            WorkItem(
+                record_id=row["record_id"],
+                source=row["source"],
+                member=row["member"],
+                kind=row["kind"],
+                title=row["title"],
+                detail=row["detail"],
+                occurred_at=occurred_at,
+                local_day=local_date(occurred_at),
+            )
+        )
+    return items
+
 
 def load_fixture_items() -> list[WorkItem]:
     items = []
@@ -125,6 +168,11 @@ def load_fixture_items() -> list[WorkItem]:
 class MockSource:
     name = "mock"
 
+    def __init__(self, *, include_attendance: bool = False) -> None:
+        # 默认 False：既有调用（含 test_mock）的夹具集合不变；
+        # --mock 显式置 True 时追加考勤样例条目（TK-V2-902 验收④）。
+        self.include_attendance = include_attendance
+
     def collect(
         self,
         *,
@@ -132,8 +180,11 @@ class MockSource:
         until: datetime,
         author: str | None = None,
     ) -> list[WorkItem]:
+        fixture = load_fixture_items()
+        if self.include_attendance:
+            fixture = fixture + _attendance_fixture_items()
         return [
             item
-            for item in load_fixture_items()
+            for item in fixture
             if since <= item.occurred_at <= until and (author is None or item.member == author)
         ]

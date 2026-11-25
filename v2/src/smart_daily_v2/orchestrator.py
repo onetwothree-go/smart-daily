@@ -33,8 +33,46 @@ from smart_daily_v2.reports.generator import (
     build_team_report,
     group_by_member,
 )
-from smart_daily_v2.sources.base import WorkSource
+from smart_daily_v2.sources.base import AllSourcesUnavailableError, WorkSource
 from smart_daily_v2.sources.fallback import collect_with_fallback
+
+# 第 4 周变更涟漪（TK-V2-902 / design §4-3 定案 A）：考勤源按 name 识别，
+# 走独立支路、不进 collect_with_fallback 降级链（后者「首个非空源即停止」会吞掉考勤）。
+ATTENDANCE_SOURCE_NAME = "feishu_attendance"
+
+
+def _split_sources(
+    sources: Sequence[WorkSource],
+) -> tuple[list[WorkSource], list[WorkSource]]:
+    """把考勤源从主链分出：返回 (主链源, 考勤源)，顺序保持稳定。"""
+    main: list[WorkSource] = []
+    attendance: list[WorkSource] = []
+    for source in sources:
+        if getattr(source, "name", None) == ATTENDANCE_SOURCE_NAME:
+            attendance.append(source)
+        else:
+            main.append(source)
+    return main, attendance
+
+
+def _collect_attendance(
+    attendance_sources: Sequence[WorkSource],
+    *,
+    since: datetime,
+    until: datetime,
+    reasons: list[str],
+) -> list[WorkItem]:
+    """考勤独立支路：逐源独立 try/except，失败留痕不中断，成功条目合流。"""
+    items: list[WorkItem] = []
+    for source in attendance_sources:
+        try:
+            rows = source.collect(since=since, until=until)
+        except Exception as exc:  # 独立支路：任何失败只留痕，不拖垮主链
+            reason = getattr(exc, "reason", None) or str(exc)
+            reasons.append(f"{source.name}: {reason}")
+            continue
+        items.extend(rows)
+    return items
 
 
 def _persist_report(
@@ -50,7 +88,34 @@ def _persist_report(
 def run(day: date, *, sources: Sequence[WorkSource], notify: bool = True) -> dict:
     since = datetime.combine(day, time.min, tzinfo=LOCAL_TZ)
     until = datetime.combine(day + timedelta(days=1), time.min, tzinfo=LOCAL_TZ)
-    collected_items, reasons = collect_with_fallback(sources, since=since, until=until)
+
+    # TK-V2-902（design §4-3 定案 A）：主链与考勤支路分离。
+    # 主链为空（只跑考勤）时不调用 collect_with_fallback——它会对空源列表抛
+    # AllSourcesUnavailableError，而考勤单跑属合法场景（验收③）。
+    main_sources, attendance_sources = _split_sources(sources)
+    main_error: AllSourcesUnavailableError | None = None
+    if main_sources:
+        try:
+            collected_items, reasons = collect_with_fallback(main_sources, since=since, until=until)
+        except AllSourcesUnavailableError as exc:
+            # 主链全失败先记账；考勤支路若有产出则不判整次失败（验收②）。
+            main_error = exc
+            collected_items = []
+            reasons = [f"{err.source}: {err.reason}" for err in exc.errors]
+    else:
+        collected_items, reasons = [], []
+
+    attendance_items = _collect_attendance(
+        attendance_sources, since=since, until=until, reasons=reasons
+    )
+    # 全部数据源失败才判整次失败：主链全失败且考勤无产出（验收②）。
+    # 只跑考勤且全失败、或完全无源时同样抛（沿用 collect_with_fallback([]) 语义）。
+    if main_error is not None and not attendance_items:
+        raise main_error
+    if not main_sources and not attendance_items and sources:
+        raise AllSourcesUnavailableError([])
+
+    collected_items = collected_items + attendance_items
     items: list[WorkItem] = [
         item for item in collected_items if local_date(item.occurred_at) == day
     ]

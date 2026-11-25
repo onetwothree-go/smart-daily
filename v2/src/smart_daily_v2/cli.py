@@ -16,8 +16,10 @@ Scope registrations (☐ 待确认，组内):
   ☐ 待确认：source_name 拼接规则
 - Delivery expectations use run()'s current result; the additional K6 recipient
   channel is not wired by this CLI. ☐ 待确认：K6 送达 6 条未注入
-- --source accepts github, feishu_task, feishu_chat, or mock; the final source set
-  remains unresolved. ☐ 待组内确认
+- --source accepts github, feishu_task, feishu_chat, feishu_attendance, or mock;
+  the final source set remains unresolved. ☐ 待组内确认
+- TK-V2-902：feishu_attendance 为第五源（design §4-4），--mock 样例含考勤条目；
+  考勤在 orchestrator 走独立支路（design §4-3），失败留痕不中断。
 - The exit-code table is documented here and shown verbatim in --help; the intended
   external documentation location remains unresolved. ☐ 待组内确认
 - K8 is inherited: AllSourcesUnavailableError derives from SourceUnavailableError.
@@ -33,6 +35,7 @@ from datetime import date, datetime
 from smart_daily_v2 import orchestrator, storage
 from smart_daily_v2.config import load_config
 from smart_daily_v2.models import LOCAL_TZ
+from smart_daily_v2.sources.attendance import FeishuAttendanceSource
 from smart_daily_v2.sources.base import SourceUnavailableError
 from smart_daily_v2.sources.feishu_chat import FeishuChatSource
 from smart_daily_v2.sources.feishu_tasks import FeishuTaskSource
@@ -50,6 +53,8 @@ SOURCE_TYPES = {
     "feishu_task": FeishuTaskSource,
     "feishu_chat": FeishuChatSource,
     "mock": MockSource,
+    # TK-V2-902（design §4-4 定案）：第五源，可用 --source 单独跑考勤。
+    "feishu_attendance": FeishuAttendanceSource,
 }
 
 
@@ -80,7 +85,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _sources(args: argparse.Namespace) -> list[object]:
     if args.mock:
-        return [MockSource()]
+        # TK-V2-902 验收④：--mock 样例含考勤条目（默认 MockSource 行为不变）。
+        return [MockSource(include_attendance=True)]
     if args.source is not None:
         source_type = SOURCE_TYPES[args.source]
         return [source_type() if args.source == "mock" else source_type.from_env()]
