@@ -4,12 +4,24 @@ from datetime import date
 
 from smart_daily_v2.models import LOCAL_TZ, WorkItem
 
-_KIND_LABELS = {"commit": "提交", "task": "任务", "message": "消息"}
+_KIND_LABELS = {
+    "commit": "提交",
+    "task": "任务",
+    "message": "消息",
+    # TK-V2-903（design §5-2）：考勤条目 badge 中文标签。
+    "attendance": "考勤",
+}
 _CONVENTIONAL_TYPE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*)\s*:")
 
 
 def _type_badge(item: WorkItem) -> str:
-    """优先取 conventional commit 的 type 前缀（fix:/docs:/feat: …），否则回落 kind 中文标签。"""
+    """优先取 conventional commit 的 type 前缀（fix:/docs:/feat: …），否则回落 kind 中文标签。
+
+    TK-V2-903（design §5-2）：kind=attendance 强制返回「考勤」，
+    避免标题含 `xxx:` 时被 conventional 前缀抢先显示为英文徽标。
+    """
+    if item.kind == "attendance":
+        return _KIND_LABELS["attendance"]
     match = _CONVENTIONAL_TYPE.match(item.title)
     if match:
         return match.group(1)
