@@ -13,6 +13,14 @@ TK-V2-903（badge 映射 / 生成层接入），二者未落地时整文件 skip
 C1 判据（另走评审），不得在此静默扩充。
 
 边界：AI 辅助起草骨架，未代签、未代勾任务状态、未改 design/proposal/tasks。
+
+2026-11-26 修订登记（于悦请求代修，杨佳莹本人找 user_id 无暇）：902/903 合入后本文件
+自动启用，暴露两处用例构造问题——① test_904_02 把条目直传 build_personal_report，
+漏了 group_by_member 成员过滤；② test_904_05 原按验收⑤原文同传 --mock 与
+--source feishu_attendance（CLI 互斥组不接受），且断言 stdout 含考勤正文，但 main()
+按退出码契约只落库不打印正文。本次只修这两条用例构造，使其验证真实的验收意图
+（成员隔离 / exit 0 + 落库日报含考勤行）；未代杨佳莹签认、未勾销 904、未改验收标准
+原文（验收⑤字面与 CLI 契约的冲突另走组内对齐）。
 """
 
 from __future__ import annotations
@@ -78,7 +86,9 @@ def test_904_01_recorded_member_has_exactly_one_attendance_row():
 def test_904_02_member_without_attendance_has_no_row():
     items = [make_attendance_item("att-001", "甲", datetime(2026, 11, 25, 9, 0, tzinfo=LOCAL_TZ))]
 
-    body = build_personal_report("乙", items, DAY)
+    # build_personal_report 只渲染传入条目、不按成员过滤；成员过滤在 group_by_member 层。
+    groups = group_by_member(items)
+    body = build_personal_report("乙", groups.get("乙", []), DAY)
 
     assert attendance_rows(body) == []
 
@@ -114,11 +124,20 @@ def test_904_04_record_id_in_detail_is_one_to_one_with_source_records():
     assert body.count("record_id=") == len(source_ids)
 
 
-def test_904_05_cli_mock_attendance_source_exit_zero():
+def test_904_05_cli_mock_attendance_source_exit_zero(tmp_path):
+    # 验收⑤原文「--source feishu_attendance --mock」两参数在 CLI 互斥组内，无法同传；
+    # 且 main() 按退出码契约不向 stdout 打印日报正文，正文落 SQLite daily_reports.content。
+    # 故改用 --mock（夹具含考勤条目、无需真实凭证）+ --no-notify（不触发推送失败码 3），
+    # 并把 DB_PATH 指向临时库，从落库正文验证「exit 0 且日报含考勤行」。
+    # mock 考勤夹具日期为 2026-11-18，与 DAY（11-25）不同，按夹具实际日期取日报。
+    import sqlite3
+
     root = Path(__file__).resolve().parents[1]
     env = os.environ.copy()
     src = str(root / "src")
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
+    db_path = tmp_path / "attendance.db"
+    env["DB_PATH"] = str(db_path)
 
     result = subprocess.run(
         [
@@ -126,10 +145,9 @@ def test_904_05_cli_mock_attendance_source_exit_zero():
             "-m",
             "smart_daily_v2.cli",
             "--mock",
-            "--source",
-            "feishu_attendance",
+            "--no-notify",
             "--day",
-            DAY.isoformat(),
+            "2026-11-18",
         ],
         capture_output=True,
         text=True,
@@ -139,4 +157,15 @@ def test_904_05_cli_mock_attendance_source_exit_zero():
     )
 
     assert result.returncode == 0, result.stderr
-    assert "`考勤`" in result.stdout
+    conn = sqlite3.connect(db_path)
+    try:
+        contents = [
+            row[0]
+            for row in conn.execute(
+                "SELECT content FROM daily_reports WHERE report_date = ?", ("2026-11-18",)
+            )
+        ]
+    finally:
+        conn.close()
+    assert contents, "CLI 应落库当日日报"
+    assert any("`考勤`" in body for body in contents), "落库日报正文应含考勤行"

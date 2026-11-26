@@ -1088,3 +1088,9 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 2026-11-25 | WorkBuddy | 黄 | 用户引用上一轮盘点「要不要拉队友12条 / 要不要清红绿循环记录话术」回「整吧」→ ① 本地 behind 12，队友今天推进考勤组 901-904（feat/test 各若干）、思考题、签字回填、B组前三项闭环（proposal 0.5-diff/design §8-B #1#2#3/tasks 9xx）；工作区干净，`git merge --ff-only origin/dev` 快进成功、本地与 origin/dev 同步。② 清 `v2/docs/方赫-红绿循环记录-第3周.md` 残留的解释性话术3处（L180 标题「经本人明确授权、非放水」→「本人决定修正、非放水」、L180「明确选『授权 Claude 修正笔误』」→「明确选『修正笔误』」、L183「笔误修正经本人授权后由 Claude Code 执行」→「由本人选定后由 Claude Code 执行」），**保留事实**：只修笔误、非放水、未放宽验收、10/176 passed、7条签认状态。核全文禁用话术 0 处。**签认栏未改**（本次为本人产出措辞修正） | `v2/docs/方赫-红绿循环记录-第3周.md`（3处话术）；`docs/ai-usage-log.md` 本条 | 核快进后本地=origin/dev、无冲突；核清后 0 处禁用话术；核签认状态与验收事实未变；未动源码/specs/tests/他人文件 | ☐ 待本人核验 |
 
 - 边界：拉取为纯快进同步、未改任何文件内容；话术清理仅限本人第3周这一份，未碰他人签字栏/状态列/specs/源码；签认结论与日期原样保留。
+
+## 补记（2026-11-26，应于悦请求代修杨佳莹 904 两条用例 + 于悦自修 901 ruff，状态 ☐ 待本人核验）
+
+| 日期 | 工具 | 四色 | 用途与提示要点 | 产出与去向 | 人工核验方式 | 状态 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-26 | WorkBuddy | 黄 | 于悦称杨佳莹正找飞书 user_id 无暇修 904、请求代改让 CI 红的两条用例：①`test_904_02` 把甲的考勤条目直传 `build_personal_report("乙", items, DAY)`，但该函数只渲染传入条目、不按成员过滤（过滤在 `group_by_member` 层）→ 改为先分组再取乙的列表；②`test_904_05` 按验收⑤原文同传 `--mock` 与 `--source feishu_attendance`（CLI 互斥组不接受），且断言 stdout 含考勤正文，但 `main()` 按退出码契约只落库不打印正文 → 改用 `--mock --no-notify`、DB_PATH 指临时库、从 `daily_reports.content` 验证 exit 0 + 含考勤行（mock 考勤夹具日期 11-18，按夹具日取）。实测 root cause 后只改这两条用例构造 + 文件头代修登记；未代杨佳莹签认、未勾销 904、未改验收⑤原文（其与 CLI 契约冲突另走组内对齐）。另修于悦自己 901 遗留的 ruff：`test_source_attendance.py` F401（未用 local_date）/E501（长行）+ 该文件与 `attendance.py` format | `v2/tests/test_integration_attendance.py`、`v2/tests/test_source_attendance.py`、`v2/src/smart_daily_v2/sources/attendance.py`、本日志 | 本人核对：①904 两条 root cause 有源码/实测输出互证（build_personal_report 不过滤、argparse 互斥、stdout 无正文、落库含考勤行）；②全量 pytest 308 passed（原 303 + 904 骨架 5 激活后全过，CI 不再红）；③ruff check 全过、format 116 文件全过；④未动杨佳莹签字栏/904 状态、未改验收标准；⑤未 commit | ☐ 待本人核验 |
