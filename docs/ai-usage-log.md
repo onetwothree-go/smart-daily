@@ -1094,3 +1094,11 @@ AI 给出的重要结论须**三源核验**（至少两个独立可信来源相�
 | 日期 | 工具 | 四色 | 用途与提示要点 | 产出与去向 | 人工核验方式 | 状态 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-26 | WorkBuddy | 黄 | 于悦称杨佳莹正找飞书 user_id 无暇修 904、请求代改让 CI 红的两条用例：①`test_904_02` 把甲的考勤条目直传 `build_personal_report("乙", items, DAY)`，但该函数只渲染传入条目、不按成员过滤（过滤在 `group_by_member` 层）→ 改为先分组再取乙的列表；②`test_904_05` 按验收⑤原文同传 `--mock` 与 `--source feishu_attendance`（CLI 互斥组不接受），且断言 stdout 含考勤正文，但 `main()` 按退出码契约只落库不打印正文 → 改用 `--mock --no-notify`、DB_PATH 指临时库、从 `daily_reports.content` 验证 exit 0 + 含考勤行（mock 考勤夹具日期 11-18，按夹具日取）。实测 root cause 后只改这两条用例构造 + 文件头代修登记；未代杨佳莹签认、未勾销 904、未改验收⑤原文（其与 CLI 契约冲突另走组内对齐）。另修于悦自己 901 遗留的 ruff：`test_source_attendance.py` F401（未用 local_date）/E501（长行）+ 该文件与 `attendance.py` format | `v2/tests/test_integration_attendance.py`、`v2/tests/test_source_attendance.py`、`v2/src/smart_daily_v2/sources/attendance.py`、本日志 | 本人核对：①904 两条 root cause 有源码/实测输出互证（build_personal_report 不过滤、argparse 互斥、stdout 无正文、落库含考勤行）；②全量 pytest 308 passed（原 303 + 904 骨架 5 激活后全过，CI 不再红）；③ruff check 全过、format 116 文件全过；④未动杨佳莹签字栏/904 状态、未改验收标准；⑤未 commit | ☐ 待本人核验 |
+
+## 补记（2026-11-26，于悦第4周产出①「变更涟漪代码实现与回归通过记录」代起草，状态 ☐ 待本人核验）
+
+| 日期 | 工具 | 四色 | 用途与提示要点 | 产出与去向 | 人工核验方式 | 状态 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-26 | WorkBuddy | 黄 | 于悦「先给我做第一份文件」→ 依本地实测与 git 提交历史代起草第4周开发产出①：§1 交付总览（901/902/903 本人实现 + 904 代修边界，新增用例 12+12+6+5=35 条、全量 273→308）；§2 逐任务红→绿→检查（红绿提交号 `ca40142`→`bc1c189`、`d77fd1d`→`40a5ba3`、`c1d2bfd`→`3ceee2d` 逐条贴出）；§3 回归通过记录（实跑 308 passed、ruff check 全过 + format 116 文件、CI run `45737268295`/`45737268564` 双 success、DEF-11 红转绿经 `7db0172`+`80a9542`）；§4 边界（904 非本人产出、两处用例构造代修未代签；B#5/B#6 配置侧前置未齐保持 ⬜ 不勾销、真实联调留 ☐；1A/2A 裁决口径；design §9 归方赫、proposal C11 字面归赵蕊）；文末签字栏留空 | `v2/docs/于悦-第4周-变更涟漪代码实现与回归通过记录.md`、本日志 | 本人核对：①四个考勤测试文件 collect 实测 12/12/6/5=35 条；②全量 pytest 308 passed、ruff 双清为本次实跑；③红绿提交号经 `git log` 逐条互证；④CI 两 run success 经 GitHub API 查证；⑤未代签未代勾、未动他人文件与 specs；⑥未 commit（git 交 Claude Code） | ☐ 待本人核验 |
+
+- 边界：本条为代起草文档，不改既有条目计数口径；产出物签字栏留空待本人签，未代签、未倒填；未提交（git 按约定交本人/Claude Code）。
