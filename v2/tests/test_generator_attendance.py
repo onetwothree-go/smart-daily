@@ -40,8 +40,21 @@ def _attendance_item(
 
 def test_attendance_badge_is_chinese() -> None:
     assert format_item(_attendance_item()) == (
-        "| 09:05 | `考勤` | 考勤：正常 —— 出勤状态：正常 record_id: mock-att-001 |"
+        "| 09:05 | `考勤` | 已打卡 —— record_id: mock-att-001 |"
     )
+
+
+def test_attendance_status_not_exposed_in_report() -> None:
+    """早退/迟到等考勤判定不进日报正文；record_id 保留供 C11 对账。"""
+    rendered = format_item(
+        _attendance_item(title="考勤：早退", detail="出勤状态：早退\nrecord_id: mock-att-001")
+    )
+
+    assert "早退" not in rendered
+    assert "迟到" not in rendered
+    assert "出勤状态" not in rendered
+    assert "已打卡" in rendered
+    assert "record_id: mock-att-001" in rendered
 
 
 def test_attendance_badge_forced_over_conventional_prefix() -> None:

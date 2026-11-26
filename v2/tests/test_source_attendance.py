@@ -102,6 +102,83 @@ def _fake_post(
     return calls
 
 
+def _real_record(
+    *,
+    check_in_time: str | None,
+    check_out_time: str | None,
+    check_in_id: str = "",
+    check_out_id: str = "",
+    check_in_result: str = "Normal",
+    check_out_result: str = "Normal",
+) -> dict[str, object]:
+    """飞书 user_tasks/query 真实返回格式：嵌套打卡对象 + unix 秒时间戳。"""
+
+    def punch(ts: str | None, rec_id: str) -> dict[str, object] | None:
+        if not ts:
+            return None
+        return {
+            "check_time": ts,
+            "record_id": rec_id,
+            "location_name": "不应进日报的定位字段",
+            "device_id": "不应进日报的设备字段",
+        }
+
+    rec: dict[str, object] = {
+        "check_in_result": check_in_result,
+        "check_out_result": check_out_result,
+        "check_in_record_id": check_in_id,
+        "check_out_record_id": check_out_id,
+    }
+    ci = punch(check_in_time, check_in_id)
+    co = punch(check_out_time, check_out_id)
+    if ci is not None:
+        rec["check_in_record"] = ci
+    if co is not None:
+        rec["check_out_record"] = co
+    return rec
+
+
+def test_real_feishu_nested_unix_timestamp_record(monkeypatch) -> None:
+    """真实接口格式：嵌套 check_in/out_record + unix 秒戳 + 分离 record_id。
+
+    红→绿：修复前 _pick_occurred_at 只读顶层 ISO 字段，读不到 → 0 条；修复后应读出。
+    """
+    real_since = datetime(2026, 11, 26, 0, 0, tzinfo=LOCAL_TZ)
+    real_until = datetime(2026, 11, 27, 0, 0, tzinfo=LOCAL_TZ)
+    payload = _page(
+        [
+            _user_task(
+                "ou-member-a",
+                [
+                    _real_record(
+                        check_in_time="1795685306",
+                        check_out_time="1795686717",
+                        check_in_id="real-in-001",
+                        check_out_id="real-out-001",
+                        check_in_result="Normal",
+                        check_out_result="Early",
+                    )
+                ],
+            )
+        ]
+    )
+    _fake_post(monkeypatch, payload)
+
+    items = _make_source().collect(since=real_since, until=real_until)
+
+    assert len(items) == 1
+    item = items[0]
+    assert item.kind == "attendance"
+    assert item.member == normalize_key(MEMBER_MAP["ou-member-a"])
+    assert item.occurred_at.tzinfo is not None
+    assert item.occurred_at == datetime(2026, 11, 26, 17, 28, 26, tzinfo=LOCAL_TZ)
+    assert item.local_day == date(2026, 11, 26)
+    assert "real-in-001" in item.detail  # 优先取上班卡 record_id
+    # 隐私最小化：定位/设备字段不得进 detail
+    assert "定位" not in item.detail
+    assert "不应进日报" not in item.detail
+
+
 def test_two_records_map_to_workitems_with_derived_fields(monkeypatch) -> None:
     payload = _page(
         [

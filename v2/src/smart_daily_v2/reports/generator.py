@@ -34,7 +34,14 @@ def _clean(text: str) -> str:
 
 
 def _headline(item: WorkItem) -> str:
-    """内容列标题：去掉已经在类型列出现过的 conventional 前缀。"""
+    """内容列标题：去掉已经在类型列出现过的 conventional 前缀。
+
+    考勤条目只展示「已打卡」这一事实，不把飞书的出勤状态判定（早退/迟到等）
+    渲染到日报正文：打卡时间、record_id 均保留，C11 逐条对账所需的状态仍完整
+    留在 WorkItem.detail 内，仅不在面向读者的表格里披露。
+    """
+    if item.kind == "attendance":
+        return "已打卡"
     title = _clean(item.title)
     match = _CONVENTIONAL_TYPE.match(title)
     if match:
@@ -46,6 +53,12 @@ def _headline(item: WorkItem) -> str:
 
 def _supplement(item: WorkItem) -> str:
     """详情只在确实带来新信息时追加；GitHub 的 detail==title 不再重复印一遍。"""
+    if item.kind == "attendance":
+        # 只把 record_id 原样带进日报供对账溯源；出勤状态留在 detail、不进正文。
+        # 兼容采集源 `record_id: xxx` 与集成用例 `record_id=xxx` 两种内嵌写法。
+        detail = _clean(item.detail or "")
+        match = re.search(r"record_id[:=]\s*[\w-]+", detail)
+        return match.group(0) if match else ""
     title = _clean(item.title)
     detail = _clean(item.detail or "")
     if not detail or detail == title:

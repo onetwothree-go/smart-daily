@@ -162,8 +162,8 @@ class FeishuAttendanceSource(WorkSource):
                 if not (since <= occurrence <= until):
                     continue
 
-                record_id = str(record.get("record_id", ""))
-                status = str(record.get("status", ""))
+                record_id = _pick_record_id(record)
+                status = _pick_status(record)
                 mapped = self.member_map.get(user_id)
                 if mapped is None:
                     member = normalize_key(user_id)
@@ -193,10 +193,73 @@ class FeishuAttendanceSource(WorkSource):
         return items
 
 
+def _as_datetime(raw: object) -> datetime | None:
+    """把打卡时刻转成带时区 datetime：兼容 ISO 字符串与 unix 秒时间戳。
+
+    真实飞书 user_tasks/query 返回 unix 秒（如 "1795685306"）；桩/夹具用 ISO。
+    """
+    if not raw:
+        return None
+    text = str(raw)
+    if text.isdigit():
+        from smart_daily_v2.models import LOCAL_TZ
+
+        return datetime.fromtimestamp(int(text), tz=LOCAL_TZ)
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _punch(record: Mapping[str, object], which: str) -> Mapping[str, object]:
+    """取某一次打卡对象，兼容真实嵌套格式与桩的顶层 ISO 格式。"""
+    nested = record.get(f"check_{which}_record")
+    if isinstance(nested, Mapping):
+        return nested
+    return record
+
+
 def _pick_occurred_at(record: Mapping[str, object]) -> datetime | None:
-    """取上班打卡时刻，缺则回落下班卡，两者皆无返回 None（design §4-2 定案）。"""
-    for key in ("check_time", "off_time"):
-        raw = record.get(key)
-        if raw:
-            return datetime.fromisoformat(str(raw))
+    """取上班打卡时刻，缺则回落下班卡，两者皆无返回 None（design §4-2 定案）。
+
+    真实格式：check_in_record.check_time / check_out_record.check_time（unix 秒）；
+    桩格式：顶层 check_time / off_time（ISO）。隐私字段不读取、不落库。
+    """
+    check_in = _punch(record, "in")
+    for raw in (
+        check_in.get("check_time"),
+        _punch(record, "out").get("check_time"),
+        record.get("off_time"),
+    ):
+        parsed = _as_datetime(raw)
+        if parsed is not None:
+            return parsed
     return None
+
+
+def _pick_record_id(record: Mapping[str, object]) -> str:
+    """优先取上班卡 record_id，回落下班卡；兼容桩的顶层 record_id。"""
+    check_in = _punch(record, "in")
+    check_out = _punch(record, "out")
+    for candidate in (
+        check_in.get("record_id"),
+        str(record.get("check_in_record_id") or ""),
+        check_out.get("record_id"),
+        str(record.get("check_out_record_id") or ""),
+        record.get("record_id"),
+    ):
+        if candidate:
+            return str(candidate)
+    return ""
+
+
+def _pick_status(record: Mapping[str, object]) -> str:
+    """取出勤状态供 detail 对账；兼容真实 check_*_result 与桩的顶层 status。"""
+    for candidate in (
+        record.get("check_in_result"),
+        record.get("check_out_result"),
+        record.get("status"),
+    ):
+        if candidate:
+            return str(candidate)
+    return ""
