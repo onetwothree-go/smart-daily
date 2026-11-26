@@ -68,30 +68,61 @@ def _supplement(item: WorkItem) -> str:
     return detail
 
 
-def format_item(item: WorkItem) -> str:
-    """单条工作痕迹 → 表格数据行，个人/团队日报共用（C4 逐字一致的单一来源）。"""
+def _local_hhmm(item: WorkItem) -> str:
+    """条目归属时区的 HH:MM；format_item 与个人日报列表块共用同一取时口径。"""
     occurred_at = item.occurred_at
     if occurred_at.tzinfo is not None:
         occurred_at = occurred_at.astimezone(LOCAL_TZ)
+    return f"{occurred_at:%H:%M}"
 
-    badge = _clean(_type_badge(item))
+
+def _content_with_extra(item: WorkItem) -> str:
+    """内容 = 标题 +（确有新增信息时）详情；表格行与双块列表行共用。"""
     content = _headline(item)
     extra = _supplement(item)
-    if extra:
-        content = f"{content} —— {extra}"
-    return f"| {occurred_at:%H:%M} | `{badge}` | {content} |"
+    return f"{content} —— {extra}" if extra else content
+
+
+def format_item(item: WorkItem) -> str:
+    """单条工作痕迹 → 表格数据行（团队日报用，C11③ 团队分组表格行保持原样）。
+
+    TK-V2-905（design 0.7-diff 0.6 §5-1）：个人日报已改双块、不再走本函数；
+    团队日报 C11③ 继续沿用本表格行，故 format_item 输出逐字不动。
+    """
+    badge = _clean(_type_badge(item))
+    return f"| {_local_hhmm(item)} | `{badge}` | {_content_with_extra(item)} |"
 
 
 def build_personal_report(member: str, items: list[WorkItem], day: date) -> str:
+    """个人日报 → `今日考勤` 独立块 + `工作记录` 列表块（S11 乙案 / TK-V2-905）。
+
+    design 0.7-diff 0.6 §5-1 局部翻案：个人日报不再用 `| HH:MM | badge | 内容 |`
+    表格行与提交混排、不出现表格分隔行。考勤块仅列打卡事实（`HH:MM` + 「已打卡」
+    + `record_id`），工作记录块以列表逐条列工作内容。①a 脱敏不变（状态只留 detail），
+    计数口径、1:1 对账、推送链、团队日报均不受影响。
+    """
     lines = [f"# 个人日报 · {day:%Y-%m-%d} · {member}", ""]
     lines.append(f"> 今日共 **{len(items)} 条**工作记录 ｜ 由系统自动生成，手工编写 0 条")
     lines.append("")
-    lines.append("| 时间 | 类型 | 内容 |")
-    lines.append("| :---: | :---: | :--- |")
-    if items:
-        lines.extend(format_item(item) for item in items)
+
+    attendance = [item for item in items if item.kind == "attendance"]
+    work = [item for item in items if item.kind != "attendance"]
+
+    if attendance:
+        lines.append("## 今日考勤")
+        lines.append("")
+        lines.extend(f"- {_local_hhmm(item)} {_content_with_extra(item)}" for item in attendance)
+        lines.append("")
+
+    lines.append("## 工作记录")
+    lines.append("")
+    if work:
+        for item in work:
+            badge = _clean(_type_badge(item))
+            lines.append(f"- {_local_hhmm(item)} `{badge}` {_content_with_extra(item)}")
     else:
-        lines.append("| — | — | 今日无工作记录 |")
+        lines.append("- 今日无工作记录")
+
     lines.extend(["", "---", "", "> 数据来源：真实工作记录 ｜ 本日报由系统自动汇总"])
     return "\n".join(lines)
 

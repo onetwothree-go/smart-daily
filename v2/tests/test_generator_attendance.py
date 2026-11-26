@@ -90,9 +90,11 @@ def test_member_without_attendance_has_no_attendance_row() -> None:
 
 
 def test_attendance_in_report_when_present() -> None:
+    """个人日报：考勤进 `## 今日考勤` 独立块，正文「已打卡」+ record_id（905 双块）。"""
     report = build_personal_report("甲", [_attendance_item()], DAY)
 
-    assert "`考勤`" in report
+    assert "## 今日考勤" in report
+    assert "已打卡" in report
     assert "record_id: mock-att-001" in report
 
 
@@ -140,20 +142,21 @@ def _is_work_line(line: str) -> bool:
 
 
 def test_personal_report_attendance_not_in_middle() -> None:
-    """个人日报里考勤行不得夹在工作记录之间，须置顶。"""
+    """个人日报：考勤独占 `## 今日考勤` 块，整体位于 `## 工作记录` 块之前（905 双块）。"""
     late_work = _work_item("late", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
-    attend = _attendance_item()  # 09:05，夹在 20:00 与 08:00 之间
+    attend = _attendance_item()  # 09:05，时间处于中间
     early_work = _work_item("early", datetime.fromisoformat("2026-11-18T08:00:00+08:00"))
 
     groups = group_by_member([late_work, attend, early_work])
     report = build_personal_report("甲", groups["甲"], DAY)
-    lines = report.splitlines()
-    attendance_positions = [i for i, line in enumerate(lines) if "`考勤`" in line]
-    work_positions = [i for i, line in enumerate(lines) if _is_work_line(line)]
 
-    assert attendance_positions, "应有一条考勤行"
-    assert work_positions, "应有工作记录行"
-    assert attendance_positions[0] < min(work_positions), "考勤行须在所有工作记录行之前"
+    attendance_block = _personal_block(report, "## 今日考勤")
+    work_block = _personal_block(report, "## 工作记录")
+
+    assert attendance_block, "应有一条考勤行"
+    assert work_block, "应有工作记录行"
+    assert "已打卡" in attendance_block[0]
+    assert report.index("## 今日考勤") < report.index("## 工作记录")
 
 
 def test_team_report_attendance_not_in_middle() -> None:
@@ -171,3 +174,58 @@ def test_team_report_attendance_not_in_middle() -> None:
     assert attendance_positions, "应有一条考勤行"
     assert work_positions, "应有工作记录行"
     assert attendance_positions[0] < min(work_positions), "考勤行须在该成员工作记录之前"
+
+
+# --- TK-V2-905 双块呈现红测试（design 0.7-diff 0.6 §5-1 / proposal 0.5-diff 0.6 / issue #24）---
+
+
+def _personal_block(body: str, heading: str) -> list[str]:
+    """取个人日报某个 `## ` 块内的非空行（截至下一个 `## ` 或 `---`）。"""
+    lines = body.splitlines()
+    if heading not in lines:
+        return []
+    start = lines.index(heading) + 1
+    out: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("## ") or line == "---":
+            break
+        if line.strip():
+            out.append(line)
+    return out
+
+
+def test_personal_report_uses_two_independent_blocks() -> None:
+    """个人日报为 `## 今日考勤` + `## 工作记录` 两块独立呈现，考勤在前，无表格分隔行。"""
+    work = _work_item("w", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    body = build_personal_report("甲", [work, _attendance_item()], DAY)
+
+    assert "## 今日考勤" in body
+    assert "## 工作记录" in body
+    assert body.index("## 今日考勤") < body.index("## 工作记录")
+    assert "| :---" not in body
+
+
+def test_personal_attendance_block_line_is_redacted() -> None:
+    """考勤块每行 `- HH:MM 已打卡 —— record_id: XXX`；早退/迟到状态不渲染。"""
+    body = build_personal_report("甲", [_attendance_item(title="考勤：早退")], DAY)
+
+    assert _personal_block(body, "## 今日考勤") == ["- 09:05 已打卡 —— record_id: mock-att-001"]
+    assert "早退" not in body
+
+
+def test_personal_work_block_is_list_not_table() -> None:
+    """工作记录块用 `- HH:MM `badge` 内容` 列表，不出现表格数据行。"""
+    work = _work_item("w", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    body = build_personal_report("甲", [work], DAY)
+
+    block = _personal_block(body, "## 工作记录")
+    assert len(block) == 1
+    assert block[0].startswith("- 20:00 `feat` ")
+
+
+def test_personal_report_without_attendance_has_no_attendance_block() -> None:
+    """无记录成员不出现考勤块（906②），仍保留 C8「今日无工作记录」。"""
+    body = build_personal_report("甲", [], DAY)
+
+    assert "## 今日考勤" not in body
+    assert "今日无工作记录" in body

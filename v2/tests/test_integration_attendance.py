@@ -69,18 +69,35 @@ def make_attendance_item(
 
 
 def attendance_rows(body: str) -> list[str]:
+    """团队日报的考勤表格行（C11③ 团队分组表格行原样保留）。"""
     return [line for line in body.splitlines() if "`考勤`" in line and line.startswith("|")]
 
 
+def personal_attendance_lines(body: str) -> list[str]:
+    """个人日报 `## 今日考勤` 块的列表行（S11 乙案 / TK-V2-905 / 906①）。"""
+    lines = body.splitlines()
+    if "## 今日考勤" not in lines:
+        return []
+    start = lines.index("## 今日考勤") + 1
+    out: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("## ") or line == "---":
+            break
+        if line.strip():
+            out.append(line)
+    return out
+
+
 def test_904_01_recorded_member_has_exactly_one_attendance_row():
+    """个人日报考勤行：906① 双块断言取代原表格行逐字断言（团队日报断言保持 904 原样）。"""
     item = make_attendance_item("att-001", "甲", datetime(2026, 11, 25, 9, 0, tzinfo=LOCAL_TZ))
 
     body = build_personal_report("甲", [item], DAY)
-    rows = attendance_rows(body)
+    lines = personal_attendance_lines(body)
 
-    assert len(rows) == 1
-    assert rows[0].startswith("| 09:00 | `考勤` |")
-    assert "att-001" in rows[0]
+    assert len(lines) == 1
+    assert lines[0] == "- 09:00 已打卡 —— record_id=att-001"
+    assert "att-001" in lines[0]
 
 
 def test_904_02_member_without_attendance_has_no_row():
@@ -90,7 +107,8 @@ def test_904_02_member_without_attendance_has_no_row():
     groups = group_by_member(items)
     body = build_personal_report("乙", groups.get("乙", []), DAY)
 
-    assert attendance_rows(body) == []
+    assert personal_attendance_lines(body) == []
+    assert "## 今日考勤" not in body
 
 
 def test_904_03_team_report_groups_all_attendance_items():
@@ -168,4 +186,6 @@ def test_904_05_cli_mock_attendance_source_exit_zero(tmp_path):
     finally:
         conn.close()
     assert contents, "CLI 应落库当日日报"
-    assert any("`考勤`" in body for body in contents), "落库日报正文应含考勤行"
+    assert any("## 今日考勤" in body and "已打卡" in body for body in contents), (
+        "落库个人日报正文应含双块考勤行（905）"
+    )
