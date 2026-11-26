@@ -90,7 +90,14 @@ def _sources(args: argparse.Namespace) -> list[object]:
     if args.source is not None:
         source_type = SOURCE_TYPES[args.source]
         return [source_type() if args.source == "mock" else source_type.from_env()]
-    return [GithubSource.from_env(), FeishuTaskSource.from_env(), FeishuChatSource.from_env()]
+    # 默认源含考勤：22:00 自动日报（run_daily.ps1 不带 --source）因此能在报告中
+    # 出现「考勤」行；凭证/映射未齐时考勤走 orchestrator 独立支路降级留痕，不中断主流程。
+    return [
+        GithubSource.from_env(),
+        FeishuTaskSource.from_env(),
+        FeishuChatSource.from_env(),
+        FeishuAttendanceSource.from_env(),
+    ]
 
 
 def _print_reports(reports) -> None:

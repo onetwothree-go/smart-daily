@@ -280,6 +280,37 @@ def test_signature_keyword_only_and_satisfies_worksource(monkeypatch) -> None:
         source.collect(SINCE, UNTIL)
 
 
+def test_parse_member_map_splits_pairs_and_skips_invalid() -> None:
+    from smart_daily_v2.sources.attendance import _parse_member_map
+
+    raw = " ou-a: 甲 ,ou-b:乙,invalid-no-colon,ou-c:,:无名,ou-d:丁"
+    assert _parse_member_map(raw) == {
+        "ou-a": "甲",
+        "ou-b": "乙",
+        "ou-d": "丁",
+    }
+
+
+def test_from_env_reads_member_map_from_config(monkeypatch) -> None:
+    _install_env(monkeypatch)
+    monkeypatch.setenv("FEISHU_ATTENDANCE_MEMBER_MAP", "ou-member-a: MemberA ,ou-member-b:memberb")
+
+    from smart_daily_v2.sources.attendance import FeishuAttendanceSource
+
+    source = FeishuAttendanceSource.from_env()
+    assert source.member_map == {"ou-member-a": "MemberA", "ou-member-b": "memberb"}
+    assert source.feishu_app_id == "fake-app-id"
+
+
+def test_from_env_empty_map_when_unset(monkeypatch) -> None:
+    _install_env(monkeypatch)
+    monkeypatch.delenv("FEISHU_ATTENDANCE_MEMBER_MAP", raising=False)
+
+    from smart_daily_v2.sources.attendance import FeishuAttendanceSource
+
+    assert FeishuAttendanceSource.from_env().member_map == {}
+
+
 def test_scope_registration_and_no_real_credentials() -> None:
     from smart_daily_v2.sources import attendance
 

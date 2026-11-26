@@ -13,6 +13,7 @@ class Config:
     feishu_app_id: str
     feishu_app_secret: str
     feishu_chat_id: str
+    feishu_attendance_member_map: str
     feishu_api: str
     feishu_webhook_url: str
     feishu_webhook_secret: str

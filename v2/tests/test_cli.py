@@ -118,6 +118,20 @@ def test_day_sets_report_date(monkeypatch) -> None:
     assert calls[0]["day"] == DAY
 
 
+def test_default_sources_include_attendance(monkeypatch) -> None:
+    """22:00 自动日报默认源须含 feishu_attendance，否则真实考勤进不了老师日报。"""
+    import smart_daily_v2.cli as cli
+
+    monkeypatch.setenv("FEISHU_APP_ID", "fake-app-id")
+    monkeypatch.setenv("FEISHU_APP_SECRET", "fake-app-secret")
+    monkeypatch.setenv("FEISHU_ATTENDANCE_MEMBER_MAP", "ou-a:甲")
+
+    args = cli._build_parser().parse_args([])
+    names = [source.name for source in cli._sources(args)]
+
+    assert names == ["github", "feishu_task", "feishu_chat", "feishu_attendance"]
+
+
 def test_mock_and_source_select_single_source(monkeypatch) -> None:
     import smart_daily_v2.cli as cli
 

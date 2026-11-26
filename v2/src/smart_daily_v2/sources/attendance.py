@@ -37,6 +37,23 @@ from smart_daily_v2.models import WorkItem, local_date
 from smart_daily_v2.sources.base import SourceUnavailableError, WorkSource
 
 
+def _parse_member_map(raw: str) -> dict[str, str]:
+    """解析 FEISHU_ATTENDANCE_MEMBER_MAP（格式 ``user_id:姓名,user_id:姓名``）。
+
+    B#6 方案 A（配置侧杨佳莹草稿）：静态映射、不假定同名即同人。跳过空项与
+    格式不合法的项（缺冒号 / 空 user_id / 空姓名），姓名保留原值，由 collect()
+    里 normalize_key() 统一归一化，与 feishu_chat / feishu_tasks 同源。
+    """
+    mapping: dict[str, str] = {}
+    for pair in raw.split(","):
+        if ":" not in pair:
+            continue
+        user_id, name = (part.strip() for part in pair.split(":", 1))
+        if user_id and name:
+            mapping[user_id] = name
+    return mapping
+
+
 def _fetch_tenant_access_token(app_id: str, app_secret: str, api_base: str) -> str:
     url = f"{api_base.rstrip('/')}/auth/v3/tenant_access_token/internal"
     try:
@@ -76,10 +93,12 @@ class FeishuAttendanceSource(WorkSource):
     @classmethod
     def from_env(cls) -> FeishuAttendanceSource:
         config = load_config()
+        member_map = _parse_member_map(config.feishu_attendance_member_map)
         return cls(
             feishu_app_id=config.feishu_app_id,
             feishu_app_secret=config.feishu_app_secret,
             feishu_api=config.feishu_api,
+            member_map=member_map,
         )
 
     def collect(
