@@ -59,9 +59,7 @@ def _fetch_tenant_access_token(app_id: str, app_secret: str, api_base: str) -> s
         )
     token = payload.get("tenant_access_token", "")
     if not token:
-        raise SourceUnavailableError(
-            "feishu_attendance", "token 响应缺少 tenant_access_token"
-        )
+        raise SourceUnavailableError("feishu_attendance", "token 响应缺少 tenant_access_token")
     return token
 
 
@@ -100,9 +98,7 @@ class FeishuAttendanceSource(WorkSource):
             if not value
         ]
         if missing:
-            raise SourceUnavailableError(
-                self.name, f"凭证未配置：{', '.join(missing)}"
-            )
+            raise SourceUnavailableError(self.name, f"凭证未配置：{', '.join(missing)}")
 
         token = _fetch_tenant_access_token(
             self.feishu_app_id, self.feishu_app_secret, self.feishu_api
@@ -121,15 +117,11 @@ class FeishuAttendanceSource(WorkSource):
         }
 
         try:
-            response = httpx.post(
-                url, json=body, params=params, headers=headers, timeout=15
-            )
+            response = httpx.post(url, json=body, params=params, headers=headers, timeout=15)
         except httpx.HTTPError as exc:
             raise SourceUnavailableError(self.name, f"请求失败：{exc}") from exc
         if not response.is_success:
-            raise SourceUnavailableError(
-                self.name, f"请求失败（HTTP {response.status_code}）"
-            )
+            raise SourceUnavailableError(self.name, f"请求失败（HTTP {response.status_code}）")
         payload = response.json()
         code = payload.get("code", 0)
         if code != 0:

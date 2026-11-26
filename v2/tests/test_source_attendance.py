@@ -15,7 +15,7 @@ import httpx
 import pytest
 
 from smart_daily_v2.identity import normalize_key
-from smart_daily_v2.models import LOCAL_TZ, WorkItem, local_date
+from smart_daily_v2.models import LOCAL_TZ, WorkItem
 from smart_daily_v2.sources.base import SourceUnavailableError, WorkSource
 
 SINCE = datetime(2026, 11, 9, 0, 0, tzinfo=LOCAL_TZ)
@@ -84,9 +84,7 @@ def _fake_post(
 
     calls: list[dict[str, object]] = []
 
-    def fake_post(
-        url: str, *, json, timeout, headers=None, params=None
-    ) -> httpx.Response:
+    def fake_post(url: str, *, json, timeout, headers=None, params=None) -> httpx.Response:
         calls.append(
             {
                 "url": url,
@@ -97,9 +95,7 @@ def _fake_post(
             }
         )
         if "/auth/v3/tenant_access_token/internal" in url:
-            return _response(
-                {"code": 0, "tenant_access_token": "fake-token", "expire": 7200}
-            )
+            return _response({"code": 0, "tenant_access_token": "fake-token", "expire": 7200})
         return _response(attendance_payload)
 
     monkeypatch.setattr(httpx, "post", fake_post)
@@ -135,7 +131,11 @@ def test_two_records_map_to_workitems_with_derived_fields(monkeypatch) -> None:
     assert items[1].occurred_at == datetime.fromisoformat("2026-11-09T09:31:00+08:00")
     assert all(item.local_day == date(2026, 11, 9) for item in items)
     assert all(item.occurred_at.tzinfo is not None for item in items)
-    assert all("/attendance/v1/user_tasks/query" in call["url"] for call in calls if "auth" not in call["url"])
+    assert all(
+        "/attendance/v1/user_tasks/query" in call["url"]
+        for call in calls
+        if "auth" not in call["url"]
+    )
 
 
 def test_off_time_is_fallback_when_check_time_missing(monkeypatch) -> None:
