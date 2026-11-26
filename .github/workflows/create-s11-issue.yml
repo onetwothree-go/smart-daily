@@ -1,7 +1,10 @@
 name: Create S11 issue (one-off)
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - .github/workflows/s11-trigger.txt
 
 permissions:
   contents: read
