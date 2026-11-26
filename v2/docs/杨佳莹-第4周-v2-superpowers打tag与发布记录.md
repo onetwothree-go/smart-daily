@@ -50,3 +50,4 @@ uv run ruff check . && uv run ruff format --check .
 - tag 打在 `d5715d7`，即打标时点仓库的最终提交；此后仓库若有新提交，tag 不随之移动。
 - 本次发布未改任何源码 / specs / tests / 他人文档，只新增 tag 与本记录文件。
 - GitHub Releases 页面未另建 release，课程以仓库 tag 为准；如老师要求 Release 页面再补。
+- 打标当晚组内又有新提交（日报双块呈现 9ed1ff1 等三条，全量测试增至 339 passed）；tag 保持指向交付验证时点的 `d5715d7` 不移动，后续交付按需另打 tag。
