@@ -12,7 +12,12 @@
 from datetime import date, datetime
 
 from smart_daily_v2.models import WorkItem
-from smart_daily_v2.reports.generator import build_personal_report, format_item
+from smart_daily_v2.reports.generator import (
+    build_personal_report,
+    build_team_report,
+    format_item,
+    group_by_member,
+)
 
 DAY = date(2026, 11, 18)
 OCCURRED = datetime.fromisoformat("2026-11-18T09:05:00+08:00")
@@ -101,3 +106,68 @@ def test_kind_labels_extended_without_touching_existing() -> None:
     assert _KIND_LABELS.get("commit") == "提交"
     assert _KIND_LABELS.get("task") == "任务"
     assert _KIND_LABELS.get("message") == "消息"
+
+
+# --- 考勤置顶护栏：考勤不得夹在工作记录中间（用户 2026-11-26 截图反馈） ---
+
+
+def _work_item(record_id: str, occurred_at: datetime) -> WorkItem:
+    return WorkItem(
+        record_id=record_id,
+        source="github",
+        member="甲",
+        kind="commit",
+        title=f"feat: 工作 {record_id}",
+        detail=f"工作 {record_id}",
+        occurred_at=occurred_at,
+        local_day=DAY,
+    )
+
+
+def test_group_by_member_puts_attendance_first() -> None:
+    """group_by_member 排序后，考勤须排在该成员最前，其余按时间倒序。"""
+    late_work = _work_item("late", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    attend = _attendance_item()  # 09:05，时间处于中间
+    early_work = _work_item("early", datetime.fromisoformat("2026-11-18T08:00:00+08:00"))
+
+    groups = group_by_member([late_work, attend, early_work])
+
+    assert groups["甲"][0].kind == "attendance"
+
+
+def _is_work_line(line: str) -> bool:
+    return "工作 late" in line or "工作 early" in line
+
+
+def test_personal_report_attendance_not_in_middle() -> None:
+    """个人日报里考勤行不得夹在工作记录之间，须置顶。"""
+    late_work = _work_item("late", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    attend = _attendance_item()  # 09:05，夹在 20:00 与 08:00 之间
+    early_work = _work_item("early", datetime.fromisoformat("2026-11-18T08:00:00+08:00"))
+
+    groups = group_by_member([late_work, attend, early_work])
+    report = build_personal_report("甲", groups["甲"], DAY)
+    lines = report.splitlines()
+    attendance_positions = [i for i, line in enumerate(lines) if "`考勤`" in line]
+    work_positions = [i for i, line in enumerate(lines) if _is_work_line(line)]
+
+    assert attendance_positions, "应有一条考勤行"
+    assert work_positions, "应有工作记录行"
+    assert attendance_positions[0] < min(work_positions), "考勤行须在所有工作记录行之前"
+
+
+def test_team_report_attendance_not_in_middle() -> None:
+    """团队日报里每个成员块的考勤行同样不得夹在工作记录中间，须置顶。"""
+    late_work = _work_item("late", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    attend = _attendance_item()
+    early_work = _work_item("early", datetime.fromisoformat("2026-11-18T08:00:00+08:00"))
+
+    groups = group_by_member([late_work, attend, early_work])
+    report = build_team_report(groups, DAY)
+    lines = report.splitlines()
+    attendance_positions = [i for i, line in enumerate(lines) if "`考勤`" in line]
+    work_positions = [i for i, line in enumerate(lines) if _is_work_line(line)]
+
+    assert attendance_positions, "应有一条考勤行"
+    assert work_positions, "应有工作记录行"
+    assert attendance_positions[0] < min(work_positions), "考勤行须在该成员工作记录之前"

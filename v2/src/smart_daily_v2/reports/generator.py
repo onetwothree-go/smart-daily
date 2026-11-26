@@ -135,10 +135,12 @@ def group_by_member(items: list[WorkItem]) -> dict[str, list[WorkItem]]:
         groups.setdefault(item.member, []).append(item)
 
     for member, member_items in groups.items():
-        groups[member] = sorted(
-            member_items,
-            key=lambda item: item.occurred_at,
-            reverse=True,
-        )
+        # 考勤条目按用户反馈（2026-11-26 截图）须独立于工作记录、不得夹在提交之间。
+        # 采用「考勤置顶、其余按时间倒序」：考勤排在该成员最前，工作记录仍按时间倒序。
+        # 两路日报（个人 / 团队）共用本函数，改一处即同时生效；无考勤成员排序完全不变。
+        attendance = [item for item in member_items if item.kind == "attendance"]
+        work = [item for item in member_items if item.kind != "attendance"]
+        work.sort(key=lambda item: item.occurred_at, reverse=True)
+        groups[member] = attendance + work
 
     return groups
