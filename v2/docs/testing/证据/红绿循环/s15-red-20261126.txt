@@ -1,0 +1,883 @@
+FFFFFFFFFFFFFFFFFF                                                       [100%]
+================================== FAILURES ===================================
+__________________ test_lists_only_requested_member_records ___________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AC53770>
+
+    def test_lists_only_requested_member_records(cleared_env, capsys):
+>       code, out, _ = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11", "--mock"])
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:35: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+_____________ test_output_is_five_columns_without_privacy_fields ______________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AD98F50>
+
+    def test_output_is_five_columns_without_privacy_fields(cleared_env, capsys):
+>       _, out, _ = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11", "--mock"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:45: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+_____________________ test_rows_ordered_by_time_ascending _____________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AD99BD0>
+
+    def test_rows_ordered_by_time_ascending(cleared_env, capsys):
+>       _, out, _ = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11", "--mock"])
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+_____________ test_member_without_records_exits_zero_and_says_so ______________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AD035C0>
+
+    def test_member_without_records_exits_zero_and_says_so(cleared_env, capsys):
+>       code, out, err = _run(
+            capsys, ["--attendance", "--member", "丁", "--month", "2026-11", "--mock"]
+        )
+
+tests\test_s15_attendance_query.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 丁 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 丁 --month 2026-11
+____________________ test_month_outside_records_exits_zero ____________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AEA8180>
+
+    def test_month_outside_records_exits_zero(cleared_env, capsys):
+>       code, out, err = _run(
+            capsys, ["--attendance", "--member", "甲", "--month", "2026-12", "--mock"]
+        )
+
+tests\test_s15_attendance_query.py:69: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-12\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-12
+________________ test_missing_or_bad_arguments_exit_two[argv0] ________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AD79EB0>
+argv = ['--attendance', '--month', '2026-11', '--mock']
+
+    @pytest.mark.parametrize(
+        "argv",
+        [
+            ["--attendance", "--month", "2026-11", "--mock"],
+            ["--attendance", "--member", "甲", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-13", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-11/", "--mock"],
+        ],
+    )
+    def test_missing_or_bad_arguments_exit_two(cleared_env, capsys, argv):
+>       code, _, err = _run(capsys, argv)
+                       ^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --month 2026-11
+________________ test_missing_or_bad_arguments_exit_two[argv1] ________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AC5FF00>
+argv = ['--attendance', '--member', '甲', '--mock']
+
+    @pytest.mark.parametrize(
+        "argv",
+        [
+            ["--attendance", "--month", "2026-11", "--mock"],
+            ["--attendance", "--member", "甲", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-13", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-11/", "--mock"],
+        ],
+    )
+    def test_missing_or_bad_arguments_exit_two(cleared_env, capsys, argv):
+>       code, _, err = _run(capsys, argv)
+                       ^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲
+________________ test_missing_or_bad_arguments_exit_two[argv2] ________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AE246B0>
+argv = ['--attendance', '--member', '甲', '--month', '2026-13', '--mock']
+
+    @pytest.mark.parametrize(
+        "argv",
+        [
+            ["--attendance", "--month", "2026-11", "--mock"],
+            ["--attendance", "--member", "甲", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-13", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-11/", "--mock"],
+        ],
+    )
+    def test_missing_or_bad_arguments_exit_two(cleared_env, capsys, argv):
+>       code, _, err = _run(capsys, argv)
+                       ^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-13\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-13
+________________ test_missing_or_bad_arguments_exit_two[argv3] ________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AE8D350>
+argv = ['--attendance', '--member', '甲', '--month', '2026-11/', '--mock']
+
+    @pytest.mark.parametrize(
+        "argv",
+        [
+            ["--attendance", "--month", "2026-11", "--mock"],
+            ["--attendance", "--member", "甲", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-13", "--mock"],
+            ["--attendance", "--member", "甲", "--month", "2026-11/", "--mock"],
+        ],
+    )
+    def test_missing_or_bad_arguments_exit_two(cleared_env, capsys, argv):
+>       code, _, err = _run(capsys, argv)
+                       ^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11/\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11/
+_____________________ test_non_attendance_source_rejected _____________________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AE8E450>
+
+    def test_non_attendance_source_rejected(cleared_env, capsys):
+>       code, _, err = _run(
+            capsys, ["--attendance", "--member", "甲", "--month", "2026-11", "--source", "github"]
+        )
+
+tests\test_s15_attendance_query.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+_______________ test_attendance_and_list_are_mutually_exclusive _______________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AE986E0>
+
+    def test_attendance_and_list_are_mutually_exclusive(cleared_env, capsys):
+>       code, _, err = _run(capsys, ["--attendance", "--list", "--member", "甲", "--month", "2026-11"])
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+_______________________ test_collect_failure_exits_one ________________________
+
+cleared_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024C8AD66EA0>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AE2FC50>
+
+    def test_collect_failure_exits_one(cleared_env, monkeypatch, capsys):
+        class _Boom:
+            name = "feishu_attendance"
+            member_map = {"u-1": "甲"}
+    
+            @classmethod
+            def from_env(cls):
+                return cls()
+    
+            def collect(self, *, since, until, author=None):
+                raise SourceUnavailableError("feishu_attendance", "凭证未配置：FEISHU_APP_ID")
+    
+        monkeypatch.setattr(cli, "FeishuAttendanceSource", _Boom)
+>       code, _, err = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11"])
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:119: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+__________ test_missing_member_map_exits_one_instead_of_faking_empty __________
+
+cleared_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024C8AC6FDD0>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AD43770>
+
+    def test_missing_member_map_exits_one_instead_of_faking_empty(cleared_env, monkeypatch, capsys):
+        """映射为空时接口必返空集：不能把配置缺失伪装成「无考勤记录」（exit 0）。"""
+    
+        class _NoMap:
+            name = "feishu_attendance"
+            member_map: dict[str, str] = {}
+    
+            @classmethod
+            def from_env(cls):
+                return cls()
+    
+            def collect(self, *, since, until, author=None):
+                raise AssertionError("映射为空时不应发起采集")
+    
+        monkeypatch.setattr(cli, "FeishuAttendanceSource", _NoMap)
+>       code, out, err = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11"])
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+______________________ test_member_not_in_map_exits_two _______________________
+
+cleared_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024C8AE3E8D0>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8ADA33F0>
+
+    def test_member_not_in_map_exits_two(cleared_env, monkeypatch, capsys):
+        class _MapOnlyJia:
+            name = "feishu_attendance"
+            member_map = {"u-1": "甲"}
+    
+            @classmethod
+            def from_env(cls):
+                return cls()
+    
+            def collect(self, *, since, until, author=None):
+                raise AssertionError("映射未命中成员时不应发起采集")
+    
+        monkeypatch.setattr(cli, "FeishuAttendanceSource", _MapOnlyJia)
+>       code, _, err = _run(capsys, ["--attendance", "--member", "戊", "--month", "2026-11"])
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 戊 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 戊 --month 2026-11
+__________________ test_default_source_is_attendance_source ___________________
+
+cleared_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024C8ADA5D30>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AD668F0>
+
+    def test_default_source_is_attendance_source(cleared_env, monkeypatch, capsys):
+        """不给 --mock / --source 时默认走真实考勤源（from_env），不是四源默认链。"""
+        calls: list[tuple[datetime, datetime]] = []
+    
+        class _Stub:
+            name = "feishu_attendance"
+            member_map = {"u-x": "甲"}
+    
+            @classmethod
+            def from_env(cls):
+                calls.append(("from_env", None))
+                return cls()
+    
+            def collect(self, *, since, until, author=None):
+                calls.append((since, until))
+                occurred = datetime(2026, 11, 20, 9, 0, tzinfo=LOCAL_TZ)
+                return [
+                    WorkItem(
+                        record_id="real-001",
+                        source="feishu_attendance",
+                        member="甲",
+                        kind="attendance",
+                        title="考勤：正常",
+                        detail="出勤状态：正常\nrecord_id: real-001",
+                        occurred_at=occurred,
+                        local_day=local_date(occurred),
+                    )
+                ]
+    
+        monkeypatch.setattr(cli, "FeishuAttendanceSource", _Stub)
+>       code, out, _ = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11"])
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:194: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+____________ test_status_and_time_extracted_for_real_nested_record ____________
+
+cleared_env = None
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AE3DCD0>
+
+    def test_status_and_time_extracted_for_real_nested_record(cleared_env, capsys):
+        """真实格式的 title 前缀固定「考勤：」，状态直取；时刻按东八区格式化。"""
+>       code, out, _ = _run(capsys, ["--attendance", "--member", "丙", "--month", "2026-11", "--mock"])
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 丙 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 丙 --month 2026-11
+__________________ test_query_does_not_touch_report_history ___________________
+
+cleared_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024C8AE4CB90>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8AE3D6D0>
+
+    def test_query_does_not_touch_report_history(cleared_env, monkeypatch, capsys):
+        """查询模式不得读写日报历史表（与 --list 分属两类查询）。"""
+    
+        def _boom(*args, **kwargs):
+            raise AssertionError("--attendance 不应触碰日报历史")
+    
+        monkeypatch.setattr(cli, "_list_reports", _boom)
+>       code, _, _ = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11", "--mock"])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:218: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+_____________________ test_month_boundaries_are_inclusive _____________________
+
+cleared_env = None
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000024C8AE4CD70>
+capsys = <_pytest.capture.CaptureFixture object at 0x0000024C8ADF4F70>
+
+    def test_month_boundaries_are_inclusive(cleared_env, monkeypatch, capsys):
+        """月初 00:00 与月末 23:59:59 的记录都要算入当月。"""
+        from smart_daily_v2.sources.mock import MockSource
+    
+        first = datetime(2026, 11, 1, 0, 0, tzinfo=LOCAL_TZ)
+        last = datetime(2026, 11, 30, 23, 59, 59, tzinfo=LOCAL_TZ)
+        items = [
+            WorkItem(
+                "b-1",
+                "feishu_attendance",
+                "甲",
+                "attendance",
+                "考勤：正常",
+                "x",
+                first,
+                date(2026, 11, 1),
+            ),
+            WorkItem(
+                "b-2",
+                "feishu_attendance",
+                "甲",
+                "attendance",
+                "考勤：迟到",
+                "x",
+                last,
+                date(2026, 11, 30),
+            ),
+        ]
+    
+        def collect(self, *, since, until, author=None):
+            return [
+                item
+                for item in items
+                if since <= item.occurred_at <= until and (author is None or item.member == author)
+            ]
+    
+        monkeypatch.setattr(MockSource, "collect", collect)
+>       code, out, _ = _run(capsys, ["--attendance", "--member", "甲", "--month", "2026-11", "--mock"])
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_s15_attendance_query.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_s15_attendance_query.py:24: in _run
+    code = cli.main(argv)
+           ^^^^^^^^^^^^^^
+src\smart_daily_v2\cli.py:141: in main
+    args = _build_parser().parse_args(argv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2007: in parse_args
+    self.error(msg)
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2773: in error
+    self.exit(2, _('%(prog)s: error: %(message)s\n') % args)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='退出码 | 含义\n0 | 成功\n1 | 采集或落库失败\n2 | 参数错误\n3 | 推送存在失败项', formatter_class=<class 'argparse.RawDescriptionHelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\Lenovo\AppData\Local\Programs\Python\Python314\Lib\argparse.py:2760: SystemExit
+---------------------------- Captured stderr call -----------------------------
+usage: python.exe -m pytest [-h] [--mock |
+                            --source {github,feishu_task,feishu_chat,mock,feishu_attendance}]
+                            [--no-notify] [--day DAY] [--list]
+python.exe -m pytest: error: unrecognized arguments: --attendance --member 甲 --month 2026-11
+=========================== short test summary info ===========================
+FAILED tests/test_s15_attendance_query.py::test_lists_only_requested_member_records
+FAILED tests/test_s15_attendance_query.py::test_output_is_five_columns_without_privacy_fields
+FAILED tests/test_s15_attendance_query.py::test_rows_ordered_by_time_ascending
+FAILED tests/test_s15_attendance_query.py::test_member_without_records_exits_zero_and_says_so
+FAILED tests/test_s15_attendance_query.py::test_month_outside_records_exits_zero
+FAILED tests/test_s15_attendance_query.py::test_missing_or_bad_arguments_exit_two[argv0]
+FAILED tests/test_s15_attendance_query.py::test_missing_or_bad_arguments_exit_two[argv1]
+FAILED tests/test_s15_attendance_query.py::test_missing_or_bad_arguments_exit_two[argv2]
+FAILED tests/test_s15_attendance_query.py::test_missing_or_bad_arguments_exit_two[argv3]
+FAILED tests/test_s15_attendance_query.py::test_non_attendance_source_rejected
+FAILED tests/test_s15_attendance_query.py::test_attendance_and_list_are_mutually_exclusive
+FAILED tests/test_s15_attendance_query.py::test_collect_failure_exits_one - S...
+FAILED tests/test_s15_attendance_query.py::test_missing_member_map_exits_one_instead_of_faking_empty
+FAILED tests/test_s15_attendance_query.py::test_member_not_in_map_exits_two
+FAILED tests/test_s15_attendance_query.py::test_default_source_is_attendance_source
+FAILED tests/test_s15_attendance_query.py::test_status_and_time_extracted_for_real_nested_record
+FAILED tests/test_s15_attendance_query.py::test_query_does_not_touch_report_history
+FAILED tests/test_s15_attendance_query.py::test_month_boundaries_are_inclusive
+18 failed in 1.50s
