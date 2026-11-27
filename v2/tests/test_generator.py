@@ -13,8 +13,28 @@ from smart_daily_v2.reports.generator import (
 
 
 def is_entry_line(line: str) -> bool:
-    """识别表格数据行（排除表头与分隔行，如 | 09:30 | 提交 | ... |）。"""
+    """识别表格数据行（团队日报用，排除表头与分隔行，如 | 09:30 | 提交 | ... |）。"""
     return bool(re.match(r"^\| \d{2}:\d{2} \|", line))
+
+
+def _normalize_entry(line: str) -> str:
+    """去掉表格行/列表行的外壳与空白，只比对 badge 与内容是否同源。"""
+    return " ".join(line.replace("|", " ").replace("- ", " ").split())
+
+
+def work_lines(report: str) -> list[str]:
+    """个人日报 `## 工作记录` 块的列表行（TK-V2-905 双块呈现）。"""
+    lines = report.splitlines()
+    if "## 工作记录" not in lines:
+        return []
+    start = lines.index("## 工作记录") + 1
+    out: list[str] = []
+    for line in lines[start:]:
+        if line == "---":
+            break
+        if line.startswith("- "):
+            out.append(line)
+    return out
 
 
 def make_item(record_id: str, member: str, source: str, occurred_at: datetime) -> WorkItem:
@@ -189,10 +209,17 @@ def test_personal_report_counts_all_items():
     items = make_personal_report_items()
 
     report = build_personal_report("甲", items, date(2026, 11, 18))
-    item_lines = [line for line in report.splitlines() if is_entry_line(line)]
+    item_lines = work_lines(report)
 
     assert len(item_lines) == 5
-    assert item_lines == [format_item(item) for item in items]
+    # 双块呈现：个人日报列表行 = `- HH:MM `badge` 内容`，团队日报仍走 format_item 表格行
+    assert item_lines == [
+        "- 09:30 `提交` 工作条目 0 —— 详情 0",
+        "- 10:30 `提交` 工作条目 1 —— 详情 1",
+        "- 11:30 `提交` 工作条目 2 —— 详情 2",
+        "- 12:30 `任务` 工作条目 3 —— 详情 3",
+        "- 13:30 `任务` 工作条目 4 —— 详情 4",
+    ]
 
 
 def test_personal_report_empty_day():
@@ -275,10 +302,11 @@ def test_team_report_entry_lines_match_personal():
 
     for member, items in groups.items():
         personal_report = build_personal_report(member, items, day)
-        personal_entry_lines = [
-            line for line in personal_report.splitlines() if is_entry_line(line)
-        ]
-        assert team_entry_lines[member] == personal_entry_lines
+        personal_lines = work_lines(personal_report)
+        # 905 双块：个人走列表行、团队仍走 format_item 表格行，去外壳后内容同源
+        assert len(personal_lines) == len(team_entry_lines[member])
+        for personal_line, team_line in zip(personal_lines, team_entry_lines[member], strict=True):
+            assert _normalize_entry(personal_line) == _normalize_entry(team_line)
 
 
 def test_team_report_all_empty_day():

@@ -4,12 +4,24 @@ from datetime import date
 
 from smart_daily_v2.models import LOCAL_TZ, WorkItem
 
-_KIND_LABELS = {"commit": "提交", "task": "任务", "message": "消息"}
+_KIND_LABELS = {
+    "commit": "提交",
+    "task": "任务",
+    "message": "消息",
+    # TK-V2-903（design §5-2）：考勤条目 badge 中文标签。
+    "attendance": "考勤",
+}
 _CONVENTIONAL_TYPE = re.compile(r"^([A-Za-z][A-Za-z0-9_-]*)\s*:")
 
 
 def _type_badge(item: WorkItem) -> str:
-    """优先取 conventional commit 的 type 前缀（fix:/docs:/feat: …），否则回落 kind 中文标签。"""
+    """优先取 conventional commit 的 type 前缀（fix:/docs:/feat: …），否则回落 kind 中文标签。
+
+    TK-V2-903（design §5-2）：kind=attendance 强制返回「考勤」，
+    避免标题含 `xxx:` 时被 conventional 前缀抢先显示为英文徽标。
+    """
+    if item.kind == "attendance":
+        return _KIND_LABELS["attendance"]
     match = _CONVENTIONAL_TYPE.match(item.title)
     if match:
         return match.group(1)
@@ -22,7 +34,14 @@ def _clean(text: str) -> str:
 
 
 def _headline(item: WorkItem) -> str:
-    """内容列标题：去掉已经在类型列出现过的 conventional 前缀。"""
+    """内容列标题：去掉已经在类型列出现过的 conventional 前缀。
+
+    考勤条目只展示「已打卡」这一事实，不把飞书的出勤状态判定（早退/迟到等）
+    渲染到日报正文：打卡时间、record_id 均保留，C11 逐条对账所需的状态仍完整
+    留在 WorkItem.detail 内，仅不在面向读者的表格里披露。
+    """
+    if item.kind == "attendance":
+        return "已打卡"
     title = _clean(item.title)
     match = _CONVENTIONAL_TYPE.match(title)
     if match:
@@ -34,6 +53,12 @@ def _headline(item: WorkItem) -> str:
 
 def _supplement(item: WorkItem) -> str:
     """详情只在确实带来新信息时追加；GitHub 的 detail==title 不再重复印一遍。"""
+    if item.kind == "attendance":
+        # 只把 record_id 原样带进日报供对账溯源；出勤状态留在 detail、不进正文。
+        # 兼容采集源 `record_id: xxx` 与集成用例 `record_id=xxx` 两种内嵌写法。
+        detail = _clean(item.detail or "")
+        match = re.search(r"record_id[:=]\s*[\w-]+", detail)
+        return match.group(0) if match else ""
     title = _clean(item.title)
     detail = _clean(item.detail or "")
     if not detail or detail == title:
@@ -43,30 +68,61 @@ def _supplement(item: WorkItem) -> str:
     return detail
 
 
-def format_item(item: WorkItem) -> str:
-    """单条工作痕迹 → 表格数据行，个人/团队日报共用（C4 逐字一致的单一来源）。"""
+def _local_hhmm(item: WorkItem) -> str:
+    """条目归属时区的 HH:MM；format_item 与个人日报列表块共用同一取时口径。"""
     occurred_at = item.occurred_at
     if occurred_at.tzinfo is not None:
         occurred_at = occurred_at.astimezone(LOCAL_TZ)
+    return f"{occurred_at:%H:%M}"
 
-    badge = _clean(_type_badge(item))
+
+def _content_with_extra(item: WorkItem) -> str:
+    """内容 = 标题 +（确有新增信息时）详情；表格行与双块列表行共用。"""
     content = _headline(item)
     extra = _supplement(item)
-    if extra:
-        content = f"{content} —— {extra}"
-    return f"| {occurred_at:%H:%M} | `{badge}` | {content} |"
+    return f"{content} —— {extra}" if extra else content
+
+
+def format_item(item: WorkItem) -> str:
+    """单条工作痕迹 → 表格数据行（团队日报用，C11③ 团队分组表格行保持原样）。
+
+    TK-V2-905（design 0.7-diff 0.6 §5-1）：个人日报已改双块、不再走本函数；
+    团队日报 C11③ 继续沿用本表格行，故 format_item 输出逐字不动。
+    """
+    badge = _clean(_type_badge(item))
+    return f"| {_local_hhmm(item)} | `{badge}` | {_content_with_extra(item)} |"
 
 
 def build_personal_report(member: str, items: list[WorkItem], day: date) -> str:
+    """个人日报 → `今日考勤` 独立块 + `工作记录` 列表块（S11 乙案 / TK-V2-905）。
+
+    design 0.7-diff 0.6 §5-1 局部翻案：个人日报不再用 `| HH:MM | badge | 内容 |`
+    表格行与提交混排、不出现表格分隔行。考勤块仅列打卡事实（`HH:MM` + 「已打卡」
+    + `record_id`），工作记录块以列表逐条列工作内容。①a 脱敏不变（状态只留 detail），
+    计数口径、1:1 对账、推送链、团队日报均不受影响。
+    """
     lines = [f"# 个人日报 · {day:%Y-%m-%d} · {member}", ""]
     lines.append(f"> 今日共 **{len(items)} 条**工作记录 ｜ 由系统自动生成，手工编写 0 条")
     lines.append("")
-    lines.append("| 时间 | 类型 | 内容 |")
-    lines.append("| :---: | :---: | :--- |")
-    if items:
-        lines.extend(format_item(item) for item in items)
+
+    attendance = [item for item in items if item.kind == "attendance"]
+    work = [item for item in items if item.kind != "attendance"]
+
+    if attendance:
+        lines.append("## 今日考勤")
+        lines.append("")
+        lines.extend(f"- {_local_hhmm(item)} {_content_with_extra(item)}" for item in attendance)
+        lines.append("")
+
+    lines.append("## 工作记录")
+    lines.append("")
+    if work:
+        for item in work:
+            badge = _clean(_type_badge(item))
+            lines.append(f"- {_local_hhmm(item)} `{badge}` {_content_with_extra(item)}")
     else:
-        lines.append("| — | — | 今日无工作记录 |")
+        lines.append("- 今日无工作记录")
+
     lines.extend(["", "---", "", "> 数据来源：真实工作记录 ｜ 本日报由系统自动汇总"])
     return "\n".join(lines)
 
@@ -110,10 +166,12 @@ def group_by_member(items: list[WorkItem]) -> dict[str, list[WorkItem]]:
         groups.setdefault(item.member, []).append(item)
 
     for member, member_items in groups.items():
-        groups[member] = sorted(
-            member_items,
-            key=lambda item: item.occurred_at,
-            reverse=True,
-        )
+        # 考勤条目按用户反馈（2026-11-26 截图）须独立于工作记录、不得夹在提交之间。
+        # 采用「考勤置顶、其余按时间倒序」：考勤排在该成员最前，工作记录仍按时间倒序。
+        # 两路日报（个人 / 团队）共用本函数，改一处即同时生效；无考勤成员排序完全不变。
+        attendance = [item for item in member_items if item.kind == "attendance"]
+        work = [item for item in member_items if item.kind != "attendance"]
+        work.sort(key=lambda item: item.occurred_at, reverse=True)
+        groups[member] = attendance + work
 
     return groups

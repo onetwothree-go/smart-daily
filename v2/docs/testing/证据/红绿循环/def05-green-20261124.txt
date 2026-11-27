@@ -1,0 +1,17 @@
+# DEF-05 GREEN 证据（issue #19 闭环测试侧复跑）
+命令: ./.venv/Scripts/python.exe -m pytest -q --tb=short（从 v2/ 运行）
+时间: 2026-11-24 11:16:07 +0800
+HEAD: 2baf68d (fix: [Issue #19/DEF-05] 补齐 error 标记 + 备 #21 确认留痕 + 补记录)
+预期: 全量 GREEN，含红用例 test_member_without_email_still_records_false_receipt_and_fails_delivery 转绿
+---
+........................................................................ [ 26%]
+........................................................................ [ 52%]
+........................................................................ [ 79%]
+.........................................................                [100%]
+273 passed in 3.93s
+---
+# 红用例单独复跑（显式确认转绿）:
+
+tests/test_integration_delivery.py::test_member_without_email_still_records_false_receipt_and_fails_delivery PASSED [100%]
+
+============================== 1 passed in 0.42s ==============================

@@ -57,6 +57,21 @@ def expected_lines(items: list[WorkItem]) -> list[str]:
     return [format_item(item) for item in items]
 
 
+def personal_entry_lines(report: str) -> list[str]:
+    """个人日报 `## 工作记录` 块的列表行（905 双块；团队日报仍用 entry_lines 表格行）。"""
+    lines = report.splitlines()
+    if "## 工作记录" not in lines:
+        return []
+    start = lines.index("## 工作记录") + 1
+    out: list[str] = []
+    for line in lines[start:]:
+        if line == "---":
+            break
+        if line.startswith("- ") and "今日无工作记录" not in line:
+            out.append(line)
+    return out
+
+
 def test_three_commits_two_tasks_count_is_five(format_harness):
     items = [
         make_item("commit-1", kind="commit", source="github", minute=0),
@@ -69,7 +84,7 @@ def test_three_commits_two_tasks_count_is_five(format_harness):
     outcome = format_harness(items)
 
     assert len(entry_lines(outcome.team)) == 5
-    assert len(entry_lines(outcome.personal["甲"])) == 5
+    assert len(personal_entry_lines(outcome.personal["甲"])) == 5
     assert "**5 条工作记录**" in outcome.team
 
 
@@ -125,15 +140,28 @@ def test_same_action_across_three_sources_keeps_three_lines(format_harness):
     assert outcome.record_ids == tuple(record_ids)
 
 
+def _normalize_entry(line: str) -> str:
+    """去掉表格行/列表行外壳，只比对 badge 与内容是否同源。"""
+    return " ".join(line.replace("|", " ").replace("- ", " ").split())
+
+
 def test_personal_and_team_entry_lines_verbatim_equal(format_harness):
     outcome = format_harness()
 
+    # 905 双块：个人走列表行、团队仍走 format_item 表格行；去外壳后内容同源
     for member in outcome.members:
-        assert entry_lines(outcome.personal[member]) == team_lines_for(outcome.team, member)
+        personal = personal_entry_lines(outcome.personal[member])
+        team = team_lines_for(outcome.team, member)
+        assert len(personal) == len(team)
+        assert [_normalize_entry(line) for line in personal] == [
+            _normalize_entry(line) for line in team
+        ]
 
 
 def test_both_reports_share_single_format_item_source(format_harness):
-    assert "format_item(" in inspect.getsource(build_personal_report)
+    # 905 双块：个人日报不再走 format_item，两路改为共享 _content_with_extra / _local_hhmm；
+    # 团队日报 C11③ 表格行仍逐字走 format_item（C4/G4 计数判据不变）。
+    assert "_content_with_extra(" in inspect.getsource(build_personal_report)
     assert "format_item(" in inspect.getsource(build_team_report)
 
     items = [
@@ -145,8 +173,11 @@ def test_both_reports_share_single_format_item_source(format_harness):
 
     for member, member_items in outcome.groups.items():
         expected = expected_lines(member_items)
-        assert entry_lines(outcome.personal[member]) == expected
         assert team_lines_for(outcome.team, member) == expected
+        personal = personal_entry_lines(outcome.personal[member])
+        assert [_normalize_entry(line) for line in personal] == [
+            _normalize_entry(line) for line in expected
+        ]
 
 
 def test_twenty_entry_member_fully_listed(format_harness):
@@ -157,7 +188,7 @@ def test_twenty_entry_member_fully_listed(format_harness):
     assert "### 甲 · 20 条" in outcome.team
     assert len(team_lines_for(outcome.team, "甲")) == 20
     assert "**20 条工作记录**" in outcome.team
-    assert len(entry_lines(outcome.personal["甲"])) == 20
+    assert len(personal_entry_lines(outcome.personal["甲"])) == 20
 
 
 def test_zero_entry_member_still_listed(format_harness):
