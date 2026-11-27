@@ -9,6 +9,7 @@
 红→绿：本文件先于实现落地，pytest 应红；实现后应绿。
 """
 
+import re
 from datetime import date, datetime
 
 from smart_daily_v2.models import WorkItem
@@ -160,20 +161,21 @@ def test_personal_report_attendance_not_in_middle() -> None:
 
 
 def test_team_report_attendance_not_in_middle() -> None:
-    """团队日报里每个成员块的考勤行同样不得夹在工作记录中间，须置顶。"""
+    """团队日报 907：考勤独占 `#### 今日考勤` 块、整体位于 `#### 工作记录` 块之前。"""
     late_work = _work_item("late", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
     attend = _attendance_item()
     early_work = _work_item("early", datetime.fromisoformat("2026-11-18T08:00:00+08:00"))
 
     groups = group_by_member([late_work, attend, early_work])
     report = build_team_report(groups, DAY)
-    lines = report.splitlines()
-    attendance_positions = [i for i, line in enumerate(lines) if "`考勤`" in line]
-    work_positions = [i for i, line in enumerate(lines) if _is_work_line(line)]
+    section = _team_member_section(report, "甲")
 
-    assert attendance_positions, "应有一条考勤行"
-    assert work_positions, "应有工作记录行"
-    assert attendance_positions[0] < min(work_positions), "考勤行须在该成员工作记录之前"
+    attendance_block = _team_block_lines(section, "#### 今日考勤")
+    work_block = _team_block_lines(section, "#### 工作记录")
+
+    assert attendance_block, "考勤块须有一条"
+    assert work_block and any(_is_work_line(line) for line in work_block), "工作块须有记录"
+    assert section.index("#### 今日考勤") < section.index("#### 工作记录"), "考勤块须在工作块之前"
 
 
 # --- TK-V2-905 双块呈现红测试（design 0.7-diff 0.6 §5-1 / proposal 0.5-diff 0.6 / issue #24）---
@@ -229,3 +231,90 @@ def test_personal_report_without_attendance_has_no_attendance_block() -> None:
 
     assert "## 今日考勤" not in body
     assert "今日无工作记录" in body
+
+
+# --- TK-V2-907 团队日报双块红测试（design 0.7 §5-1 / proposal 0.5-diff 0.7 / issue #25）---
+
+
+def _team_member_section(body: str, member: str) -> str:
+    """取团队日报某个 `### <member> · N 条` 块的正文（截至下一个 `### ` 或文末 `---`）。"""
+    lines = body.splitlines()
+    header = next(line for line in lines if line.startswith(f"### {member} · "))
+    start = lines.index(header) + 1
+    out: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("### ") or line == "---":
+            break
+        out.append(line)
+    return "\n".join(out)
+
+
+def _team_block_lines(section: str, heading: str) -> list[str]:
+    """取成员块内某个 `#### ` 块的行（截至下一个 `#### `）。"""
+    lines = section.splitlines()
+    if heading not in lines:
+        return []
+    start = lines.index(heading) + 1
+    out: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("#### "):
+            break
+        if line.strip():
+            out.append(line)
+    return out
+
+
+def test_team_report_member_uses_two_independent_blocks() -> None:
+    """团队日报 907：每个成员名下为 `#### 今日考勤` + `#### 工作记录` 两块，考勤在前。"""
+    work = _work_item("w", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    body = build_team_report({"甲": [work, _attendance_item()]}, DAY)
+    section = _team_member_section(body, "甲")
+
+    assert "#### 今日考勤" in section
+    assert "#### 工作记录" in section
+    assert section.index("#### 今日考勤") < section.index("#### 工作记录")
+    assert "| :---" not in section, "成员明细块不得出现表格分隔行"
+    assert not re.match(r"^\| \d{2}:\d{2} \|", section, re.M), "成员明细块不得有表格数据行"
+
+
+def test_team_attendance_block_line_is_redacted() -> None:
+    """团队考勤块每行 `- HH:MM 已打卡 —— record_id: XXX`；早退/迟到状态不渲染。"""
+    body = build_team_report({"甲": [_attendance_item(title="考勤：早退")]}, DAY)
+    section = _team_member_section(body, "甲")
+
+    assert _team_block_lines(section, "#### 今日考勤") == [
+        "- 09:05 已打卡 —— record_id: mock-att-001"
+    ]
+    assert "早退" not in section
+
+
+def test_team_work_block_is_list_not_table() -> None:
+    """团队工作记录块用 `- HH:MM `badge` 内容` 列表，不出现表格行。"""
+    work = _work_item("w", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    body = build_team_report({"甲": [work]}, DAY)
+    section = _team_member_section(body, "甲")
+
+    block = _team_block_lines(section, "#### 工作记录")
+    assert len(block) == 1
+    assert block[0].startswith("- 20:00 `feat` ")
+
+
+def test_team_summary_table_stays_verbatim() -> None:
+    """907 红线：顶部「今日贡献一览」汇总表原样，仍涵盖全部条目（含考勤）。"""
+    work = _work_item("w", datetime.fromisoformat("2026-11-18T20:00:00+08:00"))
+    body = build_team_report({"甲": [work, _attendance_item()]}, DAY)
+
+    assert "## 今日贡献一览" in body
+    assert "| 成员 | 记录数 | 占比 | 分布 |" in body
+    assert "| :--- | ---: | ---: | :--- |" in body
+    assert "| 甲 | 2 | 100.0% |" in body, "汇总表记录数仍含考勤条目（1A 计数口径不变）"
+    assert "**2 条工作记录**" in body
+
+
+def test_team_member_without_attendance_has_no_attendance_block() -> None:
+    """团队无考勤成员不出现考勤块，仍保留 C8「今日无工作记录」。"""
+    body = build_team_report({"甲": []}, DAY)
+    section = _team_member_section(body, "甲")
+
+    assert "#### 今日考勤" not in section
+    assert "今日无工作记录" in section

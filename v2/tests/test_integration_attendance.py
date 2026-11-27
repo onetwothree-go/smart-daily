@@ -69,8 +69,20 @@ def make_attendance_item(
 
 
 def attendance_rows(body: str) -> list[str]:
-    """团队日报的考勤表格行（C11③ 团队分组表格行原样保留）。"""
-    return [line for line in body.splitlines() if "`考勤`" in line and line.startswith("|")]
+    """团队日报各成员 `#### 今日考勤` 块内的列表行（907 双块；汇总表不算考勤明细）。"""
+    lines = body.splitlines()
+    out: list[str] = []
+    in_block = False
+    for line in lines:
+        if line.startswith("### "):
+            in_block = False
+        elif line == "#### 今日考勤":
+            in_block = True
+        elif line.startswith("#### ") or line == "---":
+            in_block = False
+        elif in_block and line.strip():
+            out.append(line)
+    return out
 
 
 def personal_attendance_lines(body: str) -> list[str]:
