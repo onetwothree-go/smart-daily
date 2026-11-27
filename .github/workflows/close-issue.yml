@@ -19,4 +19,5 @@ jobs:
         run: |
           gh issue close 24 \
             --repo onetwothree-go/smart-daily \
-            --comment-file .github/workflows/close-issue-comment.md
+            --reason completed \
+            --comment "$(cat .github/workflows/close-issue-comment.md)"

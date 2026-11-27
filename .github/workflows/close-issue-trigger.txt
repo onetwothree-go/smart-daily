@@ -1,1 +1,1 @@
-trigger one-off close of completed issue #24 (S11乙案), 2026-11-27
+retry close issue #24 with fixed gh comment flag, 2026-11-27
