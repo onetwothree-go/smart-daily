@@ -1,0 +1,1 @@
+trigger one-off close of completed issue #24 (S11乙案), 2026-11-27
