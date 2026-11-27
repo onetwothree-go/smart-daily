@@ -1,6 +1,5 @@
 import builtins
 import inspect
-import re
 import socket
 from collections import Counter
 from datetime import date, datetime
@@ -36,29 +35,43 @@ def make_item(
 
 
 def entry_lines(report: str) -> list[str]:
-    return [line for line in report.splitlines() if re.match(r"^\| \d{2}:\d{2} \|", line)]
+    """团队日报所有成员 `#### 工作记录` 块的列表行（907 双块；汇总表不算条目）。"""
+    return [line for member in _members(report) for line in team_lines_for(report, member)]
+
+
+def _members(team: str) -> list[str]:
+    return [line[4:].split(" · ", 1)[0] for line in team.splitlines() if line.startswith("### ")]
 
 
 def team_lines_for(team: str, member: str) -> list[str]:
-    lines = []
-    in_member_section = False
-    section_prefix = f"### {member} · "
-    for line in team.splitlines():
-        if line.startswith("### "):
-            if in_member_section:
-                break
-            in_member_section = line.startswith(section_prefix)
-        elif in_member_section and re.match(r"^\| \d{2}:\d{2} \|", line):
-            lines.append(line)
-    return lines
+    """团队日报某成员 `#### 工作记录` 块的列表行（907 双块）。"""
+    lines = team.splitlines()
+    header = next(line for line in lines if line.startswith(f"### {member} · "))
+    start = lines.index(header) + 1
+    section: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("### ") or line == "---":
+            break
+        section.append(line)
+    if "#### 工作记录" not in section:
+        return []
+    work_start = section.index("#### 工作记录") + 1
+    out: list[str] = []
+    for line in section[work_start:]:
+        if line.startswith("#### "):
+            break
+        if line.startswith("- ") and "今日无工作记录" not in line:
+            out.append(line)
+    return out
 
 
 def expected_lines(items: list[WorkItem]) -> list[str]:
+    """期望的 format_item 表格行；与团队双块列表行用 _normalize_entry 去外壳后同源比对。"""
     return [format_item(item) for item in items]
 
 
 def personal_entry_lines(report: str) -> list[str]:
-    """个人日报 `## 工作记录` 块的列表行（905 双块；团队日报仍用 entry_lines 表格行）。"""
+    """个人日报 `## 工作记录` 块的列表行（905 双块）。"""
     lines = report.splitlines()
     if "## 工作记录" not in lines:
         return []
@@ -98,8 +111,8 @@ def test_no_hand_written_entries_counter_matches(format_harness):
     ]
 
     outcome = format_harness(items)
-    actual = entry_lines(outcome.team)
-    expected = expected_lines(items)
+    actual = [_normalize_entry(line) for line in entry_lines(outcome.team)]
+    expected = [_normalize_entry(line) for line in expected_lines(items)]
 
     assert Counter(actual) == Counter(expected)
     assert len(actual) == 5
@@ -148,21 +161,18 @@ def _normalize_entry(line: str) -> str:
 def test_personal_and_team_entry_lines_verbatim_equal(format_harness):
     outcome = format_harness()
 
-    # 905 双块：个人走列表行、团队仍走 format_item 表格行；去外壳后内容同源
+    # 905/907 双块：个人与团队成员明细同走列表行，内容逐字一致
     for member in outcome.members:
-        personal = personal_entry_lines(outcome.personal[member])
-        team = team_lines_for(outcome.team, member)
-        assert len(personal) == len(team)
-        assert [_normalize_entry(line) for line in personal] == [
-            _normalize_entry(line) for line in team
-        ]
+        assert personal_entry_lines(outcome.personal[member]) == team_lines_for(
+            outcome.team, member
+        )
 
 
 def test_both_reports_share_single_format_item_source(format_harness):
-    # 905 双块：个人日报不再走 format_item，两路改为共享 _content_with_extra / _local_hhmm；
-    # 团队日报 C11③ 表格行仍逐字走 format_item（C4/G4 计数判据不变）。
+    # 905/907 双块后两路日报都走 _content_with_extra / _local_hhmm 渲染列表行；
+    # format_item 表格行保留供既有 badge / 脱敏 / 对账断言复用，输出逐字不动。
     assert "_content_with_extra(" in inspect.getsource(build_personal_report)
-    assert "format_item(" in inspect.getsource(build_team_report)
+    assert "_content_with_extra(" in inspect.getsource(build_team_report)
 
     items = [
         make_item("甲-1", member="甲", minute=0),
@@ -172,12 +182,12 @@ def test_both_reports_share_single_format_item_source(format_harness):
     outcome = format_harness(items)
 
     for member, member_items in outcome.groups.items():
-        expected = expected_lines(member_items)
-        assert team_lines_for(outcome.team, member) == expected
-        personal = personal_entry_lines(outcome.personal[member])
-        assert [_normalize_entry(line) for line in personal] == [
-            _normalize_entry(line) for line in expected
+        expected = [_normalize_entry(line) for line in expected_lines(member_items)]
+        assert [_normalize_entry(line) for line in team_lines_for(outcome.team, member)] == expected
+        personal = [
+            _normalize_entry(line) for line in personal_entry_lines(outcome.personal[member])
         ]
+        assert personal == expected
 
 
 def test_twenty_entry_member_fully_listed(format_harness):
@@ -212,7 +222,9 @@ def test_fixture_reconciliation_and_record_ids_stable(format_harness, monkeypatc
     assert first.record_ids == second.record_ids
     assert f"**{len(first.groups)} 位成员**" in first.team
     assert f"**{len(first.items)} 条工作记录**" in first.team
-    assert Counter(entry_lines(first.team)) == Counter(expected_lines(first.items))
+    assert Counter(_normalize_entry(line) for line in entry_lines(first.team)) == Counter(
+        _normalize_entry(line) for line in expected_lines(first.items)
+    )
 
     def fail(*args, **kwargs):
         raise AssertionError("unexpected I/O")

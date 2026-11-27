@@ -21,8 +21,9 @@ def test_case_whitespace_variants_merge_to_one_group(identity_harness):
 
 def test_record_ids_disjoint_and_no_merge_loss(identity_harness):
     outcome = identity_harness()
+    # 907 双块：团队成员明细走 `#### 工作记录` 列表行；汇总表不算条目
     team_entry_lines = [
-        line for line in outcome.team.splitlines() if re.match(r"^\| \d{2}:\d{2} \|", line)
+        line for line in outcome.team.splitlines() if re.match(r"^- \d{2}:\d{2} `", line)
     ]
 
     assert len(outcome.record_ids) == 3

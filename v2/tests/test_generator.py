@@ -37,6 +37,28 @@ def work_lines(report: str) -> list[str]:
     return out
 
 
+def team_work_lines(report: str, member: str) -> list[str]:
+    """团队日报某成员 `#### 工作记录` 块的列表行（TK-V2-907 成员明细双块）。"""
+    lines = report.splitlines()
+    header = next(line for line in lines if line.startswith(f"### {member} · "))
+    start = lines.index(header) + 1
+    section: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("### ") or line == "---":
+            break
+        section.append(line)
+    if "#### 工作记录" not in section:
+        return []
+    work_start = section.index("#### 工作记录") + 1
+    out: list[str] = []
+    for line in section[work_start:]:
+        if line.startswith("#### "):
+            break
+        if line.startswith("- ") and "今日无工作记录" not in line:
+            out.append(line)
+    return out
+
+
 def make_item(record_id: str, member: str, source: str, occurred_at: datetime) -> WorkItem:
     return WorkItem(
         record_id=f"https://example.com/records/{record_id}",
@@ -268,7 +290,7 @@ def test_team_report_lists_all_members_without_truncation():
     report = build_team_report(groups, day)
     lines = report.splitlines()
     section_headers = [line for line in lines if line.startswith("### ")]
-    entry_lines = [line for line in lines if is_entry_line(line)]
+    entry_lines = [line for member in groups for line in team_work_lines(report, member)]
 
     assert lines[0] == "# 团队日报 · 2026-11-18"
     assert "**4 位成员**" in report
@@ -291,22 +313,14 @@ def test_team_report_entry_lines_match_personal():
     }
 
     report = build_team_report(groups, day)
-    report_lines = report.splitlines()
-    team_entry_lines = {member: [] for member in groups}
-    current_member = None
-    for line in report_lines:
-        if line.startswith("### "):
-            current_member = line[4:].split(" · ", 1)[0]
-        elif is_entry_line(line):
-            team_entry_lines[current_member].append(line)
 
     for member, items in groups.items():
         personal_report = build_personal_report(member, items, day)
         personal_lines = work_lines(personal_report)
-        # 905 双块：个人走列表行、团队仍走 format_item 表格行，去外壳后内容同源
-        assert len(personal_lines) == len(team_entry_lines[member])
-        for personal_line, team_line in zip(personal_lines, team_entry_lines[member], strict=True):
-            assert _normalize_entry(personal_line) == _normalize_entry(team_line)
+        team_lines = team_work_lines(report, member)
+        # 905/907 双块：个人与团队成员明细同走列表行，内容逐字同源
+        assert len(personal_lines) == len(team_lines)
+        assert personal_lines == team_lines
 
 
 def test_team_report_all_empty_day():

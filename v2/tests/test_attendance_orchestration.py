@@ -109,7 +109,9 @@ def test_attendance_items_flow_into_team_report(monkeypatch) -> None:
     attendance = _source(ATTENDANCE_NAME, [_attendance_item("att-2", "甲")])
     result = orch.run(DAY, sources=[attendance], notify=False)
 
-    assert "`考勤`" in result["team_report"] or "attendance" in result["team_report"]
+    # 907 团队双块：考勤进 `#### 今日考勤` 块、正文「已打卡」+ record_id（脱敏不变）
+    assert "#### 今日考勤" in result["team_report"]
+    assert "已打卡" in result["team_report"]
     assert result["members"] == 1
 
 
